@@ -1,0 +1,18 @@
+# Medical Diary Project Rules
+
+You are an AI coding assistant working on the Medical Diary project.
+
+## Single Source of Truth (SSOT)
+The file `backend/docs/SYSTEM_DESIGN_SSOT.md` is the Single Source of Truth for this project.
+**MANDATORY:** You MUST read this file before making any architectural decisions or code changes.
+
+## Backend Guidelines (FastAPI + Supabase)
+- Use Domain-Driven Design (DDD) module structure.
+- Every module MUST have: `schemas.py`, `service.py`, `router.py`.
+- No hard-deletes. Use `deleted_at`.
+- Use PostgreSQL Triggers for Audit Logs.
+- Use `pgcrypto` for sensitive data encryption.
+
+## Communication
+- Keep responses concise.
+- Summarize changes clearly.
