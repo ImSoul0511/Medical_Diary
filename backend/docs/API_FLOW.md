@@ -25,7 +25,7 @@ sequenceDiagram
     FE->>User: GET /users/me (Gửi kèm Bearer Token)
     User-->>FE: 200 OK (Trả về Profile & Privacy Settings)
     
-    FE->>User: PATCH /users/privacy (Thiết lập "emergency": true)
+    FE->>User: PATCH /users/privacy (Thiết lập show_blood_type, show_allergies, ...)
     User-->>FE: 200 OK (Cập nhật thành công)
 ```
 
@@ -43,7 +43,7 @@ sequenceDiagram
     participant ConAPI as API: /consent
     participant MedAPI as API: /medical-records
 
-    DocFE->>DocAPI: GET /doctors/search-patients?phone=0123... (Tìm bệnh nhân)
+    DocFE->>DocAPI: GET /doctors/search-patients?phone=0123...&cccd=0123... (Tìm bệnh nhân)
     DocAPI-->>DocFE: 200 OK (Trả về thông tin cơ bản: Tên, ID)
 
     DocFE->>DocAPI: POST /doctors/request-access (Xin quyền xem hồ sơ)
@@ -73,12 +73,16 @@ Sau khi Bác sĩ đã được Bệnh nhân cấp quyền (từ Luồng 2), quy 
 sequenceDiagram
     participant DocFE as App Bác sĩ
     participant PatFE as App Bệnh nhân
+    participant Vitals as API: /health-metrics
     participant Diary as API: /diaries
     participant Med as API: /medical-records
     participant Rx as API: /prescriptions
 
-    DocFE->>Diary: GET /diaries?patient_id={id} (Xem nhật ký bệnh nhân tự ghi)
-    Diary-->>DocFE: 200 OK (Danh sách triệu chứng, nhịp tim)
+    DocFE->>Vitals: GET /health-metrics?patient_id={id} (Xem dữ liệu đo lường)
+    Vitals-->>DocFE: 200 OK (Lịch sử nhịp tim, bước chân, nhịp thở)
+
+    DocFE->>Diary: GET /diaries?patient_id={id} (Xem nhật ký bệnh nhân)
+    Diary-->>DocFE: 200 OK (Ghi chép + đánh giá triệu chứng)
     
     DocFE->>Med: POST /medical-records (Tạo chẩn đoán chính thức)
     Med-->>DocFE: 201 Created (Ghi nhận bệnh án)
@@ -115,11 +119,11 @@ sequenceDiagram
     Note over EmgFE,EmgAPI: Cấp cứu viên quét mã QR
     EmgFE->>EmgAPI: GET /emergency/access/{token}
     
-    EmgAPI->>DB: Truy vấn dữ liệu (Chỉ lấy field "emergency": true)
-    Note over DB: DB Trigger tự động ghi Log vào bảng data_access_logs
+    EmgAPI->>DB: Truy vấn profiles (Lọc theo privacy_settings)
+    Note over DB: Không ghi Audit Log cho truy cập Public View
     
-    DB-->>EmgAPI: Trả về dữ liệu public
-    EmgAPI-->>EmgFE: 200 OK (Hiển thị Nhóm máu, Dị ứng, SĐT người nhà)
+    DB-->>EmgAPI: Trả về các trường User bật trong privacy_settings
+    EmgAPI-->>EmgFE: 200 OK (Hiển thị Nhóm máu, Dị ứng, SĐT người nhà tùy cấu hình)
 ```
 
 ---

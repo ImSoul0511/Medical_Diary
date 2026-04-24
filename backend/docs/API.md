@@ -2,6 +2,8 @@
 
 Tài liệu này định nghĩa cấu trúc Request và Response cho toàn bộ các Endpoint trong hệ thống.
 
+> **Lưu ý quan trọng:** Tài liệu này cung cấp danh sách Endpoints và các **Request/Response mẫu (Sample)**. Các ví dụ JSON trong tài liệu chỉ mang tính chất minh họa. Để xem chi tiết về cấu trúc dữ liệu, các ràng buộc (validation), và thông tin mặc định, vui lòng tham khảo `SCHEMAS.md` và `DB_SCHEMAS.md`.
+
 ## Quy chuẩn chung (Global Standards)
 
 ### 1. Headers mặc định
@@ -139,22 +141,26 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   {
     "id": "uuid",
     "full_name": "Nguyen Khai",
-    "email": "nguyen@example.com",
+    "blood_type": "O+",
+    "allergies": "Penicillin",
+    "emergency_contact": "0123456789",
     "privacy_settings": {
-      "emergency": true,
-      "heart_rate": "doctor_only"
+      "show_blood_type": true,
+      "show_allergies": true,
+      "show_emergency_contact": false
     }
   }
   ```
 
-### 2.2 Cập nhật quyền riêng tư
+### 2.2 Cập nhật cấu hình Public View
 * **Endpoint:** `PATCH /users/privacy`
 * **Auth:** Bắt buộc
 * **Body:**
   ```json
   {
-    "emergency": true,
-    "diary": "private"
+    "show_blood_type": true,
+    "show_allergies": true,
+    "show_emergency_contact": false
   }
   ```
 * **Response (200 OK):** Trả về object `privacy_settings` đã cập nhật.
@@ -185,7 +191,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Auth:** Bắt buộc
 * **Query Params:**
   * `format`: `json` (mặc định) hoặc `pdf`
-  * `scope`: Danh sách phần dữ liệu cần xuất, phân cách bằng dấu phẩy. Giá trị hợp lệ: `profile`, `diaries`, `medical_records`, `prescriptions`.
+  * `scope`: Danh sách phần dữ liệu cần xuất, phân cách bằng dấu phẩy. Giá trị hợp lệ: `profile`, `health_metrics`, `diaries`, `medical_records`, `prescriptions`.
 * **Response (200 OK):**
   * **Headers:** `Content-Disposition: attachment; filename="medical_export.json"` (hoặc `.pdf`)
   * **Body:** File chứa dữ liệu đã chọn.
@@ -229,31 +235,61 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Body:**
   ```json
   {
-    "action": "approved"
+    "action": "approved",
+    "approved_scope": ["medical_records", "heart_rate"] 
   }
   ```
-  *Giá trị hợp lệ: `"approved"` hoặc `"rejected"`*
+  *Giá trị hợp lệ của `action`: `"approved"` hoặc `"rejected"`.*
+  *Nếu `action` là `"approved"`, user có thể truyền `approved_scope` (là tập con của `requested_scope`) để chọn cụ thể những quyền muốn cấp.*
 * **Response (200 OK):** `{ "message": "Access request approved successfully" }`
+
+### 2.9 Cập nhật thông tin hồ sơ cá nhân
+* **Endpoint:** `PATCH /users/me`
+* **Auth:** Bắt buộc
+* **Body:**
+  ```json
+  {
+    "full_name": "Nguyen Van B",
+    "blood_type": "AB+",
+    "allergies": "Aspirin",
+    "emergency_contact": "0909123456"
+  }
+  ```
+  *Tất cả các trường đều Optional. Chỉ truyền trường cần cập nhật.*
+* **Response (200 OK):** Trả về `UserProfileResponse` đã cập nhật.
 
 ---
 
 ## 3. Module: Doctors & Users Search (`/doctors`, `/users`)
 
 ### 3.1 Bác sĩ tìm kiếm bệnh nhân
-* **Endpoint:** `GET /doctors/search-patients?name=Nguyen&phone=0123`
+* **Endpoint:** `GET /doctors/search-patients?phone=0987654321&cccd=012345678912`
 * **Auth:** Bắt buộc (Role: Doctor)
-* **Response (200 OK):** Chỉ trả về thông tin public của bệnh nhân.
+* **Response (200 OK):** Chỉ trả về thông tin cơ bản.
   ```json
   [
     {
       "id": "uuid",
-      "full_name": "Nguyen Khai",
-      "phone": "0123***789"
+      "full_name": "Nguyen Khai"
     }
   ]
   ```
 
-### 3.2 User tìm kiếm bác sĩ
+### 3.2 Bác sĩ xem hồ sơ chi tiết của bệnh nhân
+* **Endpoint:** `GET /users/{id}`
+* **Auth:** Bắt buộc (Role: Doctor)
+* **Response (200 OK):** Chỉ trả về những trường mà bệnh nhân cấu hình hiển thị Public (trong `privacy_settings`) HOẶC bác sĩ đã được cấp quyền qua Consent.
+  ```json
+  {
+    "id": "uuid",
+    "full_name": "Nguyen Khai",
+    "blood_type": "O+",
+    "allergies": "Penicillin"
+    // emergency_contact sẽ bị ẩn nếu không public và bác sĩ không có quyền
+  }
+  ```
+
+### 3.3 User tìm kiếm bác sĩ
 * **Endpoint:** `GET /users/search-doctors?name=Tran&specialty=Cardiology`
 * **Auth:** Bắt buộc (Role: User)
 * **Response (200 OK):** Chỉ trả về thông tin public của bác sĩ.
@@ -268,7 +304,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ]
   ```
 
-### 3.3 Bác sĩ xin quyền truy cập
+### 3.4 Bác sĩ xin quyền truy cập
 * **Endpoint:** `POST /doctors/request-access`
 * **Auth:** Bắt buộc (Role: Doctor)
 * **Rate Limit:** 10 req/day
@@ -276,7 +312,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```json
   {
     "patient_id": "uuid_của_bệnh_nhân",
-    "requested_scope": ["medical_records", "prescriptions"],
+    "requested_scope": ["medical_records", "prescriptions", "blood_type"],
     "reason": "Khám định kỳ"
   }
   ```
@@ -284,22 +320,60 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 
 ---
 
-## 4. Module: Medical Data (`/diaries`, `/medical-records`, `/prescriptions`)
+## 4. Module: Medical Data (`/health-metrics`, `/diaries`, `/medical-records`, `/prescriptions`)
 
-### 4.1 Thêm nhật ký sức khỏe
+### 4.1 Ghi nhận dữ liệu đo lường (Health Metrics)
+* **Endpoint:** `POST /health-metrics`
+* **Auth:** Bắt buộc (Role: User)
+* **Body:**
+  ```json
+  {
+    "heart_rate": 72,
+    "step_count": 8500,
+    "respiratory_rate": 16,
+    "recorded_at": "2026-04-24T07:30:00Z"
+  }
+  ```
+* **Response (201 Created):** Trả về bản ghi kèm `id` và `created_at`.
+
+### 4.2 Lấy lịch sử đo lường
+* **Endpoint:** `GET /health-metrics?page=1&limit=10&date_from=2026-04-01&date_to=2026-04-24`
+* **Auth:** Bắt buộc (Chủ sở hữu)
+* **Response (200 OK):**
+  ```json
+  {
+    "items": [
+      {
+        "id": "uuid",
+        "heart_rate": 72,
+        "step_count": 8500,
+        "respiratory_rate": 16,
+        "recorded_at": "2026-04-24T07:30:00Z"
+      }
+    ],
+    "total": 120,
+    "page": 1,
+    "limit": 10
+  }
+  ```
+
+### 4.3 Thêm nhật ký sức khỏe (Diary)
 * **Endpoint:** `POST /diaries`
 * **Auth:** Bắt buộc (Role: User)
 * **Body:**
   ```json
   {
-    "content": "Hôm nay thấy hơi chóng mặt",
-    "heart_rate": 95,
-    "step_count": 5000
+    "content": "Hôm nay thấy hơi chóng mặt sau khi tập thể dục",
+    "symptoms": [
+      { "name": "Đau đầu", "severity": 7 },
+      { "name": "Chóng mặt", "severity": 4 }
+    ]
   }
   ```
+  *`content` và `symptoms` đều là Optional, nhưng ít nhất phải có một trong hai.*
 * **Response (201 Created):** Trả về bản ghi vừa tạo kèm `id` và `created_at`.
 
-### 4.2 Lấy danh sách nhật ký
+### 4.4 Lấy danh sách nhật ký
 * **Endpoint:** `GET /diaries?page=1&limit=10&date_from=2026-04-01`
 * **Auth:** Bắt buộc (Chủ sở hữu)
 * **Response (200 OK):**
@@ -309,8 +383,9 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
       {
         "id": "uuid",
         "content": "Hôm nay thấy hơi chóng mặt",
-        "heart_rate": 95,
-        "step_count": 5000,
+        "symptoms": [
+          { "name": "Đau đầu", "severity": 7 }
+        ],
         "created_at": "2026-04-24T08:00:00Z"
       }
     ],
@@ -320,12 +395,12 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   }
   ```
 
-### 4.3 Xóa mềm (Soft-delete) nhật ký
+### 4.5 Xóa mềm (Soft-delete) nhật ký
 * **Endpoint:** `DELETE /diaries/{id}`
 * **Auth:** Bắt buộc (Chủ sở hữu)
 * **Response (204 No Content)**
 
-### 4.4 Bác sĩ tạo hồ sơ y tế
+### 4.6 Bác sĩ tạo hồ sơ y tế
 * **Endpoint:** `POST /medical-records`
 * **Auth:** Bắt buộc (Role: Doctor)
 * **Body:**
@@ -339,7 +414,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```
 * **Response (201 Created)**
 
-### 4.5 Bác sĩ kê đơn thuốc
+### 4.7 Bác sĩ kê đơn thuốc
 * **Endpoint:** `POST /prescriptions`
 * **Auth:** Bắt buộc (Role: Doctor)
 * **Body:**
@@ -353,7 +428,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```
 * **Response (201 Created)**
 
-### 4.6 Bệnh nhân xem danh sách đơn thuốc
+### 4.8 Bệnh nhân xem danh sách đơn thuốc
 * **Endpoint:** `GET /prescriptions?page=1&limit=10`
 * **Auth:** Bắt buộc (Role: User)
 * **Response (200 OK):**
@@ -376,7 +451,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   }
   ```
 
-### 4.7 User cập nhật trạng thái uống thuốc
+### 4.9 User cập nhật trạng thái uống thuốc
 * **Endpoint:** `PATCH /prescriptions/{id}/status`
 * **Auth:** Bắt buộc (Role: User)
 * **Body:**
@@ -388,7 +463,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```
 * **Response (200 OK)**
 
-### 4.8 Xóa mềm (Soft-delete) đơn thuốc
+### 4.10 Xóa mềm (Soft-delete) đơn thuốc
 * **Endpoint:** `DELETE /prescriptions/{id}`
 * **Auth:** Bắt buộc (Role: Doctor - chủ sở hữu đơn)
 * **Response (204 No Content)**
@@ -403,9 +478,10 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Body:**
   ```json
   {
-    "ttl_minutes": 30 
+    "ttl_minutes": 30
   }
   ```
+  *Truyền `null` hoặc bỏ trống để tạo mã QR vĩnh viễn (dùng để in ra mang theo)*
 * **Response (201 Created):**
   ```json
   {
@@ -413,11 +489,12 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
     "expires_at": "2026-04-24T12:30:00Z"
   }
   ```
+  *`expires_at` sẽ là `null` nếu token vĩnh viễn*
 
 ### 5.2 Truy cập khẩn cấp (Dành cho cấp cứu viên)
 * **Endpoint:** `GET /emergency/access/{token}`
-* **Auth:** Public (Nhưng Trigger DB sẽ tự động ghi log dựa vào token này)
-* **Response (200 OK):** Chỉ trả về các trường được User cấu hình `"emergency": true`.
+* **Auth:** Public
+* **Response (200 OK):** Trả về thông tin Public View của bệnh nhân (chỉ các trường User bật trong `privacy_settings`).
   ```json
   {
     "full_name": "Nguyen Khai",
@@ -504,6 +581,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
         "title": "Yêu cầu truy cập mới",
         "message": "Dr. Tran muốn xem hồ sơ của bạn",
         "is_read": false,
+        "reference_id": "uuid-of-consent-request",
         "created_at": "2026-04-24T09:00:00Z"
       }
     ],
