@@ -107,25 +107,36 @@ Hồ sơ bệnh án chính thức do bác sĩ tạo.
 - **deleted_at**: `timestamptz` (Soft Delete)
 
 ### Bảng `prescriptions`
-Đơn thuốc do bác sĩ kê.
+Đơn thuốc (chứa nhiều loại thuốc).
 - **id**: `uuid` (Primary Key, Default: `gen_random_uuid()`)
 - **patient_id**: `uuid` (Not Null, references `profiles.id`)
 - **doctor_id**: `uuid` (Not Null, references `profiles.id`)
-- **medication_name**: `varchar(200)` (Not Null)
-- **dosage**: `varchar(500)` (Not Null)
-- **duration_days**: `integer` (Check: `duration_days > 0`)
-- **status**: `varchar(20)` (Check: `active`, `cancelled`) (Default: `active`)
+- **notes**: `text` (Nullable — Ghi chú chung của đơn thuốc)
 - **created_at**: `timestamptz` (Default: `now()`)
 - **updated_at**: `timestamptz` (Default: `now()`)
 - **deleted_at**: `timestamptz` (Soft Delete)
 
-### Bảng `prescription_logs`
-Lịch sử uống thuốc của bệnh nhân.
+### Bảng `prescription_items`
+Chi tiết từng loại thuốc trong một đơn.
 - **id**: `uuid` (Primary Key, Default: `gen_random_uuid()`)
 - **prescription_id**: `uuid` (Not Null, references `prescriptions.id`)
+- **medication_name**: `varchar(200)` (Not Null)
+- **dosage**: `varchar(500)` (Not Null)
+- **duration_days**: `integer` (Check: `duration_days > 0`)
+- **scheduled_times**: `time[]` (Not Null — Mảng các khung giờ uống thuốc. VD: `['08:00', '13:00', '20:00']`)
+- **status**: `varchar(20)` (Check: `active`, `cancelled`) (Default: `active`)
+- **created_at**: `timestamptz` (Default: `now()`)
+- **deleted_at**: `timestamptz` (Soft Delete)
+
+### Bảng `prescription_logs`
+Lịch sử uống thuốc của bệnh nhân. **Tự động tạo bởi DB Trigger** khi bác sĩ thêm thuốc (`INSERT` vào `prescription_items`): hệ thống tạo sẵn `duration_days * số_lần_uống_mỗi_ngày` bản ghi.
+- **id**: `uuid` (Primary Key, Default: `gen_random_uuid()`)
+- **prescription_item_id**: `uuid` (Not Null, references `prescription_items.id`)
 - **user_id**: `uuid` (Not Null, references `profiles.id`)
-- **status**: `varchar(20)` (Check: `taken`, `skipped`)
-- **taken_at**: `timestamptz` (Default: `now()`)
+- **scheduled_date**: `date` (Not Null — Ngày dự kiến uống thuốc)
+- **scheduled_time**: `time` (Not Null — Giờ dự kiến uống thuốc)
+- **status**: `varchar(20)` (Check: `untaken`, `taken`, `skipped`) (Default: `untaken`)
+- **taken_at**: `timestamptz` (Nullable — Chỉ có giá trị khi `status = 'taken'`)
 
 ---
 
@@ -138,6 +149,13 @@ Quản lý mã QR truy cập khẩn cấp. User có thể chọn TTL tùy ý, ba
 - **token**: `varchar(255)` (Unique, Not Null)
 - **expires_at**: `timestamptz` (Nullable — `NULL` = vĩnh viễn, không hết hạn)
 - **created_at**: `timestamptz` (Default: `now()`)
+- **deleted_at**: `timestamptz` (Nullable — Soft Delete, vô hiệu hóa token)
+
+### Bảng `emergency_access_logs`
+Ghi nhận lịch sử mỗi lần có người quét QR token.
+- **id**: `uuid` (Primary Key, Default: `gen_random_uuid()`)
+- **token_id**: `uuid` (Not Null, references `emergency_tokens.id`)
+- **accessed_at**: `timestamptz` (Default: `now()` — Thời điểm quét QR)
 
 ### Bảng `data_access_logs` (Audit Logs)
 Bảng ghi lại mọi thao tác truy xuất/thay đổi dữ liệu y tế. **Không ghi log** cho truy cập Public View (QR/search).
@@ -165,20 +183,26 @@ Bảng ghi lại mọi thao tác truy xuất/thay đổi dữ liệu y tế. **K
 - **is_read**: `boolean` (Default: `false`)
 - **created_at**: `timestamptz` (Default: `now()`)
 
+> **Cơ chế Nhắc nhở Tự động:** Supabase `pg_cron` sẽ chạy ngầm mỗi 15 phút, quét bảng `prescription_logs` để tìm các bản ghi có `status = 'untaken'` và `scheduled_time` sắp đến, sau đó tự động `INSERT` vào bảng `notifications` để gửi Push Notification cho user.
+
 ---
 
 ## Ràng buộc & Chỉ mục (Constraints & Indexes)
 
 1. **Soft Delete**: Mọi câu lệnh `SELECT` của ứng dụng phải thêm điều kiện `WHERE deleted_at IS NULL`.
-2. **Audit Trigger**: Gắn Trigger cho các bảng `diaries`, `health_metrics`, `medical_records`, `prescriptions` để tự động chèn vào `data_access_logs`. **Không ghi log** cho truy cập Public View (QR, tìm kiếm).
+2. **Audit Trigger**: Gắn Trigger cho các bảng `diaries`, `health_metrics`, `medical_records`, `prescriptions` để tự động chèn vào `data_access_logs`. **Không ghi log** cho truy cập Public View (QR, tìm kiếm). Riêng truy cập QR được ghi vào bảng `emergency_access_logs` (chỉ ghi thời gian).
 3. **RLS (Row Level Security)**:
    - User chỉ xem được dữ liệu của chính mình.
    - Doctor chỉ xem được dữ liệu của Patient nếu có bản ghi `active` trong `consent_permissions` với `scope` tương ứng.
+   - Doctor được phép **tạo** (INSERT) `medical_records` và `prescriptions` mà **không cần consent**. Consent chỉ áp dụng cho **đọc** (SELECT).
 4. **Indexes**:
    - `doctors(license_number)`
-   - `consent_requests(patient_id, status)` (Tìm pending requests nhanh)
+   - `consent_requests(patient_id, status)`
    - `consent_permissions(doctor_id, patient_id) WHERE status = 'active'` (Partial Unique)
    - `health_metrics(user_id, recorded_at)`
    - `emergency_tokens(token)`
+   - `emergency_tokens(user_id) WHERE deleted_at IS NULL`
+   - `emergency_access_logs(token_id, accessed_at)`
    - `data_access_logs(target_user_id, created_at)`
    - `notifications(user_id, is_read)`
+   - `prescription_logs(prescription_item_id, scheduled_date, scheduled_time)`

@@ -243,6 +243,8 @@ class HealthMetricResponse(BaseModel):
     recorded_at: datetime
 ```
 
+> **Lưu ý:** `GET /health-metrics` hỗ trợ query param `patient_id` (Optional). Nếu có `patient_id`, hệ thống kiểm tra caller có role `doctor` và consent scope tương ứng. Nếu không có, trả dữ liệu của chính user.
+
 ---
 
 ## 6. Module: Diaries (`app/modules/diaries/schemas.py`)
@@ -270,6 +272,8 @@ class DiaryResponse(BaseModel):
     symptoms: Optional[list[SymptomEntry]]
     created_at: datetime
 ```
+
+> **Lưu ý:** `GET /diaries` hỗ trợ query param `patient_id` (Optional). Nếu có `patient_id`, hệ thống kiểm tra caller có role `doctor` và consent scope `diaries`. Nếu không có, trả dữ liệu của chính user.
 
 ---
 
@@ -304,28 +308,63 @@ class MedicalRecordResponse(BaseModel):
 ```python
 class PrescriptionCreateRequest(BaseModel):
     patient_id: UUID
+    notes: Optional[str] = Field(None, max_length=2000)
+```
+
+### PrescriptionItemCreateRequest
+```python
+class PrescriptionItemCreateRequest(BaseModel):
     medication_name: str = Field(..., min_length=2, max_length=200)
     dosage: str = Field(..., min_length=2, max_length=500)
     duration_days: int = Field(..., ge=1, le=365)
+    scheduled_times: list[str] = Field(..., min_length=1)  # VD: ["08:00", "13:00", "20:00"]
+    # Model Validator để kiểm tra định dạng HH:MM của scheduled_times
+```
+
+### PrescriptionItemResponse
+```python
+class PrescriptionItemResponse(BaseModel):
+    id: UUID
+    prescription_id: UUID
+    medication_name: str
+    dosage: str
+    duration_days: int
+    scheduled_times: list[str]
+    status: str            # "active" | "cancelled"
+    created_at: datetime
 ```
 
 ### PrescriptionResponse
 ```python
 class PrescriptionResponse(BaseModel):
     id: UUID
-    medication_name: str
-    dosage: str
-    duration_days: int
-    status: str            # "active" | "cancelled"
+    patient_id: UUID
+    doctor_id: UUID
     doctor_name: str
+    notes: Optional[str]
+    items: list[PrescriptionItemResponse]   # Chứa luôn danh sách các loại thuốc
     created_at: datetime
 ```
 
-### PrescriptionStatusUpdateRequest
+### PrescriptionLogUpdateRequest
 ```python
-class PrescriptionStatusUpdateRequest(BaseModel):
-    status: str = Field(..., pattern="^(taken|skipped)$")
-    taken_at: Optional[datetime] = None
+class PrescriptionLogUpdateRequest(BaseModel):
+    status: str = Field(..., pattern="^(taken|skipped|untaken)$")
+    taken_at: Optional[datetime] = None   # Tự động set = now() nếu status = 'taken' và không truyền
+```
+
+> **Lưu ý:** Endpoint là `PATCH /prescription-logs/{log_id}` (cập nhật 1 bản ghi log cụ thể).
+
+### PrescriptionLogResponse
+```python
+class PrescriptionLogResponse(BaseModel):
+    id: UUID
+    prescription_item_id: UUID
+    medication_name: str       # Lấy từ prescription_items để hiển thị
+    scheduled_date: date       # Ngày dự kiến uống thuốc
+    scheduled_time: time       # Giờ dự kiến uống thuốc
+    status: str                # "untaken" | "taken" | "skipped"
+    taken_at: Optional[datetime]   # None nếu chưa uống
 ```
 
 ---
@@ -352,6 +391,30 @@ class EmergencyAccessResponse(BaseModel):
     blood_type: Optional[str]
     allergies: Optional[str]
     emergency_contact: Optional[str]
+```
+
+### EmergencyTokenListResponse
+```python
+class EmergencyTokenItem(BaseModel):
+    id: UUID
+    token: str
+    expires_at: Optional[datetime]   # None = vĩnh viễn
+    is_expired: bool                 # Computed: True nếu expires_at < now()
+    created_at: datetime
+```
+
+### EmergencyTokenUpdateRequest
+```python
+class EmergencyTokenUpdateRequest(BaseModel):
+    ttl_minutes: Optional[int] = Field(None, ge=5)   # None = chuyển sang vĩnh viễn
+```
+
+### EmergencyAccessLogResponse
+```python
+class EmergencyAccessLogItem(BaseModel):
+    id: UUID
+    token_id: UUID
+    accessed_at: datetime
 ```
 
 ---

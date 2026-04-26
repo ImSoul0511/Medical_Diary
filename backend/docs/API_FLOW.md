@@ -27,6 +27,11 @@ sequenceDiagram
     
     FE->>User: PATCH /users/privacy (Thiết lập show_blood_type, show_allergies, ...)
     User-->>FE: 200 OK (Cập nhật thành công)
+
+    Note over FE,Auth: Khi User muốn đăng xuất
+    
+    FE->>Auth: POST /auth/logout (Đăng xuất thiết bị hiện tại)
+    Auth-->>FE: 200 OK (Invalidate session hiện tại)
 ```
 
 ---
@@ -78,25 +83,43 @@ sequenceDiagram
     participant Med as API: /medical-records
     participant Rx as API: /prescriptions
 
+    Note over DocFE,Vitals: Bác sĩ xem dữ liệu bệnh nhân (cần consent scope tương ứng)
+
     DocFE->>Vitals: GET /health-metrics?patient_id={id} (Xem dữ liệu đo lường)
+    Note over Vitals: Kiểm tra: hasRole("doctor") + consent scope (heart_rate, step_count, respiratory_rate)
     Vitals-->>DocFE: 200 OK (Lịch sử nhịp tim, bước chân, nhịp thở)
 
     DocFE->>Diary: GET /diaries?patient_id={id} (Xem nhật ký bệnh nhân)
+    Note over Diary: Kiểm tra: hasRole("doctor") + consent scope "diaries"
     Diary-->>DocFE: 200 OK (Ghi chép + đánh giá triệu chứng)
+
+    Note over DocFE,Med: Bác sĩ tạo chẩn đoán & kê đơn (KHÔNG cần consent)
     
-    DocFE->>Med: POST /medical-records (Tạo chẩn đoán chính thức)
+    DocFE->>Med: POST /medical-records (Tạo chẩn đoán chính thức + attachments ảnh)
     Med-->>DocFE: 201 Created (Ghi nhận bệnh án)
     
-    DocFE->>Rx: POST /prescriptions (Kê đơn thuốc)
-    Rx-->>DocFE: 201 Created (Lưu đơn thuốc)
+    DocFE->>Rx: POST /prescriptions (Tạo vỏ đơn thuốc)
+    Rx-->>DocFE: 201 Created (Trả về prescription_id)
     
+    DocFE->>Rx: POST /prescriptions/{id}/items (Thêm loại thuốc)
+    Rx-->>DocFE: 201 Created (Lưu chi tiết loại thuốc)
+    
+    Note over Rx,PatFE: DB Trigger tự động tạo prescription_logs (dựa trên số ngày và khung giờ, status = untaken)
     Note over Rx,PatFE: Bệnh nhân nhận được đơn thuốc
     
     PatFE->>Rx: GET /prescriptions (Xem đơn thuốc mới nhất)
     Rx-->>PatFE: 200 OK (Chi tiết liều dùng)
+
+    PatFE->>Rx: GET /prescription-logs?prescription_id={id} (Xem danh sách ngày uống thuốc)
+    Rx-->>PatFE: 200 OK (Mỗi ngày 1 bản ghi, tất cả status = untaken)
     
-    PatFE->>Rx: PATCH /prescriptions/{id}/status (Đánh dấu "Đã uống")
-    Rx-->>PatFE: 200 OK (Cập nhật trạng thái)
+    PatFE->>Rx: PATCH /prescription-logs/{log_id} (status: "taken")
+    Rx-->>PatFE: 200 OK (Đánh dấu đã uống ngày hôm nay)
+
+    Note over PatFE,Rx: Nếu lỡ ấn nhầm, User có thể hoàn tác
+    
+    PatFE->>Rx: PATCH /prescription-logs/{log_id} (status: "untaken")
+    Rx-->>PatFE: 200 OK (Hoàn tác thành công)
 ```
 
 ---
@@ -115,15 +138,26 @@ sequenceDiagram
     Note over PatFE,EmgAPI: Bệnh nhân tạo sẵn mã QR khi ra đường
     PatFE->>EmgAPI: POST /emergency/token (Tạo mã QR TTL 30 phút)
     EmgAPI-->>PatFE: 201 Created (Trả về Token)
+
+    Note over PatFE,EmgAPI: User quản lý QR token
+    PatFE->>EmgAPI: GET /emergency/tokens (Xem tất cả QR đã tạo)
+    EmgAPI-->>PatFE: 200 OK (Danh sách token + trạng thái)
+
+    PatFE->>EmgAPI: PATCH /emergency/tokens/{id} (Sửa TTL — gia hạn/rút ngắn)
+    EmgAPI-->>PatFE: 200 OK (Cập nhật thành công)
     
     Note over EmgFE,EmgAPI: Cấp cứu viên quét mã QR
     EmgFE->>EmgAPI: GET /emergency/access/{token}
     
     EmgAPI->>DB: Truy vấn profiles (Lọc theo privacy_settings)
-    Note over DB: Không ghi Audit Log cho truy cập Public View
+    EmgAPI->>DB: Ghi vào emergency_access_logs (thời điểm quét)
     
     DB-->>EmgAPI: Trả về các trường User bật trong privacy_settings
     EmgAPI-->>EmgFE: 200 OK (Hiển thị Nhóm máu, Dị ứng, SĐT người nhà tùy cấu hình)
+
+    Note over PatFE,EmgAPI: User xem lịch sử quét QR
+    PatFE->>EmgAPI: GET /emergency/tokens/history
+    EmgAPI-->>PatFE: 200 OK (Danh sách thời điểm quét từng token)
 ```
 
 ---

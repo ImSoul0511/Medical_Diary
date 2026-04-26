@@ -72,7 +72,13 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```
 * **Response (201 Created):** Trả về thông tin user (không kèm token, yêu cầu login lại).
 
-### 1.4 Hủy toàn bộ phiên đăng nhập
+### 1.4 Đăng xuất thiết bị hiện tại
+* **Endpoint:** `POST /auth/logout`
+* **Auth:** Bắt buộc
+* **Body:** Trống
+* **Response (200 OK):** `{ "message": "Logged out successfully" }`
+
+### 1.5 Hủy toàn bộ phiên đăng nhập
 * **Endpoint:** `POST /auth/revoke-all`
 * **Auth:** Bắt buộc
 * **Body:** Trống
@@ -337,8 +343,9 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Response (201 Created):** Trả về bản ghi kèm `id` và `created_at`.
 
 ### 4.2 Lấy lịch sử đo lường
-* **Endpoint:** `GET /health-metrics?page=1&limit=10&date_from=2026-04-01&date_to=2026-04-24`
-* **Auth:** Bắt buộc (Chủ sở hữu)
+* **Endpoint:** `GET /health-metrics?page=1&limit=10&date_from=2026-04-01&date_to=2026-04-24&patient_id={uuid}`
+* **Auth:** Bắt buộc (Chủ sở hữu hoặc Bác sĩ có quyền)
+* **Ghi chú:** Truyền `patient_id` nếu bác sĩ muốn xem dữ liệu của bệnh nhân.
 * **Response (200 OK):**
   ```json
   {
@@ -374,8 +381,9 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Response (201 Created):** Trả về bản ghi vừa tạo kèm `id` và `created_at`.
 
 ### 4.4 Lấy danh sách nhật ký
-* **Endpoint:** `GET /diaries?page=1&limit=10&date_from=2026-04-01`
-* **Auth:** Bắt buộc (Chủ sở hữu)
+* **Endpoint:** `GET /diaries?page=1&limit=10&date_from=2026-04-01&patient_id={uuid}`
+* **Auth:** Bắt buộc (Chủ sở hữu hoặc Bác sĩ có quyền)
+* **Ghi chú:** Truyền `patient_id` nếu bác sĩ muốn xem nhật ký của bệnh nhân.
 * **Response (200 OK):**
   ```json
   {
@@ -402,7 +410,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 
 ### 4.6 Bác sĩ tạo hồ sơ y tế
 * **Endpoint:** `POST /medical-records`
-* **Auth:** Bắt buộc (Role: Doctor)
+* **Auth:** Bắt buộc (Role: Doctor) - *Không cần bệnh nhân cấp quyền (consent)*
 * **Body:**
   ```json
   {
@@ -414,21 +422,34 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```
 * **Response (201 Created)**
 
-### 4.7 Bác sĩ kê đơn thuốc
+### 4.7 Bác sĩ tạo vỏ đơn thuốc (Group)
 * **Endpoint:** `POST /prescriptions`
-* **Auth:** Bắt buộc (Role: Doctor)
+* **Auth:** Bắt buộc (Role: Doctor) - *Không cần bệnh nhân cấp quyền (consent)*
 * **Body:**
   ```json
   {
     "patient_id": "uuid",
+    "notes": "Đơn thuốc điều trị viêm họng"
+  }
+  ```
+* **Response (201 Created):** Trả về bản ghi đơn thuốc kèm `id`.
+
+### 4.8 Bác sĩ thêm từng loại thuốc vào đơn
+* **Endpoint:** `POST /prescriptions/{id}/items`
+* **Auth:** Bắt buộc (Role: Doctor)
+* **Ghi chú:** Khi thêm loại thuốc, hệ thống tự động tạo các bản ghi `prescription_logs` tương ứng `duration_days` x `scheduled_times`.
+* **Body:**
+  ```json
+  {
     "medication_name": "Paracetamol 500mg",
-    "dosage": "1 viên/lần, 2 lần/ngày",
-    "duration_days": 5
+    "dosage": "1 viên/lần, uống sau khi ăn",
+    "duration_days": 5,
+    "scheduled_times": ["08:00", "13:00", "20:00"]
   }
   ```
 * **Response (201 Created)**
 
-### 4.8 Bệnh nhân xem danh sách đơn thuốc
+### 4.9 Bệnh nhân xem danh sách đơn thuốc
 * **Endpoint:** `GET /prescriptions?page=1&limit=10`
 * **Auth:** Bắt buộc (Role: User)
 * **Response (200 OK):**
@@ -437,11 +458,19 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
     "items": [
       {
         "id": "uuid",
-        "medication_name": "Paracetamol 500mg",
-        "dosage": "1 viên/lần, 2 lần/ngày",
-        "duration_days": 5,
-        "status": "active",
+        "patient_id": "uuid",
+        "doctor_id": "uuid",
         "doctor_name": "Dr. Tran",
+        "notes": "Đơn thuốc điều trị viêm họng",
+        "items": [
+          {
+            "id": "uuid",
+            "medication_name": "Paracetamol 500mg",
+            "dosage": "1 viên/lần",
+            "duration_days": 5,
+            "scheduled_times": ["08:00", "13:00", "20:00"]
+          }
+        ],
         "created_at": "2026-04-24T10:00:00Z"
       }
     ],
@@ -451,8 +480,26 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   }
   ```
 
-### 4.9 User cập nhật trạng thái uống thuốc
-* **Endpoint:** `PATCH /prescriptions/{id}/status`
+### 4.10 Xem lịch sử uống thuốc theo đơn
+* **Endpoint:** `GET /prescription-logs?prescription_id={id}`
+* **Auth:** Bắt buộc (Role: User)
+* **Response (200 OK):**
+  ```json
+  [
+    {
+      "id": "uuid",
+      "prescription_item_id": "uuid",
+      "medication_name": "Paracetamol 500mg",
+      "scheduled_date": "2026-04-24",
+      "scheduled_time": "08:00",
+      "status": "untaken",
+      "taken_at": null
+    }
+  ]
+  ```
+
+### 4.11 User cập nhật trạng thái uống thuốc của 1 cữ
+* **Endpoint:** `PATCH /prescription-logs/{log_id}`
 * **Auth:** Bắt buộc (Role: User)
 * **Body:**
   ```json
@@ -461,9 +508,10 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
     "taken_at": "2026-04-24T08:00:00Z"
   }
   ```
+  *Trạng thái hỗ trợ: `taken`, `skipped`, `untaken` (dùng để hoàn tác).*
 * **Response (200 OK)**
 
-### 4.10 Xóa mềm (Soft-delete) đơn thuốc
+### 4.12 Xóa mềm (Soft-delete) đơn thuốc
 * **Endpoint:** `DELETE /prescriptions/{id}`
 * **Auth:** Bắt buộc (Role: Doctor - chủ sở hữu đơn)
 * **Response (204 No Content)**
@@ -491,7 +539,13 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```
   *`expires_at` sẽ là `null` nếu token vĩnh viễn*
 
-### 5.2 Truy cập khẩn cấp (Dành cho cấp cứu viên)
+### 5.2 Quản lý mã QR khẩn cấp
+* `GET /emergency/tokens`: Bệnh nhân lấy danh sách mã QR đã tạo.
+* `PATCH /emergency/tokens/{id}`: Sửa thời hạn (TTL) của mã QR (`ttl_minutes: 60`).
+* `DELETE /emergency/tokens/{id}`: Xóa mềm (vô hiệu hóa) mã QR.
+* `GET /emergency/tokens/history`: Xem lịch sử ai đã quét mã QR nào, lúc nào.
+
+### 5.3 Truy cập khẩn cấp (Dành cho cấp cứu viên)
 * **Endpoint:** `GET /emergency/access/{token}`
 * **Auth:** Public
 * **Response (200 OK):** Trả về thông tin Public View của bệnh nhân (chỉ các trường User bật trong `privacy_settings`).
