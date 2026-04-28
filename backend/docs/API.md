@@ -84,7 +84,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Body:** Trống
 * **Response (200 OK):** `{ "message": "All sessions revoked successfully" }`
 
-### 1.5 Liệt kê các phiên hoạt động
+### 1.6 Liệt kê các phiên hoạt động
 * **Endpoint:** `GET /auth/sessions`
 * **Auth:** Bắt buộc
 * **Response (200 OK):**
@@ -99,7 +99,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ]
   ```
 
-### 1.6 Đăng ký tài khoản Bác sĩ
+### 1.7 Đăng ký tài khoản Bác sĩ
 * **Endpoint:** `POST /auth/register/doctor`
 * **Auth:** Public
 * **Body:** `multipart/form-data`
@@ -125,12 +125,12 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```
   Cần Admin duyệt trước khi được hoạt động.
 
-### 1.7 Khởi tạo MFA (TOTP) *(Deferred)*
+### 1.8 Khởi tạo MFA (TOTP) *(Deferred)*
 * **Endpoint:** `POST /auth/mfa/setup`
 * **Auth:** Bắt buộc (Role: Doctor/Admin)
 * **Trạng thái:** Tạm vô hiệu hóa, sẽ bổ sung sau giai đoạn MVP.
 
-### 1.8 Xác thực mã TOTP *(Deferred)*
+### 1.9 Xác thực mã TOTP *(Deferred)*
 * **Endpoint:** `POST /auth/mfa/verify`
 * **Auth:** Bắt buộc
 * **Trạng thái:** Tạm vô hiệu hóa, sẽ bổ sung sau giai đoạn MVP.

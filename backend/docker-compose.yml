@@ -4,10 +4,10 @@ services:
   api:
     build: .
     container_name: medical_diary_backend
+    volumes:
+      - .:/code
     ports:
       - "8000:8000"
     env_file:
       - .env
-    volumes:
-      - ./app:/code/app
-    restart: unless-stopped
+    restart: always

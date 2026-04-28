@@ -48,13 +48,13 @@ services:
 ## 2. Cách sử dụng
 
 ### Khởi chạy lần đầu hoặc khi đổi thư viện
-docker-compose up -d --build
+docker compose up -d --build
 
 ### Xem Log để Debug
 docker logs -f medical_diary_backend
 
 ### Dừng hệ thống
-docker-compose down
+docker compose down
 
 ## 3. Tại sao dùng cấu hình này?
 * **Volumes (`./app:/code/app`)**: Giúp bạn sửa code ở máy thật và Container nhận ngay lập tức mà không cần build lại Image.

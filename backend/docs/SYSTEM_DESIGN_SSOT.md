@@ -40,7 +40,7 @@ Hệ thống Backend cung cấp API cho ứng dụng Nhật ký Y tế (Medical 
 Dự án được tổ chức tách biệt rõ ràng giữa cấu hình môi trường, thư viện và source code ứng dụng.
 
 ```text
-medical_diary_backend/
+backend/
 ├── .env                        # Biến môi trường (URL, Key, Secret) (KHÔNG COMMIT LÊN GIT)
 ├── .gitignore                  # Chặn .env, __pycache__, venv
 ├── .dockerignore               # Chặn copy file thừa vào Container
