@@ -1,0 +1,8 @@
+# supabase/policies/
+# Thư mục chứa SQL thuần cho các tính năng Alembic không quản lý:
+# - RLS Policies
+# - DB Triggers (audit log, prescription_logs auto-generate)
+# - pg_cron jobs (nhắc nhở uống thuốc)
+# - pgcrypto extension setup
+#
+# Xem docs/SYSTEM_DESIGN_SSOT.md mục 6.3.

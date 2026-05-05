@@ -4,9 +4,6 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /code
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \

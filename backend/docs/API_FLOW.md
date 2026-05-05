@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Luồng tương tác API (API Integration Flows) - Medical Diary
 
 Tài liệu này mô tả trình tự gọi các API (Sequence) cho các nghiệp vụ cốt lõi trong hệ thống. Nó giúp Frontend Developer và AI Agents hiểu rõ "kịch bản" giao tiếp giữa Client và Server.

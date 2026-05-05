@@ -50,6 +50,12 @@ services:
 ### Khởi chạy lần đầu hoặc khi đổi thư viện
 docker compose up -d --build
 
+### Chạy Database Migration (lần đầu hoặc khi có model mới)
+docker compose exec api alembic upgrade head
+
+### Tạo migration mới khi sửa models
+docker compose exec api alembic revision --autogenerate -m "mô tả thay đổi"
+
 ### Xem Log để Debug
 docker logs -f medical_diary_backend
 
