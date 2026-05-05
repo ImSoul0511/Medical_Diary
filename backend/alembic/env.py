@@ -6,7 +6,12 @@ DB URL được đọc từ app.core.config thay vì hardcode trong alembic.ini.
 """
 
 import asyncio
+import os
+import sys
 from logging.config import fileConfig
+
+# Thêm thư mục gốc của dự án vào sys.path để Alembic tìm thấy package 'app'
+sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
 from alembic import context
 from sqlalchemy import pool
