@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Bộ Schemas (Pydantic Models) - Medical Diary API
 
 Tài liệu này định nghĩa toàn bộ Pydantic Schemas cho từng module. Mỗi module sử dụng các schemas này trong file `schemas.py` tương ứng.
