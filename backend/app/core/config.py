@@ -13,7 +13,6 @@ class Settings(BaseSettings):
     # Security
     JWT_SECRET: str
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # Admin Configuration
     ADMIN_IP_ALLOWLIST: str = "127.0.0.1"

@@ -31,22 +31,14 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 
 ## 1. Module: Core & Auth (`/auth`)
 
-### 1.1 Kiểm tra trạng thái
-* **Endpoint:** `GET /health`
-* **Auth:** Public
-* **Response (200 OK):**
-  ```json
-  { "status": "ok", "timestamp": "2026-04-24T12:00:00Z" }
-  ```
-
-### 1.2 Đăng nhập
+### 1.1 Đăng nhập
 * **Endpoint:** `POST /auth/login`
 * **Auth:** Public
 * **Rate Limit:** 5 req/min/IP
 * **Body:**
   ```json
   {
-    "email": "nguyen@example.com",
+    "phone_number": "+84987654321",
     "password": "securepassword123"
   }
   ```
@@ -58,50 +50,65 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
     "user": {
       "id": "uuid",
       "role": "user",
-      "email": "nguyen@example.com"
+      "phone_number": "+84987654321"
     }
   }
   ```
 
-### 1.3 Đăng ký (Role mặc định là User)
+### 1.2 Đăng ký (Role mặc định là User)
 * **Endpoint:** `POST /auth/register`
 * **Auth:** Public
 * **Body:**
   ```json
   {
-    "email": "nguyen@example.com",
+    "phone_number": "+84987654321",
     "password": "securepassword123",
-    "full_name": "Nguyen Khai"
+    "full_name": "Nguyen Khai",
+    "date_of_birth": "1990-01-01",
+    "gender": "NAM"
   }
   ```
 * **Response (201 Created):** Trả về thông tin user (không kèm token, yêu cầu login lại).
 
-### 1.4 Đăng xuất thiết bị hiện tại
+### 1.3 Đăng xuất thiết bị hiện tại
 * **Endpoint:** `POST /auth/logout`
 * **Auth:** Bắt buộc
 * **Body:** Trống
 * **Response (200 OK):** `{ "message": "Logged out successfully" }`
 
-### 1.5 Hủy toàn bộ phiên đăng nhập
+### 1.4 Hủy toàn bộ phiên đăng nhập
 * **Endpoint:** `POST /auth/revoke-all`
 * **Auth:** Bắt buộc
 * **Body:** Trống
 * **Response (200 OK):** `{ "message": "All sessions revoked successfully" }`
 
-### 1.6 Liệt kê các phiên hoạt động
+### 1.5 Liệt kê các phiên hoạt động
 * **Endpoint:** `GET /auth/sessions`
 * **Auth:** Bắt buộc
 * **Response (200 OK):**
   ```json
-  [
-    {
-      "session_id": "uuid",
-      "device": "Chrome on Windows",
-      "ip_address": "192.168.1.1",
-      "last_active": "2026-04-24T12:00:00Z"
-    }
-  ]
+  {
+    "sessions": [
+      {
+        "session_id": "uuid",
+        "device": "Chrome on Windows",
+        "ip_address": "192.168.1.1",
+        "last_active": "2026-04-24T12:00:00Z"
+      }
+    ]
+  }
   ```
+
+### 1.6 Hủy một phiên đăng nhập cụ thể
+* **Endpoint:** `POST /auth/revoke-selected-session`
+* **Auth:** Bắt buộc (Role: Doctor/Admin)
+* **Body:**
+  ```json
+  {
+    "session_id": "uuid-cua-session-can-xoa"
+  }
+  ```
+* **Response (200 OK):** `{ "message": "Phiên đăng nhập đã được hủy" }`
 
 ### 1.7 Đăng ký tài khoản Bác sĩ
 * **Endpoint:** `POST /auth/register/doctor`
@@ -109,13 +116,15 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Body:** `multipart/form-data`
   ```json
   {
-    "email": "dr.tran@example.com",
+    "phone_number": "+84987654321",
     "password": "securepassword123",
     "full_name": "Dr. Tran Van A",
-    "specialty": "Cardiology",
+    "date_of_birth": "1990-01-01",
+    "gender": "NAM",
+    "cccd": "012345678901",
     "license_number": "BS-2026-001",
-    "hospital": "HCMUS Medical Center",
-    "certificate_file": "(binary - ảnh chứng chỉ hành nghề)"
+    "specialty": "Cardiology",
+    "hospital": "HCMUS Medical Center"
   }
   ```
 * **Response (201 Created):**
@@ -134,7 +143,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Auth:** Bắt buộc (Role: Doctor/Admin)
 * **Trạng thái:** Tạm vô hiệu hóa, sẽ bổ sung sau giai đoạn MVP.
 
-### 1.9 Xác thực mã TOTP *(Deferred)*
+### 1.8 Xác thực mã TOTP *(Deferred)*
 * **Endpoint:** `POST /auth/mfa/verify`
 * **Auth:** Bắt buộc
 * **Trạng thái:** Tạm vô hiệu hóa, sẽ bổ sung sau giai đoạn MVP.
@@ -151,6 +160,8 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   {
     "id": "uuid",
     "full_name": "Nguyen Khai",
+    "gender": "NAM",
+    "date_of_birth": "1990-01-01",
     "blood_type": "O+",
     "allergies": "Penicillin",
     "emergency_contact": "0123456789",
@@ -260,6 +271,8 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```json
   {
     "full_name": "Nguyen Van B",
+    "gender": "NAM",
+    "date_of_birth": "1990-01-01",
     "blood_type": "AB+",
     "allergies": "Aspirin",
     "emergency_contact": "0909123456"
