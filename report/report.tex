@@ -1,0 +1,725 @@
+\documentclass[a4paper,12pt]{article}
+
+
+% --- Cấu hình gói ngôn ngữ và font ---
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+
+\usepackage{mathptmx}
+\usepackage{tabularx}
+\usepackage{amssymb}
+
+% --- Cấu hình lề ---
+\usepackage[left=2.5cm, right=2cm, top=2cm, bottom=2cm]{geometry}
+
+% --- Gói hình ảnh, màu sắc, bảng ---
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+
+% --- Gói hiển thị code ---
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\usepackage[font=small,labelfont=bf,labelsep=colon]{caption}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+% --- Gói liên kết ---
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={Bao Cao Do An Tu Duy Tinh Toan},
+}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small \textbf{Báo cáo Đồ Án Môn Học}}
+\rhead {\small \textit{Trường Đại học Khoa học tự nhiên, ĐHQG-HCM - Khoa CNTT}}
+\lfoot{\small \textit{Môn: Tư duy tính toán}}
+\rfoot{\small \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+
+\usepackage{titlesec}
+% Mục lớn (Section): Chữ to, in đậm, màu xanh dương đậm
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}{\thesection}{1em}{}
+% Mục nhỏ (Subsection): In đậm, màu đen
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}{\thesubsection}{1em}{}
+% ===================================================
+% BẮT ĐẦU VĂN BẢN
+% ===================================================
+\begin{document}
+
+% --- CHÈN ĐOẠN ĐỔI TÊN TẠI ĐÂY (SAU \begin{document}) ---
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\listtablename}{Danh mục bảng biểu}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\renewcommand{\refname}{Tài liệu tham khảo}
+% --------------------------------------------------------
+
+% ====================================================================
+% TRANG BÌA
+% ====================================================================
+\begin{titlepage}
+    \centering
+    \textbf{\large ĐẠI HỌC QUỐC GIA TP.HCM}\\
+    \textbf{\large TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN}\\
+    \textbf{\large KHOA CÔNG NGHỆ THÔNG TIN}\\
+    
+    \vspace{2cm}
+    
+    \includegraphics[width=0.4\textwidth]{logo_khtn.png}
+    
+    \vspace{2cm}
+    
+    {\bfseries \LARGE BÁO CÁO ĐỒ ÁN MÔN HỌC \par}
+    \vspace{0.5cm}
+    {\bfseries \Large MÔN: TƯ DUY TÍNH TOÁN \par}
+    \vspace{0.5cm}
+    {\bfseries \Large ĐỀ TÀI: NHẬT KÝ Y TẾ \par}
+    
+    \vspace{2cm}
+
+\vspace{1cm}
+
+\noindent
+\begin{minipage}[t]{0.6\textwidth}
+    \textit{Sinh viên thực hiện:} \\[6pt]
+    Nguyễn Đặng Khôi Nguyên (24120394) \\[4pt]
+    Trịnh Vỹ Triết (24120474) \\[4pt]
+    Trần Thị Lợi (24120370) \\[4pt]
+    Cái Lâm Trường (24120480) \\[4pt]
+    Lê Nguyễn Thùy Linh (24120085)
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.35\textwidth}
+    \raggedleft
+    \textit{Giáo viên hướng dẫn:} \\[6pt]
+    Đậu Ngọc Hà Dương
+\end{minipage}
+
+    \vfill
+    
+    {\large Tp. Hồ Chí Minh, tháng 3 năm 2026}
+\end{titlepage}
+
+% ====================================================================
+% MỤC LỤC
+% ====================================================================
+\newpage
+\tableofcontents
+\newpage
+
+% ====================================================================
+% NỘI DUNG CHÍNH
+% ====================================================================
+
+\section{THÔNG TIN NHÓM}
+
+\begin{table}[h]
+        \centering
+        \begin{tabular}{|c|l|c|l|}
+        \hline
+        \textbf{MSSV} & \textbf{Họ và Tên} & \textbf{Địa chỉ email} & \textbf{Ghi chú} \\
+        \hline
+        24120394 & Nguyễn Đặng Khôi Nguyên & 24120394@student.hcmus.edu.vn & \\
+        \hline
+        24120474 & Trịnh Vỹ Triết & 24120474@student.hcmus.edu.vn & \\
+        \hline
+        24120370 & Trần Thị Lợi & 24120370@student.hcmus.edu.vn & \\
+        \hline
+        24120480 & Cái Lâm Trường & 24120480@student.hcmus.edu.vn & \\
+        \hline
+        24120085 & Lê Nguyễn Thùy Linh & 24120085@student.hcmus.edu.vn & \\
+        \hline
+        \end{tabular}
+    \end{table}
+
+% ====================================================================
+\section{TỔNG QUAN VẤN ĐỀ ĐỒ ÁN GIẢI QUYẾT}
+% ====================================================================
+
+\subsection{Bối cảnh và Vấn đề chung}
+
+Trong nhiều tình huống khẩn cấp như tai nạn giao thông, đột quỵ hoặc ngất xỉu tại nơi công
+cộng, người gặp nạn thường không thể cung cấp thông tin y tế quan trọng cho nhân viên
+cấp cứu. Những thông tin như bệnh nền, dị ứng thuốc, thuốc đang sử dụng, nhóm máu hoặc
+thông tin người thân cần liên hệ thường chỉ được lưu trữ trong hồ sơ bệnh án tại bệnh viện
+hoặc do chính bệnh nhân ghi nhớ.
+
+Trong các tình huống bất ngờ, việc thiếu các dữ liệu y tế quan trọng này có thể khiến nhân
+viên cấp cứu gặp khó khăn trong việc đánh giá tình trạng ban đầu của bệnh nhân và lựa
+chọn phương án xử lý phù hợp. Điều này có thể làm chậm quá trình cấp cứu hoặc dẫn đến
+những rủi ro trong việc điều trị, đặc biệt trong các trường hợp cần xử lý nhanh để đảm bảo
+\textit{``thời gian vàng''} cứu sống bệnh nhân.
+
+Bên cạnh đó, tại nhiều địa phương hiện nay vẫn chưa có một hệ thống phổ biến giúp lưu
+trữ và cung cấp nhanh các thông tin y tế cá nhân trong các tình huống khẩn cấp. Điều này
+khiến việc tiếp cận thông tin sức khỏe của người bệnh trong thời điểm cần thiết trở nên khó
+khăn.
+
+\subsection{Giải pháp đề xuất: Hệ sinh thái Web và App}
+
+Để giải quyết triệt để các vấn đề nêu trên, đồ án tập trung vào việc thiết kế và xây dựng một hệ sinh thái y tế toàn diện bao gồm cả nền tảng \textbf{Web} và \textbf{Ứng dụng di động (App)}. Sự kết hợp này nhằm tận dụng tối đa thế mạnh của từng nền tảng trong các ngữ cảnh sử dụng khác nhau:
+
+\begin{itemize}
+    \item \textbf{Ứng dụng di động (Mobile App):} Đóng vai trò là vật bất ly thân của người dùng. App sẽ chịu trách nhiệm chính trong việc lưu trữ thẻ y tế thông minh (Offline-first), tích hợp các tiện ích cứu hộ khẩn cấp (SOS), và tự động thu thập các chỉ số sức khỏe hàng ngày (nhịp tim, bước chân). Đây là công cụ giúp người dùng làm chủ dữ liệu sức khỏe của mình mọi lúc, mọi nơi.
+    
+    \item \textbf{Nền tảng Web (Web App):} Được thiết kế dành riêng cho các nhân viên y tế và bác sĩ. Nền tảng này cho phép truy cập vào hồ sơ bệnh án chi tiết khi có sự đồng ý của bệnh nhân, hỗ trợ việc chẩn đoán dựa trên các biểu đồ xu hướng dữ liệu dài hạn mà App đã thu thập. Ngoài ra, Web cũng đóng vai trò là cổng quản trị trung tâm để quản lý danh tính và bảo mật toàn hệ thống.
+\end{itemize}
+
+% ====================================================================
+\section{CÁC VẤN ĐỀ ĐƯỢC THẢO LUẬN THEO 4 BƯỚC CỦA TƯ DUY TÍNH TOÁN}
+% ====================================================================
+
+\subsection{Vấn đề 1: Thông tin y tế rời rạc, khó truy cập trong khẩn cấp}
+
+\textbf{Vấn đề:} Thông tin y tế cá nhân (nhóm máu, tiền sử dị ứng, bệnh nền, thuốc đang sử dụng, thông tin người thân liên hệ) hiện nay tồn tại rời rạc ở nhiều nơi: sổ khám bệnh giấy, file PDF trên email, ứng dụng của từng bệnh viện, hoặc chỉ đơn giản là trong trí nhớ của người dùng.
+
+\begin{itemize}
+    \item \textbf{Decomposition:} Thiếu dữ liệu người bệnh và không liên lạc được người thân. Khi ngất xỉu hoặc hoảng loạn, nạn nhân không thể nhớ, không thể tìm sổ, và không thể đọc mật khẩu mở app cho người cấp cứu.
+    \item \textbf{Pattern Recognition:} Khi có sự cố khẩn cấp là bệnh nhân lại ``kẹt'' thông tin. Ta nhận ra nhu cầu bức thiết là cần một ``hồ sơ trung tâm'' duy nhất, luôn gắn liền với người bệnh (thông qua chiếc điện thoại di động).
+    \item \textbf{Abstraction:} Thiết kế một ứng dụng đóng vai trò như một chiếc ví lưu giữ thông tin sức khỏe.
+    \item \textbf{Algorithm Design:} Thiết kế luồng quản lý dữ liệu cơ bản của ứng dụng:
+    \begin{itemize}
+        \item \textbf{Đầu vào:} Cung cấp giao diện để người dùng nhập thông tin cá nhân và bệnh án.
+        \item \textbf{Lưu trữ:} Ghi nhận và sở hữu khối dữ liệu đó tại hệ thống lưu trữ của ứng dụng.
+        \item \textbf{Đầu ra:} Trích xuất và hiển thị thành một Thẻ Y tế tổng hợp, sẵn sàng cho người dùng hoặc bác sĩ đọc ngay lập tức.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Vấn đề 2: Bác sĩ thiếu dữ liệu sức khỏe dài hạn của bệnh nhân}
+
+\textbf{Vấn đề:} Khi khám bệnh, bác sĩ thường thiếu dữ liệu nền dài hạn về sức khỏe của bệnh nhân. Các quyết định y khoa thường chỉ dựa vào các chỉ số đo được tại một thời điểm duy nhất (lúc ở phòng khám) và lời kể mơ hồ của bệnh nhân về thói quen sinh hoạt, dẫn đến việc khó phát hiện các dấu hiệu suy giảm sức khỏe từ từ.
+
+\begin{itemize}
+    \item \textbf{Decomposition:} Ta chia nhu cầu dữ liệu chẩn đoán thành 2 phần: chỉ số tức thời tại phòng khám (ví dụ: đo huyết áp ngay lúc đó) và dữ liệu lịch sử kéo dài (ví dụ: nhịp tim trung bình trong 30 ngày qua, thói quen vận động). Sự thiếu hụt trầm trọng đang nằm ở phần dữ liệu lịch sử.
+    \item \textbf{Pattern Recognition:} Bệnh lý thường không xuất hiện đột ngột mà là kết quả của một chuỗi biến đổi sinh lý kéo dài. Nhận ra mẫu ở đây là: Dữ liệu chuỗi thời gian mang lại giá trị chẩn đoán cao hơn rất nhiều so với dữ liệu tại một thời điểm.
+    \item \textbf{Abstraction:} Mở rộng khả năng của ứng dụng từ việc chỉ ``lưu thẻ tĩnh'' sang việc lưu trữ liên tục các chỉ số sinh hiệu (nhịp tim, bước chân) và thói quen để tạo thành một ``Bức tranh xu hướng''.
+    \item \textbf{Algorithm Design:} Thiết kế cấu trúc lưu trữ mở rộng cho hệ thống: Thay vì chỉ ghi đè một bản ghi duy nhất như Thẻ SOS, hệ thống sẽ tạo một cơ sở dữ liệu lưu trữ tình trạng gắn liền với mốc thời gian. Mỗi ngày trôi qua sẽ tạo ra một bản ghi mới chứa các trường: Ngày tháng, Nhịp tim, Bước chân, Triệu chứng cơ thể,...
+\end{itemize}
+
+\subsection{Vấn đề 3: Người dùng lười nhập liệu thói quen hàng ngày}
+
+\textbf{Vấn đề:} Làm sao để có ``Dữ liệu thói quen'' khi người dùng quá lười nhập liệu mỗi ngày?
+
+\begin{itemize}
+    \item \textbf{Decomposition:} Chia dữ liệu thói quen thành: Thứ máy tự đo được (nhịp tim, bước chân) và thứ con người phải tự cảm nhận (tâm trạng, đau nhức).
+    \item \textbf{Pattern Recognition:} Hành vi lặp đi lặp lại: Người dùng cầm điện thoại/đeo đồng hồ thông minh cả ngày (máy luôn có data), nhưng rất lười mở app ra gõ chữ.
+    \item \textbf{Abstraction:} Bỏ qua các form điền chữ dài dòng. Giữ lại 2 thứ cốt lõi: Lấy dữ liệu ngầm từ máy và bắt người dùng chọn 1 thanh đánh giá mức độ.
+    \item \textbf{Algorithm Design:} 
+    \begin{itemize}
+        \item Cài đặt trên máy để tự động thu thập thông tin về nhịp tim, bước chân trung bình của một người mỗi ngày thông qua ứng dụng sức khỏe được cài đặt mặc định trên các dòng máy.
+        \item Khi có triệu chứng cần ghi lại, có một giao diện để người dùng nhập tên triệu chứng và nhập tình trạng hoặc chọn icon đánh giá mức độ của triệu chứng. Có một phần riêng nếu người dùng muốn ghi chú kỹ.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Vấn đề 4: Hiển thị dữ liệu phù hợp theo từng ngữ cảnh sử dụng}
+
+\textbf{Vấn đề:} Khi hệ thống thu thập thành công một lượng lớn dữ liệu (từ thông tin cơ bản, nhịp tim đến cảm xúc hàng ngày), việc hiển thị tất cả chúng trên cùng một giao diện sẽ không cần thiết. Người cấp cứu cần thông tin sinh tử trong vòng vài giây, trong khi bác sĩ phòng khám cần dữ liệu xu hướng trong vòng 5 phút. Việc trộn lẫn dữ liệu sẽ làm mất đi tính ứng dụng của hệ thống trong các tình huống thực tế.
+
+\begin{itemize}
+    \item \textbf{Decomposition:} Ta tiến hành bóc tách toàn bộ ``khối dữ liệu sức khỏe'' và ``ngữ cảnh sử dụng'' thành các thành phần nhỏ để đối chiếu:
+    \begin{itemize}
+        \item \textbf{Về dữ liệu:} Có nhóm máu, dị ứng, SĐT khẩn cấp, nhịp tim trung bình, bước chân, mức độ đau nhức, trạng thái tâm lý...
+        \item \textbf{Về ngữ cảnh:} Có tình huống cấp cứu khẩn cấp, tình huống khám bệnh, và tình huống tự theo dõi.
+    \end{itemize}
+    \item \textbf{Pattern Recognition:} Khi đối chiếu các tập hợp trên, ta phát hiện ra một quy luật phân bổ rõ rệt về mức độ khẩn cấp và tính chất thay đổi của dữ liệu:
+    \begin{itemize}
+        \item Dữ liệu ít khi thay đổi (tĩnh) + Cực kỳ quan trọng cho sự sống còn $\rightarrow$ Thường dùng trong Cấp cứu.
+        \item Dữ liệu thay đổi liên tục (động) + Đo lường khách quan $\rightarrow$ Thường dùng cho Bác sĩ phân tích bệnh lý.
+        \item Dữ liệu mang tính cảm nhận (chủ quan) $\rightarrow$ Thường dùng làm thông tin tham khảo phụ.
+    \end{itemize}
+    \item \textbf{Abstraction:} Gạt bỏ đi các chi tiết cụ thể (không cần quan tâm dị ứng hải sản hay dị ứng thuốc lúc này). Khái quát hóa và định nghĩa khối dữ liệu thành 3 tầng thông tin cốt lõi dựa trên mức độ ưu tiên:
+    \begin{itemize}
+        \item \textbf{Tầng Sinh tử (Cố định):} Quyết định tính mạng ngay lập tức.
+        \item \textbf{Tầng Biến thiên (Xu hướng):} Cung cấp bức tranh y khoa khách quan.
+        \item \textbf{Tầng Thói quen (Tâm trạng):} Cung cấp bối cảnh sinh hoạt chủ quan.
+    \end{itemize}
+    \item \textbf{Algorithm Design:} Thiết kế thuật toán định tuyến hiển thị dựa trên việc gắn thẻ dữ liệu vào 3 tầng đã trừu tượng hóa ở trên:
+    \begin{itemize}
+        \item \textbf{Nhánh 1:} Khi khởi chạy Module SOS, thuật toán chỉ truy xuất và hiển thị tập dữ liệu thuộc ``Tầng Sinh tử'' lên một giao diện thiết kế tối giản, font chữ lớn, bỏ qua mọi rào cản xác thực.
+        \item \textbf{Nhánh 2:} Khi khởi chạy Module Bác sĩ/Nhật ký, bên cạnh ``Tầng Sinh tử'', thuật toán sẽ tiến hành gọi dữ liệu từ ``Tầng Biến thiên'' và ``Tầng Thói quen'', sau đó đưa qua các hàm vẽ biểu đồ để tổng hợp thành Dashboard trực quan.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Vấn đề 5: Thiết kế Module SOS trong tình huống khẩn cấp}
+
+\textbf{Vấn đề:} Thiết kế Module SOS như thế nào trong tình huống khẩn cấp?
+
+\begin{itemize}
+    \item \textbf{Decomposition:} Khó khăn của người bệnh lúc này thành các yếu tố vật lý và tâm lý: Thị giác (không đọc được chữ nhỏ), Vận động (tay run, chạm không chính xác), Nhận thức (não bộ đang đóng băng, không thể xử lý chuỗi logic phức tạp).
+    \item \textbf{Pattern Recognition:} Khi hoảng loạn, cần thao tác đơn giản để gửi yêu cầu cấp cứu khẩn cấp.
+    \item \textbf{Abstraction:} Thiết kế một nút bấm đơn giản, màu đỏ, đủ to để trường hợp khẩn cấp người dùng có thể dễ dàng ấn vào.
+    \item \textbf{Algorithm Design:} Thiết kế một Shortcut đủ to, màu đỏ, để khi người dùng ấn vào, thông báo cấp cứu sẽ được gửi đi.
+\end{itemize}
+
+\textbf{Vấn đề phụ: Người dùng ấn nhầm nút SOS}
+\begin{itemize}
+    \item \textbf{Decomposition:} Nút bấm to dễ bị cơ thể/ngón tay vô tình cọ trúng trong túi quần.
+    \item \textbf{Pattern Recognition:} Hành động khẩn cấp cần sự xác nhận có chủ đích và thông báo kích hoạt.
+    \item \textbf{Abstraction:} Trì hoãn gửi thông báo, cho phép rút lại trong thời gian ngắn.
+    \item \textbf{Algorithm Design:} Nút SOS nằm trong giao diện Shortcut (giảm rủi ro ấn nhầm). Khi kích hoạt, điện thoại rung và phát âm thanh cảnh báo; người dùng có thể hủy yêu cầu trước khi hệ thống thực hiện cuộc gọi/tin nhắn khẩn cấp.
+\end{itemize}
+
+\subsection{Vấn đề 6: Truy cập nhanh khẩn cấp mà vẫn đảm bảo tính riêng tư}
+
+\textbf{Vấn đề:} Truy cập nhanh dữ liệu sinh tử của người bị nạn mà không vi phạm quyền riêng tư các dữ liệu khác.
+
+\begin{itemize}
+    \item \textbf{Decomposition:} Trong khẩn cấp, người hỗ trợ cần nắm ``Tầng sinh tử'' ngay lập tức khi nạn nhân mất ý thức. Các tầng dữ liệu khác phải được bảo mật.
+    \item \textbf{Pattern Recognition:} Người dùng luôn mang theo điện thoại và CCCD. CCCD chỉ công khai thông tin định danh cơ bản, tương tự luồng cấp cứu chỉ nên trích xuất ``Tầng sinh tử''.
+    \item \textbf{Abstraction:} Truy cập qua tra cứu số CCCD hoặc quét mã QR định danh in sẵn.
+    \item \textbf{Algorithm Design:}
+    \begin{itemize}
+        \item Người dùng cập nhật dữ liệu ``Tầng sinh tử'' và số CCCD lên hệ thống trung tâm.
+        \item Hệ thống xuất mã QR để người dùng dán sau điện thoại hoặc để trong ví.
+        \item \textbf{Truy xuất:} Quét mã QR hoặc nhập số CCCD vào cổng tra cứu khẩn cấp để nhận ngay thông tin nhóm máu, dị ứng, liên hệ khẩn cấp.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Vấn đề 7: Bảo mật thông tin các tầng khác cho người dùng}
+
+\textbf{Vấn đề:} Kiểm soát quyền truy cập dữ liệu nhạy cảm (Tầng biến thiên, Tầng thói quen) của bác sĩ.
+
+\begin{itemize}
+    \item \textbf{Decomposition:} Dữ liệu này dùng trong thăm khám thường quy. Truy cập của bác sĩ phải là tạm thời và có sự đồng ý của bệnh nhân.
+    \item \textbf{Pattern Recognition:} Dữ liệu riêng tư phải nằm dưới quyền kiểm soát tuyệt đối của bệnh nhân. Sự minh bạch đến từ việc cấp quyền dùng một lần và có lịch sử truy cập (Audit Log).
+    \item \textbf{Abstraction:} Công cụ yêu cầu truy cập từ bác sĩ và xác nhận phê duyệt từ bệnh nhân với giới hạn thời gian.
+    \item \textbf{Algorithm Design:}
+    \begin{itemize}
+        \item Bác sĩ gửi yêu cầu cấp quyền qua hệ thống (sau khi tra cứu bệnh nhân).
+        \item Hệ thống gửi thông báo đẩy/OTP tới thiết bị bệnh nhân.
+        \item Bệnh nhân nhấn ``Đồng ý'', hệ thống mở khóa dữ liệu và kích hoạt Timer.
+        \item Hết thời gian hoặc bác sĩ đóng phiên, quyền truy cập tự động thu hồi. Hệ thống ghi lại lịch sử truy cập hiển thị cho bệnh nhân.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Vấn đề 8: Tính sẵn sàng cao và khả năng lưu trữ lâu dài}
+
+\textbf{Vấn đề:} Phân bổ luồng dữ liệu giữa Local và Cloud để đảm bảo tốc độ và dung lượng.
+
+\begin{itemize}
+    \item \textbf{Decomposition:} Local cần thao tác nhanh, không phụ thuộc mạng nhưng dung lượng hạn chế. Cloud lưu trữ trọn đời và an toàn nhưng cần kết nối.
+    \item \textbf{Pattern Recognition:} Local làm bộ đệm ghi nhận tức thời. Cloud là kho lưu trữ chính. Đồng bộ ngầm diễn ra khi có mạng.
+    \item \textbf{Abstraction:} Mô hình ``Đồng bộ ngầm - Dọn dẹp tự động''.
+    \item \textbf{Algorithm Design:}
+    \begin{itemize}
+        \item Dữ liệu mới ghi vào Local với cờ [Chờ đồng bộ].
+        \item Tiến trình ngầm đẩy dữ liệu lên Cloud khi có Internet. Nhận ACK từ Cloud thì đổi cờ thành [Đã đồng bộ].
+        \item Thuật toán quét Local hàng ngày: Xóa dữ liệu [Đã đồng bộ] cũ hơn 30 ngày để giải phóng bộ nhớ.
+        \item \textbf{Truy xuất:} 30 ngày gần nhất lấy từ Local (offline), dữ liệu cũ hơn tải từ Cloud.
+    \end{itemize}
+\end{itemize}
+\subsection{Vấn đề 9: Duy trì phiên đăng nhập an toàn cho ứng dụng y tế}
+
+\textbf{Vấn đề:} Làm sao để duy trì phiên đăng nhập thuận tiện cho người dùng nhưng vẫn đảm bảo tính bảo mật cao của dữ liệu y tế, tránh rủi ro khi phiên đăng nhập bị kéo dài vô thời hạn hoặc bị đánh cắp?
+
+\begin{itemize}
+    \item \textbf{Decomposition:} Chia nhỏ cơ chế xác thực thành các thành phần: Access Token (quyền truy cập ngắn hạn), Refresh Token (quyền cấp mới token), thời gian sống của token (TTL), và cơ chế phát hiện xâm nhập (đánh cắp token).
+    \item \textbf{Pattern Recognition:} Nhận diện sự khác biệt về yêu cầu bảo mật: Các ứng dụng mạng xã hội ưu tiên trải nghiệm người dùng nên duy trì phiên đăng nhập hàng tháng. Tuy nhiên, ứng dụng y tế chứa dữ liệu nhạy cảm nên cần áp dụng mô hình phiên đăng nhập ngắn hạn để giảm thiểu thời gian.
+    \item \textbf{Abstraction:} Lựa chọn thời gian sống (TTL) của Access Token hợp lý và xây dựng cơ chế xác thực, thu hồi phiên đăng nhập (Session Management) một cách chặt chẽ.
+    \item \textbf{Algorithm Design:}
+    \begin{itemize}
+        \item Thiết lập Access Token có TTL ngắn (khoảng 15 phút) trên hệ thống xác thực (Supabase).
+        \item \textbf{Cơ chế làm mới:} Khi Access Token hết hạn, ứng dụng tự động sử dụng Refresh Token để đổi lấy một cặp Access Token và Refresh Token mới.
+        \item \textbf{Phát hiện xâm nhập (Token Rotation):} Nếu một Refresh Token cũ được sử dụng lại (dấu hiệu của việc tin tặc đánh cắp và tái sử dụng), hệ thống sẽ lập tức vô hiệu hóa (Hard Delete) toàn bộ phiên đăng nhập của người dùng đó.
+        \item \textbf{Phản ứng:} Yêu cầu người dùng đăng nhập lại từ đầu và gửi thông báo cảnh báo bảo mật về hành vi truy cập bất thường.
+    \end{itemize}
+\end{itemize}
+
+% ====================================================================
+\section{BÁO CÁO TIẾN ĐỘ}
+% ====================================================================
+
+Phần này tổng hợp chi tiết các công việc đã được triển khai trên hệ thống dự án ``Nhật ký Y tế'', tính đến thời điểm báo cáo.
+Toàn bộ mã nguồn được quản lý trên Git với nhánh \texttt{dev} (nhánh phát triển ổn định).
+\subsection{Backend}
+
+% --------------------------------------------------------------------
+\subsubsection{Kiến trúc tổng quan hệ thống}
+% --------------------------------------------------------------------
+
+Backend được xây dựng theo kiến trúc \textbf{Domain-Driven Design (DDD)}, tổ chức mã nguồn thành các module nghiệp vụ độc lập.
+Mỗi module nghiệp vụ tuân theo cấu trúc chuẩn gồm: \texttt{models.py} (ORM), \texttt{schemas.py} (Pydantic), \texttt{service.py} (logic nghiệp vụ), và \texttt{router.py} (API endpoints).
+
+% --------------------------------------------------------------------
+\subsubsection{Thiết lập hạ tầng và môi trường phát triển}
+% --------------------------------------------------------------------
+
+\paragraph{Container hóa với Docker}
+
+Hệ thống đã được container hóa hoàn chỉnh bằng Docker để đảm bảo môi trường nhất quán giữa các thành viên. Dockerfile sử dụng image \texttt{python:3.11-slim}, cài đặt các thư viện hệ thống cần thiết (\texttt{gcc}, \texttt{libpq-dev}), và chạy ứng dụng qua \textbf{Uvicorn} với chế độ hot-reload. File \texttt{docker-compose.yml} định nghĩa service \texttt{api} với cấu hình DNS public (8.8.8.8, 1.1.1.1) để đảm bảo kết nối ổn định đến Supabase Cloud.
+
+\paragraph{Quản lý cấu hình}
+
+Module \texttt{app/core/config.py} sử dụng \textbf{Pydantic Settings} để quản lý tập trung các biến môi trường, bao gồm:
+\begin{itemize}
+    \item Thông tin kết nối Supabase (URL, Anon Key, Service Role Key).
+    \item Chuỗi kết nối CSDL PostgreSQL (scheme \texttt{postgresql+asyncpg}).
+    \item Cấu hình bảo mật: JWT Secret, thuật toán mã hóa (HS256).
+\end{itemize}
+
+\paragraph{Các thư viện chính}
+
+Dự án sử dụng các thư viện Python quan trọng sau:
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|X|}
+    \hline
+    \textbf{Thư viện} & \textbf{Mục đích} \\
+    \hline
+    FastAPI & Framework API hiệu năng cao, hỗ trợ async \\
+    \hline
+    SQLAlchemy (asyncio) & ORM bất đồng bộ cho PostgreSQL \\
+    \hline
+    Alembic & Quản lý migration cơ sở dữ liệu \\
+    \hline
+    asyncpg & Driver PostgreSQL bất đồng bộ \\
+    \hline
+    Supabase SDK & Tích hợp Auth, Storage, Realtime \\
+    \hline
+    python-jose & Giải mã và xác minh JWT \\
+    \hline
+    Pydantic Settings & Quản lý cấu hình từ biến môi trường \\
+    \hline
+    \end{tabularx}
+    \caption{Danh sách các thư viện chính của Backend}
+\end{table}
+
+% --------------------------------------------------------------------
+\subsubsection{Cơ sở dữ liệu và ORM}
+% --------------------------------------------------------------------
+
+\paragraph{Mô hình Hybrid: SQLAlchemy + Supabase}
+
+Hệ thống áp dụng kiến trúc \textbf{Hybrid}, trong đó:
+\begin{itemize}
+    \item \textbf{SQLAlchemy AsyncSession:} Xử lý mọi thao tác CRUD trên PostgreSQL thông qua ORM bất đồng bộ.
+    \item \textbf{Supabase Client:} Chỉ sử dụng cho các dịch vụ đặc thù: Authentication (đăng ký/đăng nhập qua phone), Storage (upload file), và Realtime (thông báo đẩy).
+\end{itemize}
+
+\paragraph{Định nghĩa Models (ORM)}
+
+Hai bảng chính đã được định nghĩa đầy đủ:
+
+\begin{itemize}
+    \item \textbf{Bảng \texttt{profiles}:} Lưu trữ thông tin người dùng bao gồm: họ tên, vai trò (user/doctor/admin), giới tính, ngày sinh, nhóm máu, tiền sử dị ứng, liên hệ khẩn cấp, cài đặt quyền riêng tư (JSONB). Các trường nhạy cảm như số điện thoại và CCCD được mã hóa bằng \texttt{pgcrypto}.
+    \item \textbf{Bảng \texttt{doctors}:} Lưu thông tin bổ sung cho vai trò bác sĩ: chuyên khoa, số giấy phép hành nghề, bệnh viện, URL chứng chỉ, trạng thái xác minh (pending/approved/rejected), và thông tin admin duyệt.
+\end{itemize}
+
+Các bảng sử dụng cơ chế \textbf{Soft Delete} (cột \texttt{deleted\_at}) thay vì xóa vĩnh viễn, đảm bảo khả năng truy vết và khôi phục dữ liệu.
+
+\paragraph{Alembic Migrations}
+
+Hệ thống quản lý phiên bản CSDL bằng \textbf{Alembic}. File migration đầu tiên (\texttt{dee690ba0a46\_initial\_schema.py}) đã được tạo, định nghĩa schema ban đầu cho toàn bộ hệ thống. Alembic được cấu hình để tự động phát hiện thay đổi từ các model SQLAlchemy và sinh migration tương ứng.
+
+% --------------------------------------------------------------------
+\subsubsection{Hệ thống Middleware}
+% --------------------------------------------------------------------
+
+\paragraph{RLS Middleware (Row Level Security)}
+
+Middleware RLS (\texttt{app/middlewares/rls.py}) đảm nhiệm vai trò bảo mật dữ liệu ở tầng cơ sở dữ liệu. Luồng xử lý:
+
+\begin{enumerate}
+    \item Trích xuất JWT token từ header \texttt{Authorization}.
+    \item Giải mã token bằng thư viện \texttt{python-jose} với secret key của Supabase.
+    \item Chuyển đổi payload thành định dạng claims chuẩn Supabase (role, sub, email, metadata).
+    \item Gắn claims vào \texttt{request.state} để truyền xuống tầng database.
+    \item Trong \texttt{get\_db()}, claims được inject vào PostgreSQL session qua lệnh \texttt{SET LOCAL} để kích hoạt RLS policies.
+\end{enumerate}
+
+\paragraph{Logging Middleware}
+
+Middleware Logging (\texttt{app/middlewares/logging.py}) cung cấp khả năng theo dõi và truy vết mọi request/response:
+
+\begin{itemize}
+    \item Tạo mã \texttt{request\_id} duy nhất (UUID 8 ký tự) cho mỗi request đến.
+    \item Ghi log thông tin request (method, path) và response (status code, thời gian xử lý tính bằng ms).
+    \item Đính kèm \texttt{X-Request-ID} vào header response để phía client có thể truy vết.
+\end{itemize}
+
+% --------------------------------------------------------------------
+\subsubsection{Hệ thống xác thực (Authentication)}
+% --------------------------------------------------------------------
+
+Module xác thực (\texttt{app/modules/auth/}) đã được triển khai hoàn chỉnh trên nhánh \texttt{feature/auth}, bao gồm:
+
+\paragraph{Schemas xác thực}
+
+Định nghĩa các Pydantic models cho toàn bộ luồng Auth:
+
+\begin{itemize}
+    \item \textbf{LoginRequest / LoginResponse:} Xác thực bằng số điện thoại + mật khẩu. Response trả về \texttt{access\_token} (JWT) và thông tin cơ bản của người dùng (id, role).
+    \item \textbf{RegisterRequest:} Đăng ký tài khoản người dùng thường với các trường: số điện thoại, mật khẩu (tối thiểu 8 ký tự), họ tên, giới tính, ngày sinh.
+    \item \textbf{RegisterDoctorRequest:} Mở rộng đăng ký cho bác sĩ, bổ sung: số CCCD (12 ký tự), số giấy phép hành nghề, chuyên khoa, bệnh viện.
+    \item \textbf{SessionResponse / SessionListResponse:} Quản lý phiên đăng nhập của người dùng.
+\end{itemize}
+
+Tất cả schemas đều sử dụng \textbf{Field Validation} nghiêm ngặt: regex cho số điện thoại, \texttt{min\_length}/\texttt{max\_length} cho mật khẩu và họ tên.
+
+\paragraph{Service xác thực (AuthService)}
+
+Lớp \texttt{AuthService} triển khai 5 phương thức nghiệp vụ chính:
+
+\begin{enumerate}
+    \item \textbf{login():} Xác thực qua Supabase Auth, sau đó truy vấn trực tiếp PostgreSQL để lấy role thực tế từ bảng \texttt{profiles} (bypass Supabase SDK để hỗ trợ role nâng cao).
+    \item \textbf{register():} Tạo tài khoản trên Supabase Auth, sau đó INSERT profile vào CSDL với số điện thoại được mã hóa bằng \texttt{pgp\_sym\_encrypt()}.
+    \item \textbf{register\_doctor():} Luồng đăng ký 3 bước: tạo Auth account → INSERT profile (mã hóa phone + CCCD) → INSERT doctor info với trạng thái \texttt{pending\_verification}.
+    \item \textbf{log\_out():} Hủy phiên đăng nhập trên Supabase Auth.
+    \item \textbf{list\_session():} Truy vấn trực tiếp bảng \texttt{auth.sessions} để liệt kê các phiên đăng nhập đang hoạt động.
+\end{enumerate}
+
+Mọi thao tác đều được bọc trong try/except với cơ chế \texttt{rollback()} khi xảy ra lỗi, đảm bảo tính toàn vẹn dữ liệu.
+
+% --------------------------------------------------------------------
+\subsubsection{Bảo mật dữ liệu nhạy cảm}
+% --------------------------------------------------------------------
+
+\paragraph{Mã hóa tầng cơ sở dữ liệu (pgcrypto)}
+
+Hệ thống sử dụng extension \textbf{pgcrypto} của PostgreSQL để mã hóa các trường dữ liệu nhạy cảm trực tiếp trong CSDL:
+
+\begin{itemize}
+    \item \textbf{Trường được mã hóa:} Số điện thoại (\texttt{phone\_encrypted}), số CCCD (\texttt{cccd\_encrypted}).
+    \item \textbf{Phương thức:} Sử dụng hàm \texttt{pgp\_sym\_encrypt()} với khóa mã hóa được inject qua biến session \texttt{app.encryption\_key}.
+    \item \textbf{Giải mã:} Chỉ khi cần đọc, sử dụng \texttt{pgp\_sym\_decrypt()} với cùng khóa.
+\end{itemize}
+
+File SQL thiết lập (\texttt{supabase/policies/001\_pgcrypto\_setup.sql}) đã được tạo sẵn để kích hoạt extension trên Supabase.
+
+\paragraph{Phân quyền và kiểm soát truy cập}
+
+Module \texttt{app/shared/dependencies.py} cung cấp hệ thống phân quyền 3 lớp:
+
+\begin{enumerate}
+    \item \textbf{get\_supabase\_client():} Khởi tạo Supabase Client an toàn với xử lý lỗi kết nối.
+    \item \textbf{get\_current\_user():} Trích xuất thông tin người dùng từ JWT claims đã được RLS Middleware xử lý. Trả về lỗi 401 nếu token không hợp lệ.
+    \item \textbf{require\_role():} Dependency kiểm tra phân quyền theo role. Ví dụ: \texttt{Depends(require\_role(["doctor", "admin"]))} sẽ chặn mọi request không có quyền tương ứng (lỗi 403).
+\end{enumerate}
+
+% --------------------------------------------------------------------
+\subsubsection{Xử lý lỗi tập trung (Global Exception Handlers)}
+% --------------------------------------------------------------------
+
+Module \texttt{app/core/exceptions.py} thiết lập hệ thống xử lý lỗi tập trung cho toàn bộ ứng dụng, đảm bảo mọi response lỗi đều tuân theo format chuẩn \texttt{ErrorResponse} (gồm \texttt{error\_code}, \texttt{message}, \texttt{request\_id}):
+
+\begin{itemize}
+    \item \textbf{HTTP Exception Handler:} Bắt mọi lỗi HTTP (401, 403, 404, ...) và log cảnh báo kèm \texttt{request\_id}.
+    \item \textbf{Validation Exception Handler:} Bắt lỗi validation dữ liệu đầu vào (thiếu field, sai kiểu), trả về thông báo rõ ràng cho client.
+    \item \textbf{Unhandled Exception Handler:} Bắt mọi lỗi không lường trước (500), log đầy đủ stack trace để debug nhưng chỉ trả về thông báo chung cho client nhằm tránh lộ thông tin hệ thống.
+\end{itemize}
+
+% --------------------------------------------------------------------
+\subsubsection{Schemas dùng chung (Shared Schemas)}
+% --------------------------------------------------------------------
+
+Module \texttt{app/shared/schemas.py} định nghĩa các response schema chuẩn hóa được sử dụng xuyên suốt toàn bộ API:
+
+\begin{itemize}
+    \item \textbf{ErrorResponse:} Format lỗi chuẩn với mã lỗi, thông báo, và mã truy vết request.
+    \item \textbf{PaginatedResponse[T]:} Schema phân trang Generic, hỗ trợ phân trang cho mọi danh sách dữ liệu (items, total, page, limit).
+    \item \textbf{MessageResponse:} Format trả về tin nhắn thành công đơn giản.
+\end{itemize}
+
+% --------------------------------------------------------------------
+\subsubsection{Tổng kết tiến độ Backend}
+% --------------------------------------------------------------------
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|c|X|}
+    \hline
+    \textbf{Hạng mục} & \textbf{Trạng thái} & \textbf{Ghi chú} \\
+    \hline
+    {Kiến trúc DDD \& cấu trúc thư mục} & $\checkmark$ & 11 module nghiệp vụ đã được khởi tạo \\
+    \hline
+    {Docker \& Docker Compose} & $\checkmark$ & Môi trường dev hoạt động ổn định \\
+    \hline
+    {SQLAlchemy ORM \& Alembic} & $\checkmark$ & Migration ban đầu đã tạo \\
+    \hline
+    Middleware RLS & $\checkmark$ & Inject JWT claims vào PostgreSQL session \\
+    \hline
+    Middleware Logging & $\checkmark$ & Request tracing với request\_id \\
+    \hline
+    Exception Handlers & $\checkmark$ & 3 handler xử lý lỗi tập trung \\
+    \hline
+    Module Auth (schemas + service) & $\checkmark$ & Login, Register, Register Doctor, Logout, Sessions \\
+    \hline
+    Mã hóa pgcrypto & $\checkmark$ & Mã hóa SĐT và CCCD tại tầng DB \\
+    \hline
+    Phân quyền (RBAC) & $\checkmark$ & 3 lớp: auth check, role check, RLS \\
+    \hline
+    Auth Router (API endpoints) & Chưa & Cần tạo router kết nối service $\rightarrow$ endpoint \\
+    \hline
+    Các module nghiệp vụ khác & Chưa & diaries, emergency, health\_metrics, ... \\
+    \hline
+    Unit Tests & Chưa & Cần bổ sung test cho auth service \\
+    \hline
+    \end{tabularx}
+    \caption{Bảng tổng kết tiến độ Backend}
+\end{table}
+
+% --------------------------------------------------------------------
+\subsection{Frontend}
+% --------------------------------------------------------------------
+
+Phần Frontend của dự án hiện đang trong giai đoạn thiết kế giao diện và xây dựng nguyên mẫu (prototyping), chưa tiến hành lập trình. Các công việc đã và đang thực hiện bao gồm:
+
+\subsubsection{Thiết kế UI/UX}
+
+Toàn bộ giao diện người dùng được thiết kế trên nền tảng \textbf{Figma} --- công cụ thiết kế cộng tác trực tuyến cho phép nhiều thành viên cùng làm việc đồng thời trên cùng một bản thiết kế. Quy trình thiết kế tuân theo các bước:
+
+\begin{enumerate}
+    \item \textbf{Nghiên cứu người dùng:} Xác định các nhóm người dùng chính (bệnh nhân, bác sĩ, nhân viên cấp cứu) và nhu cầu đặc thù của từng nhóm trong các ngữ cảnh sử dụng khác nhau (khẩn cấp, khám bệnh, tự theo dõi).
+    \item \textbf{Wireframe:} Phác thảo bố cục cơ bản cho các màn hình chính trên Figma, tập trung vào luồng thao tác (user flow) trước khi đầu tư vào chi tiết thẩm mỹ.
+    \item \textbf{Prototype tương tác:} Tạo nguyên mẫu có khả năng tương tác trên Figma để mô phỏng trải nghiệm thực tế trước khi chuyển sang giai đoạn lập trình.
+\end{enumerate}
+
+\subsubsection{Chuyển đổi thiết kế sang mã nguồn}
+
+Dự án dự kiến sử dụng \textbf{Stitch} --- công cụ hỗ trợ chuyển đổi bản thiết kế từ Figma sang mã nguồn React Native một cách tự động. Stitch giúp:
+
+\begin{itemize}
+    \item Xuất các thành phần giao diện từ Figma thành code React tái sử dụng được.
+    \item Giảm đáng kể thời gian chuyển đổi từ thiết kế sang code, đảm bảo tính đồng nhất giữa bản thiết kế và sản phẩm thực tế.
+    \item Cho phép đội phát triển tập trung vào logic nghiệp vụ thay vì phải dựng giao diện thủ công từ đầu.
+\end{itemize}
+
+\subsubsection{Các màn hình chính được thiết kế (dự kiến)}
+
+Dựa trên phân tích các vấn đề tư duy tính toán ở Mục 3, các nhóm màn hình chính bao gồm:
+
+\begin{itemize}
+    \item \textbf{Nhóm Xác thực:} Đăng nhập, Đăng ký (người dùng thường và bác sĩ).
+    \item \textbf{Nhóm Thẻ Y tế (Tầng Sinh tử):} Hiển thị thông tin nhóm máu, dị ứng, liên hệ khẩn cấp với font chữ lớn, giao diện tối giản.
+    \item \textbf{Nhóm SOS:} Nút SOS kích thước lớn, màu đỏ nổi bật; màn hình đếm ngược trước khi gửi tín hiệu cấp cứu.
+    \item \textbf{Nhóm Nhật ký:} Giao diện ghi chép triệu chứng nhanh với icon đánh giá mức độ, biểu đồ xu hướng sức khỏe.
+    \item \textbf{Nhóm Bác sĩ (Web):} Dashboard hiển thị dữ liệu bệnh nhân, biểu đồ chỉ số sinh hiệu dài hạn.
+\end{itemize}
+
+\subsubsection{Công nghệ Frontend dự kiến}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|X|}
+    \hline
+    \textbf{Công nghệ} & \textbf{Mục đích} \\
+    \hline
+    React Native & Phát triển ứng dụng di động đa nền tảng (iOS, Android) \\
+    \hline
+    ReactJS & Phát triển giao diện Web dành cho bác sĩ và quản trị \\
+    \hline
+    TypeScript & Ngôn ngữ chính, đảm bảo type-safety \\
+    \hline
+    Zustand & Quản lý trạng thái ứng dụng (State Management) \\
+    \hline
+    SQLite & Lưu trữ dữ liệu ngoại tuyến trên thiết bị di động \\
+    \hline
+    Figma & Thiết kế giao diện và tạo prototype tương tác \\
+    \hline
+    Stitch & Chuyển đổi thiết kế Figma sang code React Native \\
+    \hline
+    \end{tabularx}
+    \caption{Công nghệ Frontend dự kiến sử dụng}
+\end{table}
+
+\subsubsection{Tổng kết tiến độ Frontend}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|c|X|}
+    \hline
+    \textbf{Hạng mục} & \textbf{Trạng thái} & \textbf{Ghi chú} \\
+    \hline
+    Nghiên cứu người dùng & $\checkmark$ & Xác định 3 nhóm người dùng chính \\
+    \hline
+    Wireframe các màn hình & Đang thực hiện & Thiết kế trên Figma \\
+    \hline
+    Prototype tương tác & Chưa & Sẽ tạo sau khi hoàn thành wireframe \\
+    \hline
+    Cài đặt project React & Chưa & Chờ hoàn thành thiết kế \\
+    \hline
+    Tích hợp Stitch & Chưa & Chuyển đổi Figma $\rightarrow$ code \\
+    \hline
+    Kết nối API Backend & Chưa & Chờ Backend hoàn thành Router \\
+    \hline
+    \end{tabularx}
+    \caption{Bảng tổng kết tiến độ Frontend}
+\end{table}
+
+% ====================================================================
+\section{CÔNG NGHỆ SỬ DỤNG (DỰ KIẾN)}
+% ====================================================================
+
+Dưới đây là mô tả các công nghệ dự kiến sử dụng cho dự án Nhật ký y tế:
+
+\subsection{Backend}
+\begin{itemize}
+    \item \textbf{Ngôn ngữ:} Python (3.10+).
+    \item \textbf{Framework:} \textbf{FastAPI}.
+    \item \textbf{Bảo mật (Security):} OAuth2 kết hợp JWT (JSON Web Token), mã hóa mật khẩu bằng bcrypt.
+    \item \textbf{Kiểm định dữ liệu (Validation):} Pydantic.
+    \item \textbf{Kiến trúc:} RESTful API.
+\end{itemize}
+
+\subsection{Frontend (Native App)}
+\begin{itemize}
+    \item \textbf{Ngôn ngữ chính:} TypeScript / JavaScript (ES6+).
+    \item \textbf{Framework/Library:} \textbf{React Native và ReactJS}. 
+    \item \textbf{Lưu trữ ngoại tuyến (Local DB):} SQLite.
+    \item \textbf{Quản lý trạng thái (State Management):} Zustand.
+    \item \textbf{Giao diện (UI Framework):} React Native Paper hoặc NativeWind.
+    \item \textbf{Thiết kế:} UI tối giản, thân thiện, nút bấm to rõ để dễ thao tác trong tình huống khẩn cấp.
+\end{itemize}
+
+\subsection{Database}
+\begin{itemize}
+    \item \textbf{Cơ sở dữ liệu:} PostgreSQL.
+    \item \textbf{ORM (Object-Relational Mapping):} SQLAlchemy.
+    \item \textbf{Cloud Database:} Supabase.
+\end{itemize}
+
+\subsection{Deployment}
+\begin{itemize}
+    \item \textbf{Containerization:} \textbf{Docker}.
+    \item \textbf{Orchestration:} Docker Compose.
+    \item \textbf{Cloud Platform:} AWS (Amazon Web Services) hoặc Google Cloud Platform.
+\end{itemize}
+
+\end{document}
