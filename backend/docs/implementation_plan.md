@@ -19,8 +19,9 @@ Tài liệu này xác định thứ tự triển khai các module, dựa trên m
 1. **Tham chiếu Docs:** Mọi schemas phải khớp với `SCHEMAS.md`. Mọi endpoint phải khớp với `API.md`. Logic luồng phải theo `API_FLOW.md`.
 2. **Service Layer:** Tất cả query đều qua `AsyncSession` (dependency `get_db()`). KHÔNG dùng Supabase Client cho CRUD.
 3. **Supabase Client:** Chỉ dùng cho 3 việc: Auth (đăng ký/đăng nhập), Storage (upload file), Realtime (nếu cần).
-4. **Error Handling:** Trả lỗi theo format chuẩn `ErrorResponse` đã định nghĩa trong `SCHEMAS.md` (mục 0).
+4. **Error Handling:** Trả lỗi theo format chuẩn `ErrorResponse` đã định nghĩa trong `SCHEMAS.md` (mục 0). Exception Handler toàn cục sẽ tự đính kèm `request_id` (xem `app/core/exceptions.py`).
 5. **Soft Delete:** Mọi DELETE đều chỉ cập nhật cột `deleted_at`. Query SELECT phải lọc `WHERE deleted_at IS NULL`.
+6. **Mã hóa Dữ liệu Nhạy cảm:** Các trường `phone_encrypted`, `cccd_encrypted` (cho Bác sĩ) phải dùng `pgp_sym_encrypt()` / `pgp_sym_decrypt()` của pgcrypto. Key lấy từ `current_setting('app.encryption_key')` (được inject qua `get_db()`). Chi tiết xem `Auth_and_Logging_plan.md` Phần C.
 
 ---
 
@@ -29,23 +30,23 @@ Tài liệu này xác định thứ tự triển khai các module, dựa trên m
 > Các module nghiệp vụ sẽ import từ đây, nên phải hoàn thành trước.
 
 ### 0.1 `app/shared/schemas.py`
-- [ ] `ErrorResponse` — Format lỗi chuẩn hóa
-- [ ] `PaginatedResponse[T]` — Phân trang generic
-- [ ] `MessageResponse` — Response đơn giản `{"message": "..."}`
+- [x] `ErrorResponse` — Format lỗi chuẩn hóa
+- [x] `PaginatedResponse[T]` — Phân trang generic
+- [x] `MessageResponse` — Response đơn giản `{"message": "..."}`
 
 ### 0.2 `app/shared/dependencies.py` (Tạo mới)
-- [ ] `get_current_user()` — Dependency giải mã JWT, trả về user object từ DB
-- [ ] `require_role(role)` — Dependency kiểm tra role (user/doctor/admin)
-- [ ] `get_supabase_client()` — Dependency cung cấp Supabase Client (cho Auth/Storage)
+- [x] `get_current_user()` — Dependency giải mã JWT, trả về user object từ DB
+- [x] `require_role(role)` — Dependency kiểm tra role (user/doctor/admin)
+- [x] `get_supabase_client()` — Dependency cung cấp Supabase Client (cho Auth/Storage)
 
 ---
 
 ## Phase 1: Auth Module (Nền tảng — Các module khác phụ thuộc vào đây)
 
 ### 1.1 `app/modules/auth/schemas.py`
-- [ ] `LoginRequest`, `LoginResponse`
-- [ ] `RegisterRequest`, `RegisterDoctorRequest`
-- [ ] `SessionInfo`, `SessionListResponse`
+- [X] `LoginRequest`, `LoginResponse`
+- [X] `RegisterRequest`, `RegisterDoctorRequest`
+- [X] `SessionInfo`, `SessionListResponse`
 
 ### 1.2 `app/modules/auth/service.py`
 - [ ] `login()` — Gọi Supabase Auth `sign_in_with_password`
@@ -54,6 +55,7 @@ Tài liệu này xác định thứ tự triển khai các module, dựa trên m
 - [ ] `logout()` — Invalidate session hiện tại
 - [ ] `revoke_all_sessions()` — Invalidate tất cả sessions
 - [ ] `list_sessions()` — Lấy danh sách sessions
+- [ ] `revoke_selected_session()` — Invalidate session được chọn
 
 ### 1.3 `app/modules/auth/router.py`
 - [ ] `POST /auth/login`
@@ -62,6 +64,7 @@ Tài liệu này xác định thứ tự triển khai các module, dựa trên m
 - [ ] `POST /auth/logout`
 - [ ] `POST /auth/revoke-all`
 - [ ] `GET /auth/sessions`
+- [ ] `POST /auth/revoke-selected-session`
 
 ### 1.4 Đăng ký router trong `app/main.py`
 - [ ] `app.include_router(auth_router, prefix="/auth", tags=["Auth"])`
@@ -93,7 +96,7 @@ Tài liệu này xác định thứ tự triển khai các module, dựa trên m
 - [ ] `PatientSearchResult`, `PatientDetailResponse`
 
 ### 2.5 `app/modules/doctors/service.py`
-- [ ] `search_patients()` — Tìm bệnh nhân qua SĐT/CCCD (giải mã pgcrypto)
+- [ ] `search_patients()` — Tìm bệnh nhân qua SĐT (giải mã pgcrypto)
 - [ ] `get_patient_detail()` — Xem hồ sơ bệnh nhân (kiểm tra consent)
 - [ ] `search_doctors()` — User tìm bác sĩ (chỉ trả public info)
 

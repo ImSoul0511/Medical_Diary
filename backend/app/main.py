@@ -1,6 +1,22 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import logging 
 from app.middlewares.rls import RLSMiddleware
+from app.middlewares.logging import LoggingMiddleware
+from app.core.exceptions import (
+    http_exception_handler,
+    validation_exception_handler,
+    unhandled_exception_handler,
+)
+
+# Cấu hình Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 app = FastAPI(
     title="Medical Diary API",
@@ -19,6 +35,14 @@ app.add_middleware(
 
 # 2. RLS Middleware (Quan trọng: Phải đứng sau CORS)
 app.add_middleware(RLSMiddleware)
+
+# 3. Logging Middleware (Phải đứng sau RLS để log được RLS context)
+app.add_middleware(LoggingMiddleware)
+
+# 4. Exception Handlers (Phải đứng sau Middleware)
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, unhandled_exception_handler)
 
 @app.get("/")
 async def root():

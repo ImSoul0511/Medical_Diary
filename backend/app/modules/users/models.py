@@ -13,6 +13,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Column,
+    Date,
     DateTime,
     ForeignKey,
     String,
@@ -38,8 +39,15 @@ class Profile(Base):
         nullable=False,
         server_default=text("'user'"),
     )
-    phone_encrypted = Column(Text, nullable=True, comment="Mã hóa pgcrypto")
+    phone_encrypted = Column(Text, nullable=False, comment="Mã hóa pgcrypto")
     cccd_encrypted = Column(Text, nullable=True, comment="Mã hóa pgcrypto — CCCD")
+    gender = Column(
+        String(10),
+        CheckConstraint("gender IN ('NAM', 'Nữ')", name="ck_profiles_gender"),
+        nullable=False,
+        server_default=text("'NAM'") # Default value required for non-nullable column with existing rows
+    )
+    date_of_birth = Column(Date, nullable=True)
     blood_type = Column(String(5), nullable=True, comment="VD: O+, AB-")
     allergies = Column(Text, nullable=True, comment="VD: Penicillin, Aspirin")
     emergency_contact = Column(String(20), nullable=True, comment="SĐT người thân")
