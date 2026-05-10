@@ -1,0 +1,150 @@
+Vấn đề chung:
+Trong nhiều tình huống khẩn cấp như tai nạn giao thông, đột quỵ hoặc ngất xỉu tại nơi công
+cộng, người gặp nạn thường không thể cung cấp thông tin y tế quan trọng cho nhân viên
+cấp cứu. Những thông tin như bệnh nền, dị ứng thuốc, thuốc đang sử dụng, nhóm máu hoặc
+thông tin người thân cần liên hệ thường chỉ được lưu trữ trong hồ sơ bệnh án tại bệnh viện
+hoặc do chính bệnh nhân ghi nhớ.
+Trong các tình huống bất ngờ, việc thiếu các dữ liệu y tế quan trọng này có thể khiến nhân
+viên cấp cứu gặp khó khăn trong việc đánh giá tình trạng ban đầu của bệnh nhân và lựa
+chọn phương án xử lý phù hợp. Điều này có thể làm chậm quá trình cấp cứu hoặc dẫn đến
+những rủi ro trong việc điều trị, đặc biệt trong các trường hợp cần xử lý nhanh để đảm bảo
+“thời gian vàng” cứu sống bệnh nhân.
+Bên cạnh đó, tại nhiều địa phương hiện nay vẫn chưa có một hệ thống phổ biến giúp lưu
+trữ và cung cấp nhanh các thông tin y tế cá nhân trong các tình huống khẩn cấp. Điều này
+khiến việc tiếp cận thông tin sức khỏe của người bệnh trong thời điểm cần thiết trở nên khó
+khăn.
+
+Quy trình xử lý các vấn đề đề ra theo 4 bước của Tư duy tính toán:
+Vấn đề: Thông tin y tế cá nhân (nhóm máu, tiền sử dị ứng, bệnh nền, thuốc đang sử dụng, thông tin người thân liên hệ) hiện nay tồn tại rời rạc ở nhiều nơi: sổ khám bệnh giấy, file PDF trên email, ứng dụng của từng bệnh viện, hoặc chỉ đơn giản là trong trí nhớ của người dùng.
+Decomposition: Thiếu dữ liệu người bệnh và không liên lạc được người thân. Khi ngất xỉu hoặc hoảng loạn, nạn nhân không thể nhớ, không thể tìm sổ, và không thể đọc mật khẩu mở app cho người cấp cứu.
+Pattern Recognition: Khi có sự cố khẩn cấp là bệnh nhân lại "kẹt" thông tin. Ta nhận ra nhu cầu bức thiết là cần một "hồ sơ trung tâm" duy nhất, luôn gắn liền với người bệnh (thông qua chiếc điện thoại di động).
+Abstraction: Thiết kế một ứng dụng đóng vai trò như một chiếc ví lưu giữ thông tin sức khỏe.
+Algorithm Design: Thiết kế luồng quản lý dữ liệu cơ bản của ứng dụng:
+Đầu vào: Cung cấp giao diện để người dùng nhập thông tin cá nhân và bệnh án.
+Lưu trữ: Ghi nhận và sở hữu khối dữ liệu đó tại hệ thống lưu trữ của ứng dụng.
+Đầu ra: Trích xuất và hiển thị thành một Thẻ Y tế tổng hợp, sẵn sàng cho người dùng hoặc bác sĩ đọc ngay lập tức.
+---------------------------------------------------------------------------------------------------------------------------
+Vấn đề: Khi khám bệnh, bác sĩ thường thiếu dữ liệu nền dài hạn về sức khỏe của bệnh nhân. Các quyết định y khoa thường chỉ dựa vào các chỉ số đo được tại một thời điểm duy nhất (lúc ở phòng khám) và lời kể mơ hồ của bệnh nhân về thói quen sinh hoạt, dẫn đến việc khó phát hiện các dấu hiệu suy giảm sức khỏe từ từ.
+Decomposition: Ta chia nhu cầu dữ liệu chẩn đoán thành 2 phần: chỉ số tức thời tại phòng khám (ví dụ: đo huyết áp ngay lúc đó) và dữ liệu lịch sử kéo dài (ví dụ: nhịp tim trung bình trong 30 ngày qua, thói quen vận động). Sự thiếu hụt trầm trọng đang nằm ở phần dữ liệu lịch sử.
+Pattern Recognition: Bệnh lý thường không xuất hiện đột ngột mà là kết quả của một chuỗi biến đổi sinh lý kéo dài. Nhận ra mẫu ở đây là: Dữ liệu chuỗi thời gian mang lại giá trị chẩn đoán cao hơn rất nhiều so với dữ liệu tại một thời điểm.
+Abstraction: Mở rộng khả năng của ứng dụng từ việc chỉ "lưu thẻ tĩnh" sang việc lưu trữ liên tục các chỉ số sinh hiệu (nhịp tim, bước chân) và thói quen để tạo thành một "Bức tranh xu hướng".
+Algorithm Design: Thiết kế cấu trúc lưu trữ mở rộng cho hệ thống: Thay vì chỉ ghi đè một bản ghi duy nhất như Thẻ SOS, hệ thống sẽ tạo một cơ sở dữ liệu lưu trữ tình trạng gắn liền với mốc thời gian. Mỗi ngày trôi qua sẽ tạo ra một bản ghi mới chứa các trường: Ngày tháng, Nhịp tim, Bước chân, Triệu chứng cơ thể,...
+---------------------------------------------------------------------------------------------------------------------------
+Vấn đề: Làm sao để có "Dữ liệu thói quen" khi người dùng quá lười nhập liệu mỗi ngày?
+Decomposition: Chia dữ liệu thói quen thành: Thứ máy tự đo được (nhịp tim, bước chân) và thứ con người phải tự cảm nhận (tâm trạng, đau nhức).
+Pattern Recognition: Hành vi lặp đi lặp lại: Người dùng cầm điện thoại/đeo đồng hồ thông minh cả ngày (máy luôn có data), nhưng rất lười mở app ra gõ chữ.
+Abstraction: Bỏ qua các form điền chữ dài dòng. Giữ lại 2 thứ cốt lõi: Lấy dữ liệu ngầm từ máy và bắt người dùng chọn 1 thanh đánh giá mức độ.
+Algorithm Design: 
+Cài đặt trên máy để tự động thu thập thông tin về nhịp tim, bước chân trung bình của một người mỗi ngày thông qua ứng dụng sức khỏe được cài đặt mặc định trên các dòng máy.
+Khi có triệu chứng cần ghi lại, có một giao diện để người dùng nhập tên triệu chứng và nhập tình trạng hoặc chọn icon đánh giá mức độ của triệu chứng. Có một phần riêng nếu người dùng muốn ghi chú kỹ.
+---------------------------------------------------------------------------------------------------------------------------
+Vấn đề: Khi hệ thống thu thập thành công một lượng lớn dữ liệu (từ thông tin cơ bản, nhịp tim đến cảm xúc hàng ngày), việc hiển thị tất cả chúng trên cùng một giao diện sẽ không cần thiết. Người cấp cứu cần thông tin sinh tử trong vòng vài giây, trong khi bác sĩ phòng khám cần dữ liệu xu hướng trong vòng 5 phút. Việc trộn lẫn dữ liệu sẽ làm mất đi tính ứng dụng của hệ thống trong các tình huống thực tế.
+Decomposition: Ta tiến hành bóc tách toàn bộ "khối dữ liệu sức khỏe" và "ngữ cảnh sử dụng" thành các thành phần nhỏ để đối chiếu:
+Về dữ liệu: Có nhóm máu, dị ứng, SĐT khẩn cấp, nhịp tim trung bình, bước chân, mức độ đau nhức, trạng thái tâm lý…
+Về ngữ cảnh: Có tình huống cấp cứu khẩn cấp, tình huống khám bệnh, và tình huống tự theo dõi.
+Pattern Recognition: Khi đối chiếu các tập hợp trên, ta phát hiện ra một quy luật phân bổ rõ rệt về mức độ khẩn cấp và tính chất thay đổi của dữ liệu:
+Dữ liệu ít khi thay đổi (tĩnh) + Cực kỳ quan trọng cho sự sống còn -> Thường dùng trong Cấp cứu.
+Dữ liệu thay đổi liên tục (động) + Đo lường khách quan -> Thường dùng cho Bác sĩ phân tích bệnh lý.
+Dữ liệu mang tính cảm nhận (chủ quan) -> Thường dùng làm thông tin tham khảo phụ.
+Abstraction: Gạt bỏ đi các chi tiết cụ thể (không cần quan tâm dị ứng hải sản hay dị ứng thuốc lúc này). Khái quát hóa và định nghĩa khối dữ liệu thành 3 tầng thông tin cốt lõi dựa trên mức độ ưu tiên:
+Tầng Sinh tử (Cố định): Quyết định tính mạng ngay lập tức.
+Tầng Biến thiên (Xu hướng): Cung cấp bức tranh y khoa khách quan.
+Tầng Thói quen (Tâm trạng): Cung cấp bối cảnh sinh hoạt chủ quan.
+Algorithm Design: Thiết kế thuật toán định tuyến hiển thị dựa trên việc gắn thẻ dữ liệu vào 3 tầng đã trừu tượng hóa ở trên:
+Nhánh 1: Khi khởi chạy Module SOS, thuật toán chỉ truy xuất và hiển thị tập dữ liệu thuộc "Tầng Sinh tử" lên một giao diện thiết kế tối giản, font chữ lớn, bỏ qua mọi rào cản xác thực.
+Nhánh 2: Khi khởi chạy Module Bác sĩ/Nhật ký, bên cạnh "Tầng Sinh tử", thuật toán sẽ tiến hành gọi dữ liệu từ "Tầng Biến thiên" và "Tầng Thói quen", sau đó đưa qua các hàm vẽ biểu đồ để tổng hợp thành Dashboard trực quan.
+---------------------------------------------------------------------------------------------------------------------------
+Vấn đề: Thiết kế Module SOS như thế nào trong tình huống khẩn cấp? (Module SOS là để trong tình huống khẩn cấp, người dùng có thể kích hoạt nhanh để gọi cấp cứu, thông báo cho người thân).
+Decomposition: Khó khăn của người bệnh lúc này thành các yếu tố vật lý và tâm lý:
+Thị giác: Không đọc được chữ nhỏ, bị lóa mắt.
+Vận động: Tay run, chạm không chính xác (dễ bấm nhầm ra ngoài hoặc bấm nhầm nút khác).
+Nhận thức: Não bộ đang đóng băng, không thể xử lý chuỗi logic (kiểu như: "Phải bấm nút Menu -> Chọn mục Cấp cứu -> Bấm Xác nhận").
+Pattern Recognition: Khi hoảng loạn, cần thao tác đơn giản để gửi yêu cầu cấp cứu khẩn cấp.
+Abstraction: Thiết kế một nút bấm đơn giản, màu đỏ, đủ to để trường hợp khẩn cấp người dùng có thể dễ dàng ấn vào.
+Algorithm Design: Thiết kế một Shortcut đủ to, màu đỏ, để khi người dùng ấn vào, thông báo cấp cứu sẽ được gửi đi.
+
+Vấn đề phụ: Người dùng ấn lộn vào nút đó khi ko có tình huống khẩn cấp.
+Decomposition: Một nút bấm to trên màn hình (để dễ thao tác khi hoảng loạn) lại tỷ lệ thuận với việc dễ bị cơ thể/ngón tay vô tình cọ trúng trong lúc để trong túi quần hoặc sử dụng hàng ngày.
+Pattern Recognition: Hành động khẩn cấp cần một sự xác nhận có chủ đích, và người dùng cần được thông báo khi vô tình kích hoạt. 
+Abstraction: Trì hoãn việc gửi thông báo khẩn cấp, cho người dùng có thêm thời gian để rút lại trước khi có hậu quả.
+Algorithm Design: 
+Nút SOS không nên nằm hẳn trên màn hình điện thoại vì quá to, dễ ấn nhầm. Thêm một cái Shortcut dẫn đến giao diện kích hoạt nút Shortcut => Giảm rủi ro ấn nhầm.
+Khi kích hoạt nút SOS, sẽ có hiệu ứng âm thanh kết hợp với điện thoại rung liên tục trong thời gian ngắn để báo cho người dùng biết nút SOS đã được kích hoạt, và người dùng có thể rút lại yêu cầu trước khi cuộc gọi khẩn cấp được thực hiện.
+---------------------------------------------------------------------------------------------------------------------------
+Vấn đề: Làm sao để thông tin sức khỏe của người dùng có thể được truy cập một cách nhanh chóng trong cả tình huống khẩn cấp mà vẫn đảm bảo tính riêng tư của dữ liệu?
+Decomposition: 
+Trường hợp khẩn cấp (tai nạn, sốc phản vệ, ngất xỉu), thời gian cứu người được tính bằng giây và nạn nhân hoàn toàn mất khả năng tự giao tiếp hay mở khóa thiết bị. Người hỗ trợ tại chỗ cần nắm được các chỉ số y tế cốt lõi ngay lập tức.
+Vì là tính huống khẩn cấp, nên thông tin cần thiết nhất là các thông tin của “Tầng sinh tử”. Các tầng khác là thông tin riêng tư cần phải bảo mật.
+Pattern recognition: 
+Vật bất ly thân: Người dùng có thói quen luôn mang theo điện thoại di động và CCCD bên mình. Trong bất kỳ tình huống sự cố nào, đây luôn là những vật dụng đầu tiên được người xung quanh tìm kiếm để xác định danh tính nạn nhân. Do đó, ta cần thiết kế một "công cụ/phương thức định danh y tế" hoạt động tương tự như vậy.
+Phân tầng công khai: Với CCCD, ta thấy nó chỉ in ấn và công khai những thông tin cơ bản nhất (Tên, Năm sinh, Số ID) đủ để định danh, chứ tuyệt đối không phơi bày hồ sơ tài chính hay đời tư chi tiết của công dân. Tương tự thì luồng truy cập công khai tại hiện trường sẽ chỉ được phép trích xuất và hiển thị duy nhất nhóm thông tin thuộc "Tầng sinh tử" (nhóm máu, dị ứng, liên hệ khẩn cấp), đóng kín hoàn toàn các tầng dữ liệu riêng tư khác.
+Abstraction: Thiết kế một cách truy cập vào dữ liệu sinh tử thông qua tra cứu CCCD hay một mã QR tạo từ ứng dụng.
+Algorithm Design:
+Đầu vào & Cập nhật hệ thống: Người dùng cung cấp thông tin thuộc "Tầng sinh tử" (nhóm máu, dị ứng, liên hệ khẩn cấp) và số Căn cước công dân (CCCD). Hệ thống sẽ cập nhật và lưu trữ khối dữ liệu công khai này lên cơ sở dữ liệu trung tâm, gắn liên kết trực tiếp với mã số CCCD của người dùng.
+Tạo mã & Chuẩn bị: Dựa trên dữ liệu đã cập nhật, hệ thống tự động xuất ra một mã QR định danh. Người dùng có thể in sẵn mã QR này ra (ví dụ: dán sau mặt lưng điện thoại, in làm thẻ đeo, hoặc để trong ví cùng CCCD).
+Truy xuất khẩn cấp: Khi tình huống khẩn cấp xảy ra, thuật toán hệ thống cho phép người hỗ trợ tại hiện trường truy cập dữ liệu công khai qua 2 nhánh độc lập:
+Người đi đường sử dụng thiết bị quét trực tiếp mã QR in sẵn trên người nạn nhân => Hệ thống lập tức gọi dữ liệu và hiển thị thông tin sinh tử.
+Người hỗ trợ tìm thấy thẻ CCCD vật lý của nạn nhân, nhập số CCCD vào cổng tra cứu khẩn cấp của hệ thống. Hệ thống đối khớp cơ sở dữ liệu và trả về màn hình thông tin sinh tử tương ứng.
+---------------------------------------------------------------------------------------------------------------------------
+Vấn đề: Bảo mật thông tin các tầng khác cho người dùng.
+Decomposition: 
+Các thông tin “Sinh tử” có thể được truy cập công khai thông qua CCCD, còn các thông tin ở các tầng khác cần được truy cập một cách minh bạch để đảm bảo tính riêng tư của dữ liệu cho người dùng.
+Các thông tin đó thường được sử dụng khi đi khám bệnh, khi người dùng đang có đầy đủ nhận thức và bác sĩ cần thêm thông tin để nắm tình hình bệnh nhân.
+Việc truy cập của bác sĩ là tạm thời, không nên là vĩnh viễn.
+Pattern Recognition: 
+Dữ liệu riêng tư phải luôn nằm trong quyền kiểm soát tuyệt đối của chủ sở hữu (bệnh nhân). Quyền truy cập chỉ được kích hoạt thông qua một hành động "trao quyền" trực tiếp và có chủ đích từ phía người dùng.
+Sự minh bạch đến từ việc quyền truy cập vào dữ liệu nhạy cảm không bao giờ được cấp vĩnh viễn hay mở cửa tự do. Nó phải là một chiếc "chìa khóa dùng một lần", chỉ có hiệu lực trong đúng phiên khám bệnh đó và dưới sự chứng kiến của người dùng.
+Abstraction:
+Cung cấp một công cụ để bác sĩ có thể yêu cầu truy cập dữ liệu, và người dùng là người chủ động xác nhận cấp quyền cho bác sĩ.
+Giới hạn thời gian cho quyền truy cập đó, để sau buổi khám, dữ liệu đó chỉ có người dùng có thể truy cập.
+Algorithm Design:
+Khởi tạo yêu cầu: Bác sĩ tra cứu thông tin bệnh nhân (qua CCCD) và nhấn chọn "Yêu cầu xem hồ sơ chi tiết". Hệ thống khởi tạo một phiên truy cập ở trạng thái "Chờ duyệt".
+Gửi xác thực: Hệ thống gửi một yêu cầu cấp quyền trực tiếp đến thiết bị của bệnh nhân (thông báo đẩy, mã OTP hoặc mã QR). Yêu cầu này hiển thị rõ thông tin bác sĩ/phòng khám đang muốn truy cập.
+Người dùng phê duyệt: Bệnh nhân kiểm tra thông tin và thực hiện thao tác "Đồng ý" trên thiết bị cá nhân của mình.
+Mở khóa phiên làm việc: Hệ thống nhận được lệnh xác nhận từ bệnh nhân, lập tức mở khóa dữ liệu riêng tư và đẩy về màn hình của bác sĩ. Đồng thời, hệ thống kích hoạt một bộ đếm thời gian (Timer) cho phiên làm việc này.
+Đóng phiên và Thu hồi: Khi thời gian giới hạn kết thúc hoặc khi bác sĩ chủ động kết thúc phiên khám bệnh, thuật toán tự động đóng phiên làm việc và vô hiệu hóa quyền truy cập. Đồng thời, hệ thống tự động tạo một bản ghi (Audit Log) lưu vào cơ sở dữ liệu với nội dung: Bác sĩ [Tên/ID] đã truy cập hồ sơ từ thời gian [A] đến [B]. Bản ghi lịch sử này hiển thị công khai trên ứng dụng của người dùng để đảm bảo tính minh bạch.
+---------------------------------------------------------------------------------------------------------------------------
+Vấn đề: Ứng dụng y tế yêu cầu tính sẵn sàng cao (phải nhập/xem được dữ liệu ngay cả khi không có mạng) và khả năng lưu trữ lịch sử lâu dài (hồ sơ bệnh án nhiều năm). Làm sao để phân bổ luồng dữ liệu hợp lý giữa Local và Cloud để đáp ứng cả hai nhu cầu này mà không làm quá tải thiết bị của người dùng?
+Decomposition:
+Local - Bộ nhớ máy người dùng: Người dùng cần thao tác nhanh, bấm lưu là phải ghi nhận ngay lập tức kể cả khi họ đang ở vùng lõm sóng (tầng hầm bệnh viện). Tuy nhiên, dung lượng điện thoại là hữu hạn, không thể dùng để lưu trữ trọn đời.
+Cloud - Cơ sở dữ liệu trung tâm: Hệ thống cần một nơi lưu trữ an toàn để chứa toàn bộ lịch sử sức khỏe từ lúc dùng app đến hiện tại. Đây cũng là nơi tiếp nhận các truy vấn từ tài khoản của Bác sĩ.
+Pattern Recognition: 
+Local là bộ đệm lưu một phần nhỏ dữ liệu gần nhất để truy xuất tức thời, và tự động xóa (evict) khi dữ liệu cũ đi để chống tràn bộ nhớ máy.
+Mọi thao tác nhập liệu đều được ghi ngay vào Local bất chấp tình trạng mạng. Sau đó, tiến trình ngầm sẽ tự động chuyển tiếp (đồng bộ) khối dữ liệu này lên Cloud khi kết nối ổn định.
+Abstraction: Khái quát hóa kiến trúc thành mô hình "Đồng bộ ngầm - Dọn dẹp tự động". Toàn bộ thao tác thêm/sửa dữ liệu của người dùng chỉ tương tác trực tiếp với Local để có độ trễ bằng. Việc luân chuyển khối dữ liệu đó từ Local lên Cloud sẽ do hệ thống tự động lo liệu ở lớp nền.
+Algorithm Design: 
+Ghi đệm tại Local: Bất cứ khi nào có dữ liệu mới sinh ra (người dùng nhập hoặc máy tự đo), hệ thống ghi thẳng vào Local. Bản ghi này được gắn cờ [Trạng thái: Chờ đồng bộ]. Người dùng nhận thông báo "Đã lưu" và có thể tắt máy ngay.
+Đồng bộ ngầm lên Cloud Khi thiết bị có kết nối Internet ổn định, một tiến trình chạy ngầm tự động "gom" các bản ghi [Chờ đồng bộ] và đẩy lên Cloud.
+Xác nhận & cập nhật trạng thái Cloud lưu thành công sẽ trả về một tín hiệu xác nhận (ACK). Local nhận được tín hiệu này lập tức đổi cờ bản ghi thành [Trạng thái: Đã đồng bộ].
+Dọn dẹp Local theo chu kỳ: Để thiết bị không bị phình to bộ nhớ, hệ thống thiết lập một "Cửa sổ thời gian" (ví dụ: 30 ngày). Mỗi ngày thuật toán tự động quét Local: Mọi bản ghi mang cờ [Đã đồng bộ] và cũ hơn 30 ngày sẽ bị xóa khỏi thiết bị (dữ liệu này vẫn đang nằm an toàn trên Cloud).
+Truy xuất linh hoạt: 
+Người dùng xem lịch sử 30 ngày gần nhất: Ứng dụng lấy thẳng từ Local (rất nhanh, xem được lúc offline).
+Bác sĩ yêu cầu xem lịch sử của 2 năm trước: Ứng dụng gọi API tải từ Cloud về để xem tạm thời.
+
+
+Công nghệ sử dụng: 
+Mô tả các công nghệ dự kiến sử dụng của dự án
+1. Backend
+Ngôn ngữ: Python (3.10+)
+Framework: FastAPI (Khuyến nghị vì tốc độ xử lý cực nhanh, hỗ trợ bất đồng bộ Asynchronous cực tốt và là tiêu chuẩn hiện đại cho RESTful) hoặc Django/Flask.
+Security: OAuth2 kết hợp JWT (JSON Web Token), mã hóa mật khẩu bằng bcrypt.
+Validation: Pydantic (Tích hợp sẵn cực kỳ mạnh mẽ trong FastAPI, giúp kiểm tra chặt chẽ dữ liệu y tế đầu vào).
+Kiến trúc: RESTful API
+
+2. Frontend (Native App)
+Ngôn ngữ chính: TypeScript / JavaScript (ES6+)
+Framework/Library: React Native / ReactJS
+Lưu trữ ngoại tuyến (Local DB): SQLite
+Quản lý trạng thái (State Management): Zustand 
+Giao diện (UI Framework): React Native Paper hoặc NativeWind.
+Thiết kế: UI tối giản, thân thiện, nút bấm to rõ để dễ thao tác trong tình huống khẩn cấp.
+
+3. Database
+Cơ sở dữ liệu: PostgreSQL 
+ORM: SQLAlchemy
+Cloud Database: Supabase
+
+4. Deployment
+Containerization: Docker
+Orchestration: Docker Compose
+Cloud Platform: AWS hoặc Google Cloud Platform
