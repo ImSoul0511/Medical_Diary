@@ -58,16 +58,16 @@ Tài liệu này xác định thứ tự triển khai các module, dựa trên m
 - [X] `revoke_selected_session()` — Invalidate session được chọn
 
 ### 1.3 `app/modules/auth/router.py`
-- [ ] `POST /auth/login`
-- [ ] `POST /auth/register`
-- [ ] `POST /auth/register/doctor`
-- [ ] `POST /auth/logout`
-- [ ] `POST /auth/revoke-all`
-- [ ] `GET /auth/sessions`
-- [ ] `POST /auth/revoke-selected-session`
+- [X] `POST /auth/login`
+- [X] `POST /auth/register`
+- [X] `POST /auth/register/doctor`
+- [X] `POST /auth/logout`
+- [X] `POST /auth/revoke-all`
+- [X] `GET /auth/sessions`
+- [X] `POST /auth/revoke-selected-session`
 
 ### 1.4 Đăng ký router trong `app/main.py`
-- [ ] `app.include_router(auth_router, prefix="/auth", tags=["Auth"])`
+- [X] `app.include_router(auth_router, prefix="/auth", tags=["Auth"])`
 
 ---
 
