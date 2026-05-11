@@ -40,7 +40,7 @@ class MessageResponse(BaseModel):
 ### LoginRequest
 ```python
 class LoginRequest(BaseModel):
-    phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
+    email: EmailStr
     password: str = Field(..., min_length=8)
 ```
 
@@ -54,12 +54,14 @@ class LoginResponse(BaseModel):
 class UserBrief(BaseModel):
     id: UUID
     role: str   # "user" | "doctor" | "admin"
+    email: EmailStr
     phone_number: str
 ```
 
 ### RegisterRequest
 ```python
 class RegisterRequest(BaseModel):
+    email: EmailStr
     phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=100)
@@ -71,6 +73,7 @@ class RegisterRequest(BaseModel):
 Lưu ý: Endpoint này dùng `multipart/form-data`, không phải JSON thuần.
 ```python
 class RegisterDoctorRequest(BaseModel):
+    email: EmailStr
     phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=100)

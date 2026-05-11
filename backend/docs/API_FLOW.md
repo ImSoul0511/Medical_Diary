@@ -52,7 +52,7 @@ sequenceDiagram
     participant ConAPI as API: /consent
     participant MedAPI as API: /medical-records
 
-    DocFE->>DocAPI: GET /doctors/search-patients?phone=0123...&cccd=0123... (Tìm bệnh nhân)
+    DocFE->>DocAPI: GET /doctors/search-patients?phone=0987654321&cccd=0123... (Tìm bệnh nhân)
     DocAPI-->>DocFE: 200 OK (Trả về thông tin cơ bản: Tên, ID)
 
     DocFE->>DocAPI: POST /doctors/request-access (Xin quyền xem hồ sơ)

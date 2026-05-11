@@ -21,7 +21,7 @@ Tài liệu này xác định thứ tự triển khai các module, dựa trên m
 3. **Supabase Client:** Chỉ dùng cho 3 việc: Auth (đăng ký/đăng nhập), Storage (upload file), Realtime (nếu cần).
 4. **Error Handling:** Trả lỗi theo format chuẩn `ErrorResponse` đã định nghĩa trong `SCHEMAS.md` (mục 0). Exception Handler toàn cục sẽ tự đính kèm `request_id` (xem `app/core/exceptions.py`).
 5. **Soft Delete:** Mọi DELETE đều chỉ cập nhật cột `deleted_at`. Query SELECT phải lọc `WHERE deleted_at IS NULL`.
-6. **Mã hóa Dữ liệu Nhạy cảm:** Các trường `phone_encrypted`, `cccd_encrypted` (cho Bác sĩ) phải dùng `pgp_sym_encrypt()` / `pgp_sym_decrypt()` của pgcrypto. Key lấy từ `current_setting('app.encryption_key')` (được inject qua `get_db()`). Chi tiết xem `Auth_and_Logging_plan.md` Phần C.
+6. **Mã hóa Dữ liệu Nhạy cảm:** Các trường `cccd_encrypted` (cho Bác sĩ) phải dùng `pgp_sym_encrypt()` / `pgp_sym_decrypt()` của pgcrypto. Key lấy từ `current_setting('app.encryption_key')` (được inject qua `get_db()`). Chi tiết xem `Auth_and_Logging_plan.md` Phần C.
 
 ---
 
@@ -96,7 +96,7 @@ Tài liệu này xác định thứ tự triển khai các module, dựa trên m
 - [ ] `PatientSearchResult`, `PatientDetailResponse`
 
 ### 2.5 `app/modules/doctors/service.py`
-- [ ] `search_patients()` — Tìm bệnh nhân qua SĐT (giải mã pgcrypto)
+- [ ] `search_patients()` — Tìm bệnh nhân qua Email
 - [ ] `get_patient_detail()` — Xem hồ sơ bệnh nhân (kiểm tra consent)
 - [ ] `search_doctors()` — User tìm bác sĩ (chỉ trả public info)
 

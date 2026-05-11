@@ -17,6 +17,7 @@ class LoginResponse(BaseModel):
 
 class RegisterRequest(BaseModel):
     email: EmailStr
+    phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=100)
     gender: str
@@ -24,6 +25,7 @@ class RegisterRequest(BaseModel):
 
 class RegisterDoctorRequest(BaseModel):
     email: EmailStr
+    phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=100)
     gender: str

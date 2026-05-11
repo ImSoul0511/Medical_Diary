@@ -60,8 +60,8 @@ class AuthService:
             user_id = response.user.id 
 
             query = text("""
-                INSERT INTO profiles (id, full_name, role, gender, date_of_birth)
-                VALUES (:id, :full_name, :role, :gender, :date_of_birth)
+                INSERT INTO profiles (id, full_name, role, gender, date_of_birth, phone_encrypted)
+                VALUES (:id, :full_name, :role, :gender, :date_of_birth, pgp_sym_encrypt(:phone, current_setting('app.encryption_key')))
                 """)
             await self.db.execute(query, {
                 "id": user_id, 
@@ -69,6 +69,7 @@ class AuthService:
                 "role": "user",
                 "gender": data.gender,
                 "date_of_birth": data.date_of_birth,
+                "phone": data.phone_number
             })
             await self.db.commit() 
 
@@ -93,9 +94,10 @@ class AuthService:
 
             # 2. Lưu profile (role = doctor, mã hóa cccd)
             profile_query = text("""
-                INSERT INTO profiles (id, full_name, date_of_birth, cccd_encrypted, gender, role)
+                INSERT INTO profiles (id, full_name, date_of_birth, phone_encrypted, cccd_encrypted, gender, role)
                 VALUES (
                     :id, :full_name, :dob,
+                    pgp_sym_encrypt(:phone, current_setting('app.encryption_key')),
                     pgp_sym_encrypt(:cccd, current_setting('app.encryption_key')),
                     :gender,
                     'doctor'
@@ -105,6 +107,7 @@ class AuthService:
                 "id": user_id,
                 "full_name": data.full_name,
                 "dob": data.date_of_birth,
+                "phone": data.phone_number,
                 "cccd": data.cccd,
                 "gender": data.gender,
             })
