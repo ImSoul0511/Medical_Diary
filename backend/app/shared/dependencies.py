@@ -1,7 +1,11 @@
+from fastapi import Security
 import json 
 from typing import Callable, List, Dict, Any
 from fastapi import Request, HTTPException, Depends 
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from supabase import create_client, Client
+
+security = HTTPBearer()
 
 from app.core.config import settings 
 def get_supabase_client() -> Client:
@@ -14,7 +18,10 @@ def get_supabase_client() -> Client:
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Database connection error: {str(e)}")
 
-def get_current_user(request: Request) -> Dict[str, Any]:
+def get_current_user(
+    request: Request,
+    _token: HTTPAuthorizationCredentials = Depends(security)
+) -> Dict[str, Any]:
     """
     Dependency lấy thông tin user từ JWT claims (đã được RLSMiddleware xử lý).
     Văng lỗi 401 nếu người dùng chưa đăng nhập hoặc token không hợp lệ.
@@ -22,10 +29,14 @@ def get_current_user(request: Request) -> Dict[str, Any]:
     claims_json = getattr(request.state, "jwt_claims", "{}")
     claims = json.loads(claims_json)
 
-    if not claims or "sub" not in claims: 
+    if not claims or "sub" not in claims:
+        # Debug log để biết tại sao bị chặn
+        import logging
+        logging.error(f"Access Denied: claims_json from state is: {claims_json}")
+        
         raise HTTPException(
             status_code=401,
-            detail="Không có quyền truy cập. Vui lòng cung cấp token hợp lệ.",
+            detail=f"Không có quyền truy cập. Token không hợp lệ hoặc RLS Context bị trống. (Claims: {claims_json})",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

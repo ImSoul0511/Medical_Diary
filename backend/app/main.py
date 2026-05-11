@@ -10,6 +10,7 @@ from app.core.exceptions import (
     validation_exception_handler,
     unhandled_exception_handler,
 )
+from app.modules.auth.router import router as auth_router 
 
 # Cấu hình Logging
 logging.basicConfig(
@@ -54,3 +55,5 @@ async def health_check():
         "status": "healthy",
         "version": "1.0.0"
     }
+
+app.include_router(auth_router)

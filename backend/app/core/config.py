@@ -12,7 +12,8 @@ class Settings(BaseSettings):
 
     # Security
     JWT_SECRET: str
-    ALGORITHM: str = "HS256"
+    ENCRYPTION_KEY: str
+    ALGORITHM: str = "ES256"
 
     # Admin Configuration
     ADMIN_IP_ALLOWLIST: str = "127.0.0.1"

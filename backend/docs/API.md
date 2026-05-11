@@ -30,6 +30,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 ---
 
 ## 1. Module: Core & Auth (`/auth`)
+> **LƯU Ý:** Tạm thời sử dụng `email` thay cho `phone_number` trong quá trình test và phát triển vì Supabase hỗ trợ sign up qua email miễn phí. Sau khi có SMS Provider sẽ chuyển lại thành số điện thoại.
 
 ### 1.1 Đăng nhập
 * **Endpoint:** `POST /auth/login`
@@ -38,7 +39,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Body:**
   ```json
   {
-    "phone_number": "+84987654321",
+    "email": "test@example.com",
     "password": "securepassword123"
   }
   ```
@@ -50,7 +51,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
     "user": {
       "id": "uuid",
       "role": "user",
-      "phone_number": "+84987654321"
+      "email": "test@example.com"
     }
   }
   ```
@@ -61,7 +62,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Body:**
   ```json
   {
-    "phone_number": "+84987654321",
+    "email": "test@example.com",
     "password": "securepassword123",
     "full_name": "Nguyen Khai",
     "date_of_birth": "1990-01-01",
@@ -79,8 +80,13 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 ### 1.4 Hủy toàn bộ phiên đăng nhập
 * **Endpoint:** `POST /auth/revoke-all`
 * **Auth:** Bắt buộc
-* **Body:** Trống
-* **Response (200 OK):** `{ "message": "All sessions revoked successfully" }`
+* **Body:**
+  ```json
+  {
+    "password": "securepassword123"
+  }
+  ```
+* **Response (200 OK):** `{ "message": "Đã thu hồi tất cả phiên đăng nhập." }`
 
 ### 1.5 Liệt kê các phiên hoạt động
 * **Endpoint:** `GET /auth/sessions`
@@ -91,9 +97,11 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
     "sessions": [
       {
         "session_id": "uuid",
-        "device": "Chrome on Windows",
-        "ip_address": "192.168.1.1",
-        "last_active": "2026-04-24T12:00:00Z"
+        "user_id": "uuid",
+        "created_at": "2026-04-24T12:00:00Z",
+        "updated_at": "2026-04-24T12:00:00Z",
+        "user_agent": "Chrome on Windows",
+        "ip": "192.168.1.1"
       }
     ]
   }
@@ -105,10 +113,11 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Body:**
   ```json
   {
-    "session_id": "uuid-cua-session-can-xoa"
+    "session_id": "uuid-cua-session-can-xoa",
+    "password": "securepassword123"
   }
   ```
-* **Response (200 OK):** `{ "message": "Phiên đăng nhập đã được hủy" }`
+* **Response (200 OK):** `{ "message": "Đã thu hồi phiên đăng nhập." }`
 
 ### 1.7 Đăng ký tài khoản Bác sĩ
 * **Endpoint:** `POST /auth/register/doctor`
@@ -116,7 +125,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Body:** `multipart/form-data`
   ```json
   {
-    "phone_number": "+84987654321",
+    "email": "doctor@example.com",
     "password": "securepassword123",
     "full_name": "Dr. Tran Van A",
     "date_of_birth": "1990-01-01",

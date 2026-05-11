@@ -25,7 +25,6 @@ Lưu trữ thông tin người dùng cơ bản, mở rộng từ bảng `auth.us
 - **id**: `uuid` (Primary Key, references `auth.users`)
 - **full_name**: `varchar(100)` (Not Null)
 - **role**: `varchar(20)` (Check: `user`, `doctor`, `admin`) (Default: `user`)
-- **phone_encrypted**: `text` (Not Null — Mã hóa pgcrypto)
 - **cccd_encrypted**: `text` (Nullable — Mã hóa pgcrypto — Căn cước công dân)
 - **gender**: `varchar(10)` (Check: `'NAM'`, `'Nữ'`)
 - **date_of_birth**: `date` (Nullable)
@@ -37,7 +36,7 @@ Lưu trữ thông tin người dùng cơ bản, mở rộng từ bảng `auth.us
 - **updated_at**: `timestamptz` (Default: `now()`)
 - **deleted_at**: `timestamptz` (Nullable - Soft Delete)
 
-> **Lưu ý:** `email` không lưu trong `profiles`. Khi cần email, JOIN với `auth.users`.
+> **Lưu ý:** `email` không lưu trong `profiles` (Supabase Auth quản lý email). Tạm thời sử dụng email thay cho phone number để test.
 
 ### Bảng `doctors`
 Thông tin bổ sung cho người dùng có role là `doctor`.

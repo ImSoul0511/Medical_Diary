@@ -241,8 +241,9 @@ Thêm vào `main.py` (diff so với hiện tại):
 | `register()` | Đăng ký user thường | Supabase Auth `sign_up` + INSERT `profiles` |
 | `register_doctor()` | Đăng ký bác sĩ | Supabase Auth `sign_up` + INSERT `profiles` + INSERT `doctors` |
 | `logout()` | Đăng xuất | Supabase Auth `sign_out` |
-| `list_sessions()` | Xem phiên đăng nhập | Trả danh sách session (placeholder) |
-| `revoke_all_sessions()` | Hủy tất cả phiên | Supabase Admin API (placeholder) |
+| `list_sessions()` | Xem phiên đăng nhập | Supabase RPC `list_user_sessions` |
+| `revoke_all_sessions()` | Hủy tất cả phiên | Supabase RPC `revoke_all_user_sessions` |
+| `revoke_selected_session()` | Hủy một phiên cụ thể | Supabase RPC `revoke_selected_session` |
 
 ---
 
@@ -597,16 +598,16 @@ Thêm vào cuối file `main.py`:
 
 ### ✅ Checklist Phần B
 
-- [ ] Sửa bug `__init` → `__init__` trong `service.py`
-- [ ] Xóa import `SessionInfo` (không tồn tại trong schemas)
-- [ ] Viết hàm `register()` trong service
-- [ ] Viết hàm `register_doctor()` trong service
-- [ ] Viết hàm `logout()` trong service
-- [ ] Viết hàm `list_sessions()` trong service
-- [ ] Viết hàm `revoke_all_sessions()` trong service
-- [ ] Viết file `router.py` với 6 endpoints
-- [ ] Đăng ký `auth_router` trong `main.py`
-- [ ] Test: Chạy `uvicorn app.main:app --reload` → Mở `/docs` → Thấy 6 endpoint Auth
+- [x] Sửa bug `__init` → `__init__` trong `service.py`
+- [x] Xóa import `SessionInfo` (không tồn tại trong schemas)
+- [x] Viết hàm `register()` trong service
+- [x] Viết hàm `register_doctor()` trong service
+- [x] Viết hàm `logout()` trong service
+- [x] Viết hàm `list_sessions()` trong service
+- [x] Viết hàm `revoke_all_sessions()` trong service
+- [x] Viết file `router.py` với 6 endpoints
+- [x] Đăng ký `auth_router` trong `main.py`
+- [x] Test: Chạy `uvicorn app.main:app --reload` → Mở `/docs` → Thấy 6 endpoint Auth
 
 ---
 
@@ -721,12 +722,12 @@ WHERE pgp_sym_decrypt(phone_encrypted::bytea, current_setting('app.encryption_ke
 
 ### ✅ Checklist Phần C
 
-- [ ] Chạy SQL `CREATE EXTENSION IF NOT EXISTS pgcrypto` trên Supabase SQL Editor
-- [ ] Tạo file `supabase/policies/001_pgcrypto_setup.sql`
-- [ ] Thêm `ENCRYPTION_KEY` vào `.env`
-- [ ] Thêm `ENCRYPTION_KEY: str` vào `app/core/config.py`
-- [ ] Sửa `app/core/database.py` — thêm `set_config('app.encryption_key', ...)` vào `get_db()`
-- [ ] Kiểm tra: INSERT 1 profile → xem trong Supabase Table Editor cột `phone_encrypted` hiển thị chuỗi mã hóa (không phải plaintext)
+- [x] Chạy SQL `CREATE EXTENSION IF NOT EXISTS pgcrypto` trên Supabase SQL Editor
+- [x] Tạo file `supabase/policies/001_pgcrypto_setup.sql`
+- [x] Thêm `ENCRYPTION_KEY` vào `.env`
+- [x] Thêm `ENCRYPTION_KEY: str` vào `app/core/config.py`
+- [x] Sửa `app/core/database.py` — thêm `set_config('app.encryption_key', ...)` vào `get_db()`
+- [x] Kiểm tra: INSERT 1 profile → xem trong Supabase Table Editor cột `phone_encrypted` hiển thị chuỗi mã hóa (không phải plaintext)
 
 ---
 

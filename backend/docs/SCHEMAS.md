@@ -95,10 +95,12 @@ class RegisterDoctorResponse(BaseModel):
 ### SessionResponse
 ```python
 class SessionResponse(BaseModel):
-    session_id: UUID
-    device: str
-    ip_address: str
-    last_active: datetime
+    session_id: UUID 
+    user_id: UUID
+    created_at: datetime 
+    updated_at: datetime 
+    user_agent: str 
+    ip: str 
 ```
 
 ### HealthResponse
@@ -118,6 +120,13 @@ class SessionListResponse(BaseModel):
 ```python
 class RevokeSessionRequest(BaseModel):
     session_id: UUID
+    password: str
+```
+
+### RevokeAllRequest
+```python
+class RevokeAllRequest(BaseModel):
+    password: str
 ```
 
 ---
