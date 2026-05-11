@@ -30,7 +30,6 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 ---
 
 ## 1. Module: Core & Auth (`/auth`)
-> **LƯU Ý:** Tạm thời sử dụng `email` thay cho `phone_number` trong quá trình test và phát triển vì Supabase hỗ trợ sign up qua email miễn phí. Sau khi có SMS Provider sẽ chuyển lại thành số điện thoại.
 
 ### 1.1 Đăng nhập
 * **Endpoint:** `POST /auth/login`
@@ -63,6 +62,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```json
   {
     "email": "test@example.com",
+    "phone_number": "0987654321",
     "password": "securepassword123",
     "full_name": "Nguyen Khai",
     "date_of_birth": "1990-01-01",
@@ -120,21 +120,21 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
 * **Response (200 OK):** `{ "message": "Đã thu hồi phiên đăng nhập." }`
 
 ### 1.7 Đăng ký tài khoản Bác sĩ
-* **Endpoint:** `POST /auth/register/doctor`
+* **Endpoint:** `POST /auth/register-doctor`
 * **Auth:** Public
 * **Body:** `multipart/form-data`
-  ```json
-  {
-    "email": "doctor@example.com",
-    "password": "securepassword123",
-    "full_name": "Dr. Tran Van A",
-    "date_of_birth": "1990-01-01",
-    "gender": "NAM",
-    "cccd": "012345678901",
-    "license_number": "BS-2026-001",
-    "specialty": "Cardiology",
-    "hospital": "HCMUS Medical Center"
-  }
+  ```text
+  email: doctor@example.com
+  phone_number: 0987654321
+  password: securepassword123
+  full_name: Dr. Tran Van A
+  date_of_birth: 1990-01-01
+  gender: NAM
+  cccd: 012345678901
+  license_number: BS-2026-001
+  specialty: Cardiology
+  hospital: HCMUS Medical Center
+  certificate_file: <File_binary>
   ```
 * **Response (201 Created):**
   ```json

@@ -51,6 +51,7 @@ async def register(
 async def register_doctor(
     # Form fields (multipart/form-data)
     email: str = Form(...),
+    phone_number: str = Form(...),
     password: str = Form(...),
     full_name: str = Form(...),
     date_of_birth: str = Form(...),
@@ -75,6 +76,7 @@ async def register_doctor(
     # 2. Tạo schema object từ form data
     data = RegisterDoctorRequest(
         email=email,
+        phone_number=phone_number,
         password=password,
         full_name=full_name,
         date_of_birth=date_type.fromisoformat(date_of_birth),
