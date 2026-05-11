@@ -25,7 +25,7 @@ class AuthService:
         try: 
             # xác thực với Supabase Auth 
             response = self.supabase.auth.sign_in_with_password({
-                "phone": data.phone_number, 
+                "email": data.email, 
                 "password": data.password 
             })
 
@@ -47,29 +47,28 @@ class AuthService:
                 )
             )
         except Exception as e: 
-            logger.warning(f"Login failed for {data.phone_number}")
-            raise HTTPException(status_code=401, detail="Số điện thoại hoặc mật khẩu không đúng")
+            logger.warning(f"Login failed for {data.email}")
+            raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không đúng")
         
     async def register(self, data: RegisterRequest) -> MessageResponse:
         try: 
             response = self.supabase.auth.sign_up({
-                "phone": data.phone_number, 
+                "email": data.email, 
                 "password": data.password 
             })
 
             user_id = response.user.id 
 
             query = text("""
-                INSERT INTO profiles (id, full_name, role, gender, date_of_birth, phone_encrypted)
-                VALUES (:id, :full_name, :role, :gender, :date_of_birth, pgp_sym_encrypt(:phone_number, current_setting('app.encryption_key')))
+                INSERT INTO profiles (id, full_name, role, gender, date_of_birth)
+                VALUES (:id, :full_name, :role, :gender, :date_of_birth)
                 """)
             await self.db.execute(query, {
                 "id": user_id, 
                 "full_name": data.full_name, 
-                "role": data.role,
+                "role": "user",
                 "gender": data.gender,
                 "date_of_birth": data.date_of_birth,
-                "phone_number": data.phone_number,
             })
             await self.db.commit() 
 
@@ -87,17 +86,16 @@ class AuthService:
         try:
             # 1. Tạo tài khoản trên Supabase Auth
             response = self.supabase.auth.sign_up({
-                "phone": data.phone_number,
+                "email": data.email,
                 "password": data.password,
             })
             user_id = response.user.id
 
-            # 2. Lưu profile (role = doctor, mã hóa phone + cccd)
+            # 2. Lưu profile (role = doctor, mã hóa cccd)
             profile_query = text("""
-                INSERT INTO profiles (id, full_name, date_of_birth, phone_encrypted, cccd_encrypted, gender, role)
+                INSERT INTO profiles (id, full_name, date_of_birth, cccd_encrypted, gender, role)
                 VALUES (
                     :id, :full_name, :dob,
-                    pgp_sym_encrypt(:phone, current_setting('app.encryption_key')),
                     pgp_sym_encrypt(:cccd, current_setting('app.encryption_key')),
                     :gender,
                     'doctor'
@@ -107,7 +105,6 @@ class AuthService:
                 "id": user_id,
                 "full_name": data.full_name,
                 "dob": data.date_of_birth,
-                "phone": data.phone_number,
                 "cccd": data.cccd,
                 "gender": data.gender,
             })
@@ -137,6 +134,7 @@ class AuthService:
     async def log_out(self) -> MessageResponse:
         try: 
             self.supabase.auth.sign_out() 
+            logger.info(f"User logged out successfully")
             return MessageResponse("Đã đăng xuất thành công.")
         except Exception as e:
             logger.error(f"Logout failed: {e}")
@@ -144,15 +142,67 @@ class AuthService:
     
     async def list_session(self, user_id: str) -> SessionListResponse:
         try: 
-            query = text("""
-                SELECT id, user_id, created_at, updated_at, user_agent, ip_address
-                FROM auth.sessions
-                WHERE user_id = :user_id
-                ORDER BY created_at DESC
-            """)
-            result = await self.db.execute(query, {"user_id": user_id})
-            sessions = result.fetchall()
-            return SessionListResponse(sessions=[SessionResponse(id=row[0], created_at=row[1], expires_at=row[2], is_revoked=row[3]) for row in sessions])
+            response = self.supabase.rpc("list_user_sessions", {
+                "target_user_id": user_id
+            }).execute()
+            logger.info(f"Sessions listed of user: {user_id}")
+            return SessionListResponse(
+                sessions=[
+                    SessionResponse(
+                        session_id=row["id"],
+                        user_id=user_id,
+                        created_at=row["created_at"],
+                        updated_at=row["updated_at"],
+                        user_agent=row.get("user_agent") or "Unknown",
+                        ip=row.get("ip") or "Unknown"
+                    ) for row in (response.data or [])
+                ]
+            )
         except Exception as e:
             logger.error(f"List sessions failed: {e}")
             raise HTTPException(status_code=400, detail="Không thể lấy danh sách phiên đăng nhập.")
+
+    async def revoke_selected_session(self, session_id: str, user_id: str, password: str) -> MessageResponse:
+        try:
+            # Xác thực mật khẩu trước
+            is_valid = self.supabase.rpc("verify_user_password", {
+                "target_user_id": user_id,
+                "plain_password": password
+            }).execute()
+            
+            if not is_valid.data:
+                raise HTTPException(status_code=401, detail="Mật khẩu không chính xác.")
+
+            self.supabase.rpc("revoke_selected_session", {
+                "target_session_id": session_id,
+                "target_user_id": user_id
+            }).execute()
+            logger.info(f"Selected session {session_id} revoked successfully of user: {user_id}")
+            return MessageResponse(message="Đã thu hồi phiên đăng nhập.")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Revoke selected session failed: {e}")
+            raise HTTPException(status_code=400, detail="Không thể thu hồi phiên đăng nhập.")
+
+    async def revoke_all_user_sessions(self, user_id: str, password: str) -> MessageResponse:
+        try:
+            # Xác thực mật khẩu trước
+            is_valid = self.supabase.rpc("verify_user_password", {
+                "target_user_id": user_id,
+                "plain_password": password
+            }).execute()
+            
+            if not is_valid.data:
+                raise HTTPException(status_code=401, detail="Mật khẩu không chính xác.")
+
+            self.supabase.rpc("revoke_all_user_sessions", {
+                "target_user_id": user_id,
+            }).execute()
+            logger.info(f"All sessions revoked successfully of user: {user_id}")
+            return MessageResponse(message="Đã thu hồi tất cả phiên đăng nhập.")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Revoke all user sessions failed: {e}")
+            raise HTTPException(status_code=400, detail="Không thể thu hồi tất cả phiên đăng nhập.")

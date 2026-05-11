@@ -49,13 +49,13 @@ Tài liệu này xác định thứ tự triển khai các module, dựa trên m
 - [X] `SessionInfo`, `SessionListResponse`
 
 ### 1.2 `app/modules/auth/service.py`
-- [ ] `login()` — Gọi Supabase Auth `sign_in_with_password`
-- [ ] `register()` — Gọi Supabase Auth `sign_up` + tạo `Profile` trong DB
-- [ ] `register_doctor()` — Như register + tạo bản ghi `Doctor` (pending_verification)
-- [ ] `logout()` — Invalidate session hiện tại
-- [ ] `revoke_all_sessions()` — Invalidate tất cả sessions
-- [ ] `list_sessions()` — Lấy danh sách sessions
-- [ ] `revoke_selected_session()` — Invalidate session được chọn
+- [X] `login()` — Gọi Supabase Auth `sign_in_with_password`
+- [X] `register()` — Gọi Supabase Auth `sign_up` + tạo `Profile` trong DB
+- [X] `register_doctor()` — Như register + tạo bản ghi `Doctor` (pending_verification)
+- [X] `logout()` — Invalidate session hiện tại
+- [X] `revoke_all_sessions()` — Invalidate tất cả sessions
+- [X] `list_sessions()` — Lấy danh sách sessions
+- [X] `revoke_selected_session()` — Invalidate session được chọn
 
 ### 1.3 `app/modules/auth/router.py`
 - [ ] `POST /auth/login`

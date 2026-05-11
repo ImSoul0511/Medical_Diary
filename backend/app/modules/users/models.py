@@ -39,7 +39,6 @@ class Profile(Base):
         nullable=False,
         server_default=text("'user'"),
     )
-    phone_encrypted = Column(Text, nullable=False, comment="Mã hóa pgcrypto")
     cccd_encrypted = Column(Text, nullable=True, comment="Mã hóa pgcrypto — CCCD")
     gender = Column(
         String(10),

@@ -1,9 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from uuid import UUID 
 from datetime import datetime, date
 from typing import List
 class LoginRequest(BaseModel):
-    phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
+    email: EmailStr
     password: str = Field(..., min_length=8)
 
 class UserBrief(BaseModel):
@@ -16,14 +16,14 @@ class LoginResponse(BaseModel):
     user: UserBrief 
 
 class RegisterRequest(BaseModel):
-    phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
+    email: EmailStr
     password: str = Field(..., min_length=8)
-    full_name: str = Field(..., min_length=2, max_lenágth=100)
+    full_name: str = Field(..., min_length=2, max_length=100)
     gender: str
     date_of_birth: date
 
 class RegisterDoctorRequest(BaseModel):
-    phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
+    email: EmailStr
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=100)
     gender: str
@@ -50,3 +50,10 @@ class SessionResponse(BaseModel):
 
 class SessionListResponse(BaseModel):
     sessions: List[SessionResponse]
+
+class RevokeSessionRequest(BaseModel):
+    session_id: UUID
+    password: str = Field(..., min_length=8)
+
+class RevokeAllRequest(BaseModel):
+    password: str = Field(..., min_length=8)

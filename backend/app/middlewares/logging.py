@@ -3,12 +3,12 @@ from time import time
 import logging 
 from fastapi import Request 
 from typing import Callable 
-from starlette.middleware.base import BaseMiddleware 
+from starlette.middleware.base import BaseHTTPMiddleware 
 
 # Cấu hình logger 
 logger = logging.getLogger("medical_diary")
 
-class LoggingMiddleware(BaseMiddleware):
+class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable):
         # tạo request_id
         request_id = uuid.uuid4().hex[:8]

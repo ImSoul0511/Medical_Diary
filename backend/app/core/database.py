@@ -63,8 +63,8 @@ async def get_db(request: Request) -> AsyncGenerator[AsyncSession, None]:
             
             # Thiết lập RLS context cho transaction này
             await session.execute(
-                text("SELECT set_config('request.jwt.claims', :claims, true)"),
-                {"claims": jwt_claims}
+                text("SELECT set_config('request.jwt.claims', :claims, true), set_config('app.encryption_key', :enc_key, true)"),
+                {"claims": jwt_claims, "enc_key": settings.ENCRYPTION_KEY}
             )
             
             yield session
