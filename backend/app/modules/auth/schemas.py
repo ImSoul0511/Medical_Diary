@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, EmailStr
 from uuid import UUID 
 from datetime import datetime, date
 from typing import List
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
