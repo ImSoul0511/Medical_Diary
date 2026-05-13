@@ -11,6 +11,7 @@ from app.core.exceptions import (
     unhandled_exception_handler,
 )
 from app.modules.auth.router import router as auth_router 
+from app.modules.users.router import router as users_router
 
 # Cấu hình Logging
 logging.basicConfig(
@@ -57,3 +58,4 @@ async def health_check():
     }
 
 app.include_router(auth_router)
+app.include_router(users_router)

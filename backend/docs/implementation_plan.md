@@ -97,12 +97,12 @@ Phase 0 (Shared) ──→ Phase 1 (Auth) ──→ Phase 2 (Consent Helper)
 
 ---
 
-## Phase 2: Consent Helper (1 người — Làm trước khi tách nhóm)
+## Phase 2: Consent Helper (Da hoan thanh)
 
 > Đây là hàm chia sẻ duy nhất giữa Phase 3A/3B/3C. Tạo xong file này thì 3 coder có thể chạy song song.
 
 ### 2.1 `app/shared/consent.py` (Tạo mới)
-- [ ] `check_consent(db, doctor_id, patient_id, required_scope)` — Kiểm tra bác sĩ có quyền truy cập scope cụ thể của bệnh nhân không. Đọc trực tiếp từ bảng `consent_permissions`.
+- [x] `check_consent(db, doctor_id, patient_id, required_scope)` — Kiểm tra bác sĩ có quyền truy cập scope cụ thể của bệnh nhân không. Đọc trực tiếp từ bảng `consent_permissions`.
 
 ```python
 # Mẫu:
@@ -130,31 +130,31 @@ async def check_consent(
 
 ---
 
-### Phase 3A: Users Self-service (Coder 1)
+### Phase 3A: Users Self-service (Coder 1) (Da hoan thanh)
 
 > User quản lý hồ sơ CỦA CHÍNH MÌNH. Không cần consent.
 
 #### 3A.1 `app/modules/users/schemas.py`
-- [ ] `UserProfileResponse`, `UserProfileUpdateRequest`
-- [ ] `PrivacyUpdateRequest`
-- [ ] `AccessHistoryResponse` (`AccessHistoryItem`)
-- [ ] `DoctorPublicResponse` (dùng cho search-doctors)
+- [x] `UserProfileResponse`, `UserProfileUpdateRequest`
+- [x] `PrivacyUpdateRequest`
+- [x] `AccessHistoryResponse` (`AccessHistoryItem`)
+- [x] `DoctorPublicResponse` (dùng cho search-doctors)
 
 #### 3A.2 `app/modules/users/service.py`
-- [ ] `get_profile(user_id)` — Lấy thông tin cá nhân
-- [ ] `update_profile(user_id, data)` — Cập nhật hồ sơ
-- [ ] `update_privacy(user_id, data)` — Cập nhật privacy_settings
-- [ ] `export_data(user_id, format, scope)` — Xuất dữ liệu (JSON/PDF)
-- [ ] `get_access_history(user_id)` — Xem lịch sử ai đã truy cập (đọc `data_access_logs`)
-- [ ] `search_doctors(name, specialty)` — User tìm bác sĩ (chỉ public info)
+- [x] `get_profile(user_id)` — Lấy thông định cá nhân
+- [x] `update_profile(user_id, data)` — Cập nhật hồ sơ
+- [x] `update_privacy(user_id, data)` — Cập nhật privacy_settings
+- [x] `export_data(user_id, format, scope)` — Xuất dữ liệu (JSON/PDF)
+- [x] `get_access_history(user_id)` — Xem lịch sử ai đã truy cập (đọc `data_access_logs`)
+- [x] `search_doctors(name, specialty)` — User tìm bác sĩ (chỉ public info)
 
 #### 3A.3 `app/modules/users/router.py`
-- [ ] `GET /users/me` — Auth: Bắt buộc
-- [ ] `PATCH /users/me` — Auth: Bắt buộc
-- [ ] `PATCH /users/privacy` — Auth: Bắt buộc
-- [ ] `GET /users/me/export` — Auth: Bắt buộc
-- [ ] `GET /users/me/access-history` — Auth: Bắt buộc
-- [ ] `GET /users/search-doctors` — Auth: Bắt buộc (Role: User)
+- [x] `GET /users/me` — Auth: Bắt buộc
+- [x] `PATCH /users/me` — Auth: Bắt buộc
+- [x] `PATCH /users/privacy` — Auth: Bắt buộc
+- [x] `GET /users/me/export` — Auth: Bắt buộc
+- [x] `GET /users/me/access-history` — Auth: Bắt buộc
+- [x] `GET /users/search-doctors` — Auth: Bắt buộc (Role: User)
 
 ---
 
@@ -296,6 +296,12 @@ async def check_consent(
 - [ ] Đăng ký tất cả routers trong `main.py`
 - [ ] Viết RLS Policies SQL vào `supabase/policies/`
 - [ ] Viết DB Triggers SQL (audit log, prescription_logs auto-generate)
+- [ ] **Rate Limiting (`slowapi`):**
+  - [ ] Khởi tạo `Limiter` instance trong `app/core/rate_limit.py` (key_func = `get_remote_address`)
+  - [ ] Gắn `SlowAPIMiddleware` + `SlowAPIASGIMiddleware` vào `main.py` (global error handler cho 429)
+  - [ ] Gắn `@limiter.limit("5/minute")` vào `POST /auth/login`
+  - [ ] Gắn `@limiter.limit("10/day")` vào `POST /doctors/request-access`
+  - [ ] Gắn rate limit mặc định cho các endpoint nhạy cảm khác (register, emergency access, v.v.)
 - [ ] Test toàn bộ luồng qua Swagger UI (`/docs`)
 - [ ] Commit & push lên `dev` branch
 
