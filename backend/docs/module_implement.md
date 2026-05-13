@@ -12,11 +12,13 @@ Tài liệu này hướng dẫn AI Agents quy trình từng bước khi được
 
 > **ĐỌC TRƯỚC KHI LÀM.** Luôn đọc các tài liệu tham khảo trước khi viết bất kỳ dòng code nào.
 
-1. **Tất cả các function phải là `async`.**
-2. **Không tự ý quyết định.** Nếu có bất kỳ sự mơ hồ, mâu thuẫn, hay thiếu thông tin nào → **hỏi user trước**.
-3. **Supabase là tài khoản free-tier.** Luôn kiểm tra giới hạn của Supabase Free Tier trước khi dùng bất kỳ tính năng nào (Storage limit, Auth rate limit, RPC limit, v.v.).
-4. **Nếu cần quyền admin của Supabase** (VD: tạo RPC function, trigger, RLS policy) → Tạo file `.sql` trong `supabase/policies/` và yêu cầu user chạy trên SQL Editor của Supabase Dashboard.
-5. **Luôn cập nhật tài liệu** sau khi thay đổi code (SCHEMAS.md, API.md, SYSTEM_DESIGN_SSOT.md, v.v.).
+1. **Tat ca cac function phai la `async`.**
+2. **Khong tu y quyet dinh.** Neu co bat ky su mo ho, mau thuan, hay thieu thong tin nao --> **hoi user truoc**.
+3. **Supabase la tai khoan free-tier.** Luon kiem tra gioi han cua Supabase Free Tier truoc khi dung bat ky tinh nang nao (Storage limit, Auth rate limit, RPC limit, v.v.).
+4. **Neu can quyen admin cua Supabase** (VD: tao RPC function, trigger, RLS policy) --> Tao file `.sql` trong `supabase/policies/` va yeu cau user chay tren SQL Editor cua Supabase Dashboard.
+5. **Luon cap nhat tai lieu** sau khi thay doi code (SCHEMAS.md, API.md, SYSTEM_DESIGN_SSOT.md, v.v.).
+6. **KHONG duoc tu chay cac lenh install hoac tac vu he thong.** Neu can cai dat dependency (`pip install`, `npm install`, v.v.) hoac chay bat ky lenh nao tren terminal --> **chi duoc huong dan user tu chay**. Agent khong duoc tu dong thuc thi cac lenh nay.
+7. **KHONG su dung emoji** trong code (.py, .sql, v.v.) va trong cac file tai lieu (.md). Dung ky tu ASCII thuan (VD: dung `[x]` thay vi checkbox emoji, dung `-->`  thay vi mui ten emoji, dung `(Da hoan thanh)` thay vi dau tick emoji).
 
 ---
 
