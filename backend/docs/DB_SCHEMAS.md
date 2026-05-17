@@ -1,6 +1,12 @@
+---
+trigger: always_on
+---
+
 # Thiết kế Cơ sở dữ liệu (Database Schemas) - Medical Diary
 
 Tài liệu này đặc tả cấu trúc các bảng trong PostgreSQL (Supabase), các mối quan hệ, ràng buộc và chính sách bảo mật dữ liệu.
+
+> **Lưu ý:** Mỗi bảng dưới đây được map 1:1 với một SQLAlchemy Model trong file `models.py` của module tương ứng. Xem bảng **Module ↔ Model Mapping** ở cuối tài liệu để tra cứu nhanh.
 
 ## Kiến trúc dữ liệu 3 tầng (Data Visibility Tiers)
 
@@ -19,8 +25,9 @@ Lưu trữ thông tin người dùng cơ bản, mở rộng từ bảng `auth.us
 - **id**: `uuid` (Primary Key, references `auth.users`)
 - **full_name**: `varchar(100)` (Not Null)
 - **role**: `varchar(20)` (Check: `user`, `doctor`, `admin`) (Default: `user`)
-- **phone_encrypted**: `text` (Mã hóa pgcrypto)
-- **cccd_encrypted**: `text` (Mã hóa pgcrypto — Căn cước công dân)
+- **cccd_encrypted**: `text` (Nullable — Mã hóa pgcrypto — Căn cước công dân)
+- **gender**: `varchar(10)` (Check: `'NAM'`, `'Nữ'`)
+- **date_of_birth**: `date` (Nullable)
 - **blood_type**: `varchar(5)` (Nullable — vd: `"O+"`, `"AB-"`)
 - **allergies**: `text` (Nullable — vd: `"Penicillin, Aspirin"`)
 - **emergency_contact**: `varchar(20)` (Nullable — SĐT người thân)
@@ -29,7 +36,7 @@ Lưu trữ thông tin người dùng cơ bản, mở rộng từ bảng `auth.us
 - **updated_at**: `timestamptz` (Default: `now()`)
 - **deleted_at**: `timestamptz` (Nullable - Soft Delete)
 
-> **Lưu ý:** `email` không lưu trong `profiles`. Khi cần email, JOIN với `auth.users`.
+> **Lưu ý:** `email` không lưu trong `profiles` (Supabase Auth quản lý email). Tạm thời sử dụng email thay cho phone number để test.
 
 ### Bảng `doctors`
 Thông tin bổ sung cho người dùng có role là `doctor`.
@@ -206,3 +213,26 @@ Bảng ghi lại mọi thao tác truy xuất/thay đổi dữ liệu y tế. **K
    - `data_access_logs(target_user_id, created_at)`
    - `notifications(user_id, is_read)`
    - `prescription_logs(prescription_item_id, scheduled_date, scheduled_time)`
+
+---
+
+## Module ↔ Model Mapping
+
+Bảng tra cứu nhanh giữa bảng DB và SQLAlchemy Model tương ứng:
+
+| Bảng DB | SQLAlchemy Model | File Location |
+|---|---|---|
+| `profiles` | `Profile` | `app/modules/users/models.py` |
+| `doctors` | `Doctor` | `app/modules/users/models.py` |
+| `consent_requests` | `ConsentRequest` | `app/modules/consent/models.py` |
+| `consent_permissions` | `ConsentPermission` | `app/modules/consent/models.py` |
+| `health_metrics` | `HealthMetric` | `app/modules/health_metrics/models.py` |
+| `diaries` | `Diary` | `app/modules/diaries/models.py` |
+| `medical_records` | `MedicalRecord` | `app/modules/medical_records/models.py` |
+| `prescriptions` | `Prescription` | `app/modules/prescriptions/models.py` |
+| `prescription_items` | `PrescriptionItem` | `app/modules/prescriptions/models.py` |
+| `prescription_logs` | `PrescriptionLog` | `app/modules/prescriptions/models.py` |
+| `emergency_tokens` | `EmergencyToken` | `app/modules/emergency/models.py` |
+| `emergency_access_logs` | `EmergencyAccessLog` | `app/modules/emergency/models.py` |
+| `data_access_logs` | `DataAccessLog` | `app/modules/admin/models.py` |
+| `notifications` | `Notification` | `app/modules/notifications/models.py` |
