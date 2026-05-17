@@ -163,15 +163,17 @@ async def check_consent(
 > Quản lý cấp/thu hồi quyền truy cập giữa User và Doctor.
 
 #### 3B.1 `app/modules/consent/schemas.py`
-- [ ] `AccessRequestItem` — Thông tin yêu cầu truy cập
-- [ ] `AccessRequestActionRequest` — Duyệt/từ chối (action + approved_scope)
-- [ ] `ConsentHistoryItem` — Bác sĩ đang có quyền gì
+- [x] `AccessRequestItem` — Response: thông tin 1 yêu cầu truy cập (request_id, doctor_id, doctor_name, status, requested_scope, requested_at)
+- [x] `AccessRequestActionRequest` — Request body: input của `PATCH /consent/access-requests/{id}` (action, approved_scope, timeout_at)
+- [x] `AccessRequestActionResponse` — Response: kết quả sau khi duyệt/từ chối (action, approved_scope, timeout_at)
+- [x] `ConsentHistoryItem` — Response: thông tin 1 bác sĩ đang có quyền (scope, doctor_id, doctor_name, granted_at, timeout_at)
+- [x] `ConsentRevokeResponse` — Response: xác nhận thu hồi quyền thành công (doctor_id, revoked_at)
 
 #### 3B.2 `app/modules/consent/service.py`
-- [ ] `list_pending_requests(patient_id)` — Patient xem yêu cầu chờ duyệt
-- [ ] `review_request(request_id, patient_id, action, approved_scope)` — Patient duyệt/từ chối
-- [ ] `revoke_permission(patient_id, doctor_id)` — Patient thu hồi quyền
-- [ ] `get_consent_history(patient_id)` — Danh sách bác sĩ đang có quyền
+- [x] `list_pending_requests(patient_id)` — Patient xem yêu cầu chờ duyệt
+- [x] `review_request(request_id, patient_id, action, approved_scope)` — Patient duyệt/từ chối
+- [x] `revoke_permission(patient_id, doctor_id)` — Patient thu hồi quyền
+- [x] `get_consent_history(patient_id)` — Danh sách bác sĩ đang có quyền
 
 #### 3B.3 `app/modules/consent/router.py`
 - [ ] `GET /consent/access-requests` — Auth: Bắt buộc (Role: User)
