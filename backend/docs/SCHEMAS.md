@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Bộ Schemas (Pydantic Models) - Medical Diary API
 
 Tài liệu này định nghĩa toàn bộ Pydantic Schemas cho từng module. Mỗi module sử dụng các schemas này trong file `schemas.py` tương ứng.
@@ -51,14 +55,18 @@ class UserBrief(BaseModel):
     id: UUID
     role: str   # "user" | "doctor" | "admin"
     email: EmailStr
+    phone_number: str
 ```
 
 ### RegisterRequest
 ```python
 class RegisterRequest(BaseModel):
     email: EmailStr
+    phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=100)
+    date_of_birth: date
+    gender: Literal['NAM', 'Nữ']
 ```
 
 ### RegisterDoctorRequest
@@ -66,8 +74,12 @@ Lưu ý: Endpoint này dùng `multipart/form-data`, không phải JSON thuần.
 ```python
 class RegisterDoctorRequest(BaseModel):
     email: EmailStr
+    phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=100)
+    date_of_birth: date
+    gender: Literal['NAM', 'Nữ']
+    cccd: str = Field(..., min_length=12, max_length=12)
     specialty: str
     license_number: str
     hospital: str
@@ -86,10 +98,12 @@ class RegisterDoctorResponse(BaseModel):
 ### SessionResponse
 ```python
 class SessionResponse(BaseModel):
-    session_id: UUID
-    device: str
-    ip_address: str
-    last_active: datetime
+    session_id: UUID 
+    user_id: UUID
+    created_at: datetime 
+    updated_at: datetime 
+    user_agent: str 
+    ip: str 
 ```
 
 ### HealthResponse
@@ -97,6 +111,25 @@ class SessionResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str   # "ok"
     timestamp: datetime
+```
+
+### SessionListResponse
+```python
+class SessionListResponse(BaseModel):
+    sessions: List[SessionResponse]
+```
+
+### RevokeSessionRequest
+```python
+class RevokeSessionRequest(BaseModel):
+    session_id: UUID
+    password: str
+```
+
+### RevokeAllRequest
+```python
+class RevokeAllRequest(BaseModel):
+    password: str
 ```
 
 ---
@@ -108,6 +141,8 @@ class HealthResponse(BaseModel):
 class UserProfileResponse(BaseModel):
     id: UUID
     full_name: str
+    gender: str
+    date_of_birth: Optional[date]
     blood_type: Optional[str]        # "O+", "AB-", ...
     allergies: Optional[str]
     emergency_contact: Optional[str]
@@ -128,6 +163,8 @@ class PrivacyUpdateRequest(BaseModel):
 ```python
 class UserProfileUpdateRequest(BaseModel):
     full_name: Optional[str] = Field(None, min_length=2, max_length=100)
+    gender: Optional[Literal['NAM', 'Nữ']] = None
+    date_of_birth: Optional[date] = None
     blood_type: Optional[str] = Field(None, max_length=5)
     allergies: Optional[str] = Field(None, max_length=2000)
     emergency_contact: Optional[str] = Field(None, max_length=20)

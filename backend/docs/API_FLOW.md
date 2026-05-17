@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Luồng tương tác API (API Integration Flows) - Medical Diary
 
 Tài liệu này mô tả trình tự gọi các API (Sequence) cho các nghiệp vụ cốt lõi trong hệ thống. Nó giúp Frontend Developer và AI Agents hiểu rõ "kịch bản" giao tiếp giữa Client và Server.
@@ -48,7 +52,7 @@ sequenceDiagram
     participant ConAPI as API: /consent
     participant MedAPI as API: /medical-records
 
-    DocFE->>DocAPI: GET /doctors/search-patients?phone=0123...&cccd=0123... (Tìm bệnh nhân)
+    DocFE->>DocAPI: GET /doctors/search-patients?phone=0987654321&cccd=0123... (Tìm bệnh nhân)
     DocAPI-->>DocFE: 200 OK (Trả về thông tin cơ bản: Tên, ID)
 
     DocFE->>DocAPI: POST /doctors/request-access (Xin quyền xem hồ sơ)
