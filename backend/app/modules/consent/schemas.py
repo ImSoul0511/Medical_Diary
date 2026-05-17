@@ -1,38 +1,52 @@
-from pydantic import BaseModel
-from uuid import UUID
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, Field, field_validator
+
+
+VALID_CONSENT_SCOPES = {
+    "blood_type",
+    "allergies",
+    "emergency_contact",
+    "medical_records",
+    "prescriptions",
+    "diaries",
+    "heart_rate",
+    "step_count",
+    "respiratory_rate",
+}
+
+
+class ConsentHistoryItem(BaseModel):
+    doctor_id: UUID
+    doctor_name: str
+    scope: list[str]
+    granted_at: datetime
 
 
 class AccessRequestItem(BaseModel):
     request_id: UUID
     doctor_id: UUID
     doctor_name: str
-    status: str  # "pending" | "approved" | "rejected"
-    requested_scope: List[str]
+    requested_scope: list[str]
+    reason: str
+    status: str
     requested_at: datetime
 
 
 class AccessRequestActionRequest(BaseModel):
-    action: str  # "approve" | "reject"
-    approved_scope: Optional[List[str]] = None  # bắt buộc khi action="approve"
-    timeout_at: Optional[datetime] = None  # None = không hết hạn, datetime = auto-revoke tại thời điểm này
+    action: str = Field(..., pattern="^(approved|rejected)$")
+    approved_scope: Optional[list[str]] = None
 
+    @field_validator("approved_scope")
+    @classmethod
+    def validate_approved_scope(cls, value: Optional[list[str]]) -> Optional[list[str]]:
+        if value is None:
+            return value
 
-class AccessRequestActionResponse(BaseModel):
-    action: str  # "approve" | "reject"
-    approved_scope: Optional[List[str]] = None
-    timeout_at: Optional[datetime] = None
+        invalid_scopes = set(value) - VALID_CONSENT_SCOPES
+        if invalid_scopes:
+            raise ValueError(f"Invalid consent scopes: {sorted(invalid_scopes)}")
 
-
-class ConsentHistoryItem(BaseModel):
-    scope: List[str]
-    doctor_id: UUID
-    doctor_name: str
-    granted_at: datetime
-    timeout_at: Optional[datetime] = None
-
-
-class ConsentRevokeResponse(BaseModel):
-    doctor_id: UUID
-    revoked_at: datetime
+        return value
