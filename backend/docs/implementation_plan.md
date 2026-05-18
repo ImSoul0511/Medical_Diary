@@ -165,7 +165,6 @@ async def check_consent(
 #### 3B.1 `app/modules/consent/schemas.py`
 - [x] `AccessRequestItem` — Response: thông tin 1 yêu cầu truy cập (request_id, doctor_id, doctor_name, status, requested_scope, requested_at)
 - [x] `AccessRequestActionRequest` — Request body: input của `PATCH /consent/access-requests/{id}` (action, approved_scope, timeout_at)
-- [x] `AccessRequestActionResponse` — Response: kết quả sau khi duyệt/từ chối (action, approved_scope, timeout_at)
 - [x] `ConsentHistoryItem` — Response: thông tin 1 bác sĩ đang có quyền (scope, doctor_id, doctor_name, granted_at, timeout_at)
 - [x] `ConsentRevokeResponse` — Response: xác nhận thu hồi quyền thành công (doctor_id, revoked_at)
 
