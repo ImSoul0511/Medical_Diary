@@ -4,10 +4,14 @@ from typing import Callable, List, Dict, Any
 from fastapi import Request, HTTPException, Depends 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from supabase import create_client, Client
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+import uuid
 
 security = HTTPBearer()
 
-from app.core.config import settings 
+from app.core.config import settings
+from app.core.database import get_db 
 def get_supabase_client() -> Client:
     """Dependency để tạo và trả về Supabase Client, đảm bảo kết nối luôn được khởi tạo"""
     try:
@@ -47,14 +51,27 @@ def require_role(allowed_roles: List[str]) -> Callable:
     Dependency kiểm tra phân quyền.
     Sử dụng: current_user: dict = Depends(require_role(["doctor", "admin"]))
     """
-    def role_checker(current_user: Dict[str, Any] = Depends(get_current_user)):
-        user_role = current_user.get("role", "user")
+    async def role_checker(
+        current_user: Dict[str, Any] = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db)
+    ):
+        from app.modules.users.models import Profile
+        
+        # Viết query vào database để check role
+        stmt = select(Profile.role).where(Profile.id == uuid.UUID(current_user["sub"]))
+        result = await db.execute(stmt)
+        db_role = result.scalar_one_or_none()
+        
+        user_role = db_role if db_role else current_user.get("role", "user")
         
         if user_role not in allowed_roles:
             raise HTTPException(
                 status_code=403,
                 detail=f"Quyền bị từ chối. API này yêu cầu các quyền: {', '.join(allowed_roles)}"
             )
+            
+        # Cập nhật role chính xác vào current_user để các hàm sau sử dụng nếu cần
+        current_user["role"] = user_role
         return current_user
         
     return role_checker
