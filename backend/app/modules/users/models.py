@@ -63,7 +63,7 @@ class Profile(Base):
     deleted_at = Column(DateTime(timezone=True), nullable=True, comment="Soft Delete")
 
     # Relationships
-    doctor_profile = relationship("Doctor", back_populates="profile", uselist=False)
+    doctor_profile = relationship("Doctor", foreign_keys="[Doctor.id]", back_populates="profile", uselist=False)
 
 
 class Doctor(Base):
@@ -99,4 +99,4 @@ class Doctor(Base):
     )
 
     # Relationships
-    profile = relationship("Profile", back_populates="doctor_profile")
+    profile = relationship("Profile", foreign_keys=[id], back_populates="doctor_profile")
