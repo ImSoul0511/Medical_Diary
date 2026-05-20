@@ -1,0 +1,70 @@
+import {
+  Activity,
+  ClipboardList,
+  FileCheck,
+  FileText,
+  HeartPulse,
+  Home,
+  Search,
+  Settings,
+  Shield,
+  UserCheck,
+  Users,
+} from "lucide-react";
+import type { Role } from "../types/auth";
+
+export const ROUTES = {
+  login: "/",
+  register: "/dang-ky",
+  adminLogin: "/quan-tri/dang-nhap",
+  patientDashboard: "/trang-chu",
+  diary: "/nhat-ky-trieu-chung",
+  healthMetrics: "/chi-so-suc-khoe",
+  profile: "/ho-so-benh-an",
+  consent: "/quan-ly-cap-quyen",
+  privacy: "/cai-dat-quyen-rieng-tu",
+  emergency: "/cap-cuu/demo-token",
+  doctorSearch: "/bac-si/tim-kiem",
+  doctorPatient: "/bac-si/benh-nhan/demo-patient",
+  doctorPrescription: "/bac-si/tao-don-thuoc/demo-patient",
+  adminDoctorApproval: "/quan-tri/phe-duyet-bac-si",
+  adminAuditLogs: "/quan-tri/nhat-ky-kiem-toan",
+} as const;
+
+export type NavigationItem = {
+  label: string;
+  path: string;
+  icon: typeof Home;
+  badge?: number;
+};
+
+export const roleHomePath: Record<Role, string> = {
+  user: ROUTES.patientDashboard,
+  doctor: ROUTES.doctorSearch,
+  admin: ROUTES.adminDoctorApproval,
+};
+
+export const patientNavigation: NavigationItem[] = [
+  { icon: Home, label: "Trang chủ", path: ROUTES.patientDashboard },
+  { icon: Activity, label: "Nhật ký triệu chứng", path: ROUTES.diary },
+  { icon: HeartPulse, label: "Chỉ số sức khỏe", path: ROUTES.healthMetrics },
+  { icon: FileText, label: "Hồ sơ bệnh án", path: ROUTES.profile },
+  { icon: Shield, label: "Quản lý cấp quyền", path: ROUTES.consent, badge: 2 },
+  { icon: Settings, label: "Cài đặt riêng tư", path: ROUTES.privacy },
+];
+
+export const doctorNavigation: NavigationItem[] = [
+  { icon: Search, label: "Tìm kiếm bệnh nhân", path: ROUTES.doctorSearch },
+  { icon: Users, label: "Chi tiết bệnh nhân", path: ROUTES.doctorPatient },
+  { icon: FileCheck, label: "Tạo đơn thuốc", path: ROUTES.doctorPrescription },
+];
+
+export const adminNavigation: NavigationItem[] = [
+  {
+    icon: UserCheck,
+    label: "Phê duyệt bác sĩ",
+    path: ROUTES.adminDoctorApproval,
+    badge: 4,
+  },
+  { icon: ClipboardList, label: "Nhật ký kiểm toán", path: ROUTES.adminAuditLogs },
+];

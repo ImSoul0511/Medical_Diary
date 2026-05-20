@@ -1,0 +1,44 @@
+:root {
+  color: #0f172a;
+  background: #f8fafc;
+  font-family: Inter, Roboto, system-ui, sans-serif;
+  font-size: 16px;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.recharts-wrapper text {
+  font-family: Inter, Roboto, system-ui, sans-serif;
+}

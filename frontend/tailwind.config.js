@@ -1,0 +1,50 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        primary: "#0284C7",
+        primaryDark: "#0369A1",
+        secondary: "#0F172A",
+        accent: "#0D9488",
+        background: "#F8FAFC",
+        card: "#FFFFFF",
+        muted: "#F1F5F9",
+        mutedForeground: "#64748B",
+        border: "#E2E8F0",
+        inputBackground: "#FFFFFF",
+        ring: "#0284C7",
+        emergency: "#DC2626",
+        success: "#16A34A",
+        pending: "#EA580C",
+        warning: "#F59E0B",
+        infoBg: "#EFF6FF",
+        successBg: "#DCFCE7",
+        dangerBg: "#FEF2F2",
+        warningBg: "#FEF3C7",
+        adminPrimary: "#0077B6",
+        adminSecondary: "#005F8C",
+        adminAccent: "#004E73",
+        adminBackground: "#E0F2FE",
+        adminMuted: "#BAE6FD",
+        chartHeart: "#DC2626",
+        chartBloodPressure: "#0284C7",
+        chartSteps: "#0D9488",
+        chartRespiratory: "#7C3AED",
+        chartWarning: "#F59E0B",
+      },
+      borderRadius: {
+        card: "8px",
+        input: "6px",
+      },
+      fontFamily: {
+        sans: ["Inter", "Roboto", "system-ui", "sans-serif"],
+      },
+      boxShadow: {
+        card: "0 1px 2px rgba(15, 23, 42, 0.06)",
+      },
+    },
+  },
+  plugins: [],
+};
