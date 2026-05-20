@@ -5,19 +5,16 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.modules.diaries import service
 from app.modules.diaries.schemas import DiaryCreateRequest, DiaryResponse
+from app.modules.diaries.service import DiariesService
 from app.shared.dependencies import require_role
-from app.shared.schemas import ErrorResponse
+from app.shared.schemas import ErrorResponse, error_responses as _error_responses
 
 router = APIRouter(prefix="/diaries", tags=["Diaries"])
 
-_error_responses = {
-    401: {"model": ErrorResponse, "description": "Unauthorized"},
-    403: {"model": ErrorResponse, "description": "Forbidden"},
-    404: {"model": ErrorResponse, "description": "Not Found"},
-    500: {"model": ErrorResponse, "description": "Internal Server Error"},
-}
+
+def _get_service(db: AsyncSession = Depends(get_db)) -> DiariesService:
+    return DiariesService(db)
 
 
 @router.post(
@@ -30,10 +27,10 @@ _error_responses = {
 )
 async def create_diary(
     data: DiaryCreateRequest,
-    db: AsyncSession = Depends(get_db),
+    service: DiariesService = Depends(_get_service),
     current_user: dict = Depends(require_role(["user"])),
 ) -> DiaryResponse:
-    return await service.create(db, UUID(current_user["sub"]), data)
+    return await service.create(UUID(current_user["sub"]), data)
 
 
 @router.get(
@@ -44,10 +41,10 @@ async def create_diary(
     description="User xem toàn bộ nhật ký chưa bị xóa. Không có patient_id — dùng Phase 4B cho Doctor xem của bệnh nhân.",
 )
 async def list_diaries(
-    db: AsyncSession = Depends(get_db),
+    service: DiariesService = Depends(_get_service),
     current_user: dict = Depends(require_role(["user"])),
 ) -> List[DiaryResponse]:
-    return await service.list_own(db, UUID(current_user["sub"]))
+    return await service.list_own(UUID(current_user["sub"]))
 
 
 @router.delete(
@@ -59,7 +56,7 @@ async def list_diaries(
 )
 async def delete_diary(
     diary_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    service: DiariesService = Depends(_get_service),
     current_user: dict = Depends(require_role(["user"])),
 ) -> None:
-    await service.soft_delete(db, UUID(current_user["sub"]), diary_id)
+    await service.soft_delete(UUID(current_user["sub"]), diary_id)

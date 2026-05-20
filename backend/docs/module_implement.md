@@ -122,7 +122,16 @@ logger = logging.getLogger("medical_diary")
 - Mọi thao tác DB phải dùng `await`.
 - Mọi thao tác I/O (file, network) phải dùng `await` nếu có.
 
-### 4.5. Kiến trúc Service
+### 4.5. Quy tắc Commit/Flush (BẮT BUỘC)
+
+- **Service tầng dưới chỉ dùng `flush()`.** Không tự gọi `commit()` trong bất kỳ file service nào.
+- **Tầng Controller/Middleware (`get_db`) sẽ chịu trách nhiệm `commit()`.** Nhờ vậy đảm bảo tính toàn vẹn dữ liệu xuyên suốt một HTTP request transaction.
+- Nếu muốn rollback trong trường hợp bắt gặp Exception ở Service, sử dụng `await db.rollback()` (hoặc `await self.db.rollback()`).
+
+### 4.6. Kiến trúc Service (BẮT BUỘC OOP)
+
+- **Triển khai Service bằng mô hình Hướng đối tượng (OOP):** Tất cả logic nghiệp vụ của một module phải được đóng gói vào các class (ví dụ: `class AuthService`, `class UsersService`). Không sử dụng các hàm tự do (standalone functions).
+- Class nhận các dependency (ví dụ: `db: AsyncSession`, `supabase: Client`) thông qua constructor (`__init__`).
 
 ```python
 import logging
@@ -155,7 +164,7 @@ class <ModuleName>Service:
             raise HTTPException(status_code=400, detail="Mô tả lỗi cho user.")
 ```
 
-### 4.6. Supabase Free-Tier Constraints
+### 4.7. Supabase Free-Tier Constraints
 
 Trước khi dùng bất kỳ tính năng Supabase nào, kiểm tra:
 
@@ -170,7 +179,7 @@ Trước khi dùng bất kỳ tính năng Supabase nào, kiểm tra:
 
 Nếu function cần tính năng vượt giới hạn → **báo user** và đề xuất phương án thay thế.
 
-### 4.7. Khi cần quyền Admin Supabase (RPC, Trigger, Policy)
+### 4.8. Khi cần quyền Admin Supabase (RPC, Trigger, Policy)
 
 Nếu service cần gọi một RPC function hoặc tạo trigger/policy mới:
 
@@ -179,7 +188,7 @@ Nếu service cần gọi một RPC function hoặc tạo trigger/policy mới:
 3. **Yêu cầu user chạy file SQL trên Supabase Dashboard → SQL Editor.**
 4. Sau khi user xác nhận đã chạy → mới tiếp tục implement service function liên quan.
 
-### 4.8. Khi cần Schema mới
+### 4.9. Khi cần Schema mới
 
 Nếu trong quá trình implement service, phát hiện cần thêm schema mới:
 
@@ -187,6 +196,12 @@ Nếu trong quá trình implement service, phát hiện cần thêm schema mới
 2. Chờ user xác nhận.
 3. Thêm schema vào `schemas.py`.
 4. **Cập nhật `docs/SCHEMAS.md`** ngay lập tức.
+
+### 4.10. Quy tắc Truy vấn Database (BẮT BUỘC)
+
+- **Ưu tiên sử dụng ORM:** Đối với các tác vụ thực hiện truy vấn cơ sở dữ liệu, luôn ưu tiên sử dụng ORM (SQLAlchemy) thay vì truy vấn SQL thuần (raw query).
+- **Hạn chế Raw Query:** Chỉ sử dụng query thuần (`text(...)`) khi bài toán thực sự phức tạp hoặc có lý do tối ưu hiệu năng đặc thù.
+- **Phòng chống SQL Injection:** Luôn kiểm tra kỹ xem câu truy vấn có nguy cơ bị SQL Injection hay không. Tuyệt đối **không** dùng chuỗi định dạng (f-string) để nối trực tiếp dữ liệu/tham số đầu vào của người dùng vào câu lệnh SQL. Luôn sử dụng các truy vấn tham số hóa (Parameterized Queries) do SQLAlchemy cung cấp.
 
 ---
 

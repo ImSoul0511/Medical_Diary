@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from app.core.database import get_db
 from app.shared.dependencies import get_current_user, require_role
-from app.shared.schemas import ErrorResponse
+from app.shared.schemas import ErrorResponse, error_responses as _error_responses
 
 from app.modules.users.schemas import (
     UserProfileResponse,
@@ -15,15 +15,6 @@ from app.modules.users.schemas import (
     DoctorPublicResponse
 )
 from app.modules.users.service import UsersService
-
-_error_responses = {
-    400: {"model": ErrorResponse, "description": "Bad Request"},
-    401: {"model": ErrorResponse, "description": "Unauthorized"},
-    403: {"model": ErrorResponse, "description": "Forbidden"},
-    404: {"model": ErrorResponse, "description": "Not Found"},
-    422: {"model": ErrorResponse, "description": "Validation Error"},
-    500: {"model": ErrorResponse, "description": "Internal Server Error"},
-}
 
 def _get_service(db: AsyncSession = Depends(get_db)) -> UsersService:
     return UsersService(db=db)

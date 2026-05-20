@@ -71,7 +71,7 @@ class AuthService:
                 "date_of_birth": data.date_of_birth,
                 "phone": data.phone_number
             })
-            await self.db.commit() 
+            await self.db.flush() 
 
             logger.info(f"User registered: {user_id}")
             return MessageResponse(message="Đăng ký thành công. Vui lòng đăng nhập.")
@@ -124,7 +124,7 @@ class AuthService:
                 "hospital": data.hospital,
                 "cert_url": certificate_url,
             })
-            await self.db.commit()
+            await self.db.flush()
 
             logger.info(f"Doctor registered (pending): {user_id}")
             return MessageResponse(message="Đăng ký bác sĩ thành công. Vui lòng chờ admin duyệt.")

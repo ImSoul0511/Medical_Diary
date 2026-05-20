@@ -17,6 +17,7 @@ async def check_consent(
           AND patient_id = :patient_id
           AND status = 'active'
           AND revoked_at IS NULL
+          AND (expires_at IS NULL OR expires_at > now())
           AND :required_scope = ANY(scope)
         LIMIT 1
         """

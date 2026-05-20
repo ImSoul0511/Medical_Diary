@@ -4,7 +4,7 @@ from supabase import Client
 
 from app.core.database import get_db
 from app.shared.dependencies import get_current_user, get_supabase_client
-from app.shared.schemas import ErrorResponse, MessageResponse
+from app.shared.schemas import ErrorResponse, MessageResponse, error_responses as _error_responses
 from app.modules.auth.schemas import (
     LoginRequest, 
     LoginResponse, 
@@ -16,14 +16,7 @@ from app.modules.auth.schemas import (
     RevokeAllRequest
 )
 
-from app.modules.auth.service import AuthService 
-
-_error_responses = {
-    400: {"model": ErrorResponse, "description": "Bad Request"},
-    401: {"model": ErrorResponse, "description": "Unauthorized"},
-    422: {"model": ErrorResponse, "description": "Validation Error"},
-    500: {"model": ErrorResponse, "description": "Internal Server Error"},
-}
+from app.modules.auth.service import AuthService
 
 def _get_service(
     db: AsyncSession = Depends(get_db),
