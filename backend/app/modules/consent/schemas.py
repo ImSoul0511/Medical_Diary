@@ -23,6 +23,7 @@ class ConsentHistoryItem(BaseModel):
     doctor_name: str
     scope: list[str]
     granted_at: datetime
+    expires_at: Optional[datetime] = None
 
 
 class AccessRequestItem(BaseModel):
@@ -38,6 +39,12 @@ class AccessRequestItem(BaseModel):
 class AccessRequestActionRequest(BaseModel):
     action: str = Field(..., pattern="^(approved|rejected)$")
     approved_scope: Optional[list[str]] = None
+    expires_in_days: Optional[int] = Field(
+        default=30,
+        ge=1,
+        le=365,
+        description="Số ngày quyền truy cập có hiệu lực. Mặc định 30 ngày. None = vĩnh viễn."
+    )
 
     @field_validator("approved_scope")
     @classmethod

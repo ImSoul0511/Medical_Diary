@@ -25,4 +25,16 @@ class PaginatedResponse(BaseModel, Generic[T]):
 class MessageResponse(BaseModel):
     """Format chuẩn cho các response trả về tin nhắn (thành công)"""
     message: str
+
+
+# Danh sách các mã lỗi chuẩn dùng cho Swagger API documentation
+error_responses = {
+    400: {"model": ErrorResponse, "description": "Bad Request"},
+    401: {"model": ErrorResponse, "description": "Unauthorized"},
+    403: {"model": ErrorResponse, "description": "Forbidden"},
+    404: {"model": ErrorResponse, "description": "Not Found"},
+    422: {"model": ErrorResponse, "description": "Validation Error"},
+    500: {"model": ErrorResponse, "description": "Internal Server Error"},
+}
+
     

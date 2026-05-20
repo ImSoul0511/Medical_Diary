@@ -6,19 +6,16 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.modules.health_metrics import service
 from app.modules.health_metrics.schemas import HealthMetricCreateRequest, HealthMetricResponse
+from app.modules.health_metrics.service import HealthMetricsService
 from app.shared.dependencies import require_role
-from app.shared.schemas import ErrorResponse
+from app.shared.schemas import ErrorResponse, error_responses as _error_responses
 
 router = APIRouter(prefix="/health-metrics", tags=["Health Metrics"])
 
-_error_responses = {
-    400: {"model": ErrorResponse, "description": "Bad Request"},
-    401: {"model": ErrorResponse, "description": "Unauthorized"},
-    403: {"model": ErrorResponse, "description": "Forbidden"},
-    500: {"model": ErrorResponse, "description": "Internal Server Error"},
-}
+
+def _get_service(db: AsyncSession = Depends(get_db)) -> HealthMetricsService:
+    return HealthMetricsService(db)
 
 
 @router.post(
@@ -31,10 +28,10 @@ _error_responses = {
 )
 async def create_metric(
     data: HealthMetricCreateRequest,
-    db: AsyncSession = Depends(get_db),
+    service: HealthMetricsService = Depends(_get_service),
     current_user: dict = Depends(require_role(["user"])),
 ) -> HealthMetricResponse:
-    return await service.create(db, UUID(current_user["sub"]), data)
+    return await service.create(UUID(current_user["sub"]), data)
 
 
 @router.get(
@@ -47,7 +44,7 @@ async def create_metric(
 async def list_metrics(
     start: Optional[datetime] = Query(None, description="Lọc từ thời điểm này (ISO 8601)"),
     end: Optional[datetime] = Query(None, description="Lọc đến thời điểm này (ISO 8601)"),
-    db: AsyncSession = Depends(get_db),
+    service: HealthMetricsService = Depends(_get_service),
     current_user: dict = Depends(require_role(["user"])),
 ) -> List[HealthMetricResponse]:
-    return await service.list_own(db, UUID(current_user["sub"]), start, end)
+    return await service.list_own(UUID(current_user["sub"]), start, end)

@@ -4,7 +4,9 @@ import io
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from sqlalchemy import select, text
+
+from app.modules.users.models import Profile
 
 from app.modules.users.schemas import (
     UserProfileResponse,
@@ -57,28 +59,33 @@ class UsersService:
             if not update_data:
                 return await self.get_profile(user_id)
 
-            set_clauses = []
-            params = {"user_id": user_id}
-            
-            for key, value in update_data.items():
-                set_clauses.append(f"{key} = :{key}")
-                params[key] = value
+            stmt = select(Profile).where(
+                Profile.id == user_id,
+                Profile.deleted_at.is_(None),
+            )
+            result = await self.db.execute(stmt)
+            profile = result.scalar_one_or_none()
 
-            set_sql = ", ".join(set_clauses)
-            
-            query = text(f"""
-                UPDATE profiles
-                SET {set_sql}, updated_at = now()
-                WHERE id = :user_id AND deleted_at IS NULL
-            """)
-            
-            await self.db.execute(query, params)
-            await self.db.commit()
+            if profile is None:
+                raise HTTPException(status_code=404, detail="Không tìm thấy hồ sơ người dùng.")
+
+            for key, value in update_data.items():
+                setattr(profile, key, value)
+
+            await self.db.flush()
 
             logger.info(f"Updated profile for user: {user_id}")
-            return await self.get_profile(user_id)
+            return UserProfileResponse(
+                id=profile.id,
+                full_name=profile.full_name,
+                gender=profile.gender,
+                date_of_birth=profile.date_of_birth,
+                blood_type=profile.blood_type,
+                allergies=profile.allergies,
+                emergency_contact=profile.emergency_contact,
+                privacy_settings=profile.privacy_settings,
+            )
         except HTTPException:
-            await self.db.rollback()
             raise
         except Exception as e:
             await self.db.rollback()

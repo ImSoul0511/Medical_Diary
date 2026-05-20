@@ -22,6 +22,9 @@ Tài liệu này xác định thứ tự triển khai các module, dựa trên m
 4. **Error Handling:** Trả lỗi theo format chuẩn `ErrorResponse` đã định nghĩa trong `SCHEMAS.md` (mục 0). Exception Handler toàn cục sẽ tự đính kèm `request_id` (xem `app/core/exceptions.py`).
 5. **Soft Delete:** Mọi DELETE đều chỉ cập nhật cột `deleted_at`. Query SELECT phải lọc `WHERE deleted_at IS NULL`.
 6. **Mã hóa Dữ liệu Nhạy cảm:** Các trường `cccd_encrypted` (cho Bác sĩ) phải dùng `pgp_sym_encrypt()` / `pgp_sym_decrypt()` của pgcrypto. Key lấy từ `current_setting('app.encryption_key')` (được inject qua `get_db()`). Chi tiết xem `Auth_and_Logging_plan.md` Phần C.
+7. **OOP Service (BẮT BUỘC):** Tất cả service.py phải triển khai bằng class (VD: `ConsentService`, `DiariesService`). Không dùng hàm tự do.
+8. **Commit/Flush:** Service chỉ dùng `flush()`. Tầng `get_db()` chịu trách nhiệm `commit()`.
+9. **Ưu tiên ORM:** Ưu tiên SQLAlchemy ORM, hạn chế raw query. Cấm f-string nối SQL (phòng SQL Injection).
 
 ---
 
@@ -97,7 +100,7 @@ Phase 0 (Shared) ──→ Phase 1 (Auth) ──→ Phase 2 (Consent Helper)
 
 ---
 
-## Phase 2: Consent Helper (Da hoan thanh)
+## Phase 2: Consent Helper ✅ (Đã hoàn thành)
 
 > Đây là hàm chia sẻ duy nhất giữa Phase 3A/3B/3C. Tạo xong file này thì 3 coder có thể chạy song song.
 
@@ -130,7 +133,7 @@ async def check_consent(
 
 ---
 
-### Phase 3A: Users Self-service (Coder 1) (Da hoan thanh)
+### Phase 3A: Users Self-service (Coder 1) ✅ (Đã hoàn thành)
 
 > User quản lý hồ sơ CỦA CHÍNH MÌNH. Không cần consent.
 
@@ -158,54 +161,55 @@ async def check_consent(
 
 ---
 
-### Phase 3B: Consent Module (Coder 2)
+### Phase 3B: Consent Module (Coder 2) ✅ (Đã hoàn thành)
 
 > Quản lý cấp/thu hồi quyền truy cập giữa User và Doctor.
+> Đã bổ sung tính năng **timeout (expires_at)** khi cấp quyền. Đã refactor sang OOP (`ConsentService`).
 
 #### 3B.1 `app/modules/consent/schemas.py`
 - [x] `AccessRequestItem` — Response: thông tin 1 yêu cầu truy cập (request_id, doctor_id, doctor_name, status, requested_scope, requested_at)
-- [x] `AccessRequestActionRequest` — Request body: input của `PATCH /consent/access-requests/{id}` (action, approved_scope, timeout_at)
-- [x] `ConsentHistoryItem` — Response: thông tin 1 bác sĩ đang có quyền (scope, doctor_id, doctor_name, granted_at, timeout_at)
+- [x] `AccessRequestActionRequest` — Request body: input của `PATCH /consent/access-requests/{id}` (action, approved_scope, expires_in_days)
+- [x] `ConsentHistoryItem` — Response: thông tin 1 bác sĩ đang có quyền (scope, doctor_id, doctor_name, granted_at, expires_at)
 - [x] `ConsentRevokeResponse` — Response: xác nhận thu hồi quyền thành công (doctor_id, revoked_at)
 
-#### 3B.2 `app/modules/consent/service.py`
+#### 3B.2 `app/modules/consent/service.py` (OOP: `ConsentService`)
 - [x] `list_pending_requests(patient_id)` — Patient xem yêu cầu chờ duyệt
-- [x] `review_request(request_id, patient_id, action, approved_scope)` — Patient duyệt/từ chối
+- [x] `review_request(request_id, patient_id, action, approved_scope)` — Patient duyệt/từ chối (hỗ trợ expires_in_days)
 - [x] `revoke_permission(patient_id, doctor_id)` — Patient thu hồi quyền
-- [x] `get_consent_history(patient_id)` — Danh sách bác sĩ đang có quyền
+- [x] `get_consent_history(patient_id)` — Danh sách bác sĩ đang có quyền (lọc hết hạn)
 
 #### 3B.3 `app/modules/consent/router.py`
-- [ ] `GET /consent/access-requests` — Auth: Bắt buộc (Role: User)
-- [ ] `PATCH /consent/access-requests/{id}` — Auth: Bắt buộc (Role: User)
-- [ ] `POST /consent/revoke/{doctor_id}` — Auth: Bắt buộc (Role: User)
-- [ ] `GET /consent/history` — Auth: Bắt buộc (Role: User)
+- [x] `GET /consent/access-requests` — Auth: Bắt buộc (Role: User)
+- [x] `PATCH /consent/access-requests/{id}` — Auth: Bắt buộc (Role: User)
+- [x] `POST /consent/revoke/{doctor_id}` — Auth: Bắt buộc (Role: User)
+- [x] `GET /consent/history` — Auth: Bắt buộc (Role: User)
 
 ---
 
-### Phase 3C: Medical Data Self-service (Coder 3)
+### Phase 3C: Medical Data Self-service (Coder 3) ✅ (Đã hoàn thành)
 
 > User tự quản lý dữ liệu y tế CỦA CHÍNH MÌNH. Không cần consent.
-> 4 sub-module bên dưới cũng độc lập nhau.
+> 4 sub-module bên dưới cũng độc lập nhau. Đã refactor sang OOP.
 
-#### 3C.1 Health Metrics (User tự ghi/xem)
-- [ ] `schemas.py` — `HealthMetricCreateRequest`, `HealthMetricResponse`
-- [ ] `service.py` — `create(user_id, data)`, `list_own(user_id, filters)`
-- [ ] `router.py` — `POST /health-metrics` (Role: User), `GET /health-metrics` (không có patient_id)
+#### 3C.1 Health Metrics (User tự ghi/xem) — OOP: `HealthMetricsService`
+- [x] `schemas.py` — `HealthMetricCreateRequest`, `HealthMetricResponse`
+- [x] `service.py` — `create(user_id, data)`, `list_own(user_id, filters)`
+- [x] `router.py` — `POST /health-metrics` (Role: User), `GET /health-metrics` (không có patient_id)
 
-#### 3C.2 Diaries (User tự viết/xem/xóa)
-- [ ] `schemas.py` — `DiaryCreateRequest`, `DiaryResponse`, `SymptomEntry`
-- [ ] `service.py` — `create(user_id, data)`, `list_own(user_id, filters)`, `soft_delete(user_id, diary_id)`
-- [ ] `router.py` — `POST /diaries` (Role: User), `GET /diaries` (không có patient_id), `DELETE /diaries/{id}` (Chủ sở hữu)
+#### 3C.2 Diaries (User tự viết/xem/xóa) — OOP: `DiariesService`
+- [x] `schemas.py` — `DiaryCreateRequest`, `DiaryResponse`, `SymptomEntry`
+- [x] `service.py` — `create(user_id, data)`, `list_own(user_id, filters)`, `soft_delete(user_id, diary_id)`
+- [x] `router.py` — `POST /diaries` (Role: User), `GET /diaries` (không có patient_id), `DELETE /diaries/{id}` (Chủ sở hữu)
 
-#### 3C.3 Prescriptions (User tự xem đơn thuốc + cập nhật trạng thái uống)
-- [ ] `schemas.py` — `PrescriptionResponse`, `PrescriptionItemResponse`, `PrescriptionLogResponse`, `PrescriptionLogUpdateRequest`
-- [ ] `service.py` — `list_own_prescriptions(user_id)`, `list_logs(user_id, prescription_id)`, `update_log_status(user_id, log_id, data)`
-- [ ] `router.py` — `GET /prescriptions` (Role: User), `GET /prescription-logs` (Role: User), `PATCH /prescription-logs/{log_id}` (Role: User)
+#### 3C.3 Prescriptions (User tự xem đơn thuốc + cập nhật trạng thái uống) — OOP: `PrescriptionsService`
+- [x] `schemas.py` — `PrescriptionResponse`, `PrescriptionItemResponse`, `PrescriptionLogResponse`, `PrescriptionLogUpdateRequest`
+- [x] `service.py` — `list_own_prescriptions(user_id)`, `list_logs(user_id, prescription_id)`, `update_log_status(user_id, log_id, data)`
+- [x] `router.py` — `GET /prescriptions` (Role: User), `GET /prescription-logs` (Role: User), `PATCH /prescription-logs/{log_id}` (Role: User)
 
-#### 3C.4 Medical Records (User tự xem hồ sơ bệnh án của mình)
-- [ ] `schemas.py` — `MedicalRecordResponse`
-- [ ] `service.py` — `list_own_records(user_id)`
-- [ ] `router.py` — (Endpoint xem hồ sơ bệnh án của chính mình — sẽ ghép chung với GET ở Phase 4B)
+#### 3C.4 Medical Records (User tự xem hồ sơ bệnh án của mình) — OOP: `MedicalRecordsService`
+- [x] `schemas.py` — `MedicalRecordResponse`
+- [x] `service.py` — `list_own_records(user_id)`
+- [x] `router.py` — `GET /medical-records/me` (Role: User)
 
 ---
 
@@ -313,5 +317,5 @@ async def check_consent(
 | Giai đoạn | Coder 1 | Coder 2 | Coder 3 |
 |---|---|---|---|
 | **Song song (Tuần 1)** | Phase 3A: Users Self-service | Phase 3B: Consent Module | Phase 3C: Medical Data Self-service |
-| **Song song (Tuần 2)** | Phase 4A: Doctors Cross-user | Phase 5: Emergency HOẶC Phase 7: Admin | Phase 4B: Medical Data Cross-user |
-| **Cuối cùng** | Phase 6: Notifications | Phase 8: Integration | Phase 8: Integration |
+| **Phase 2 (Tuần 2 - Đang triển khai)** | **Phase 4A:** Doctors Cross-user (Tìm kiếm bệnh nhân, Xin quyền) | **Phase 5 & 7:** Emergency (QR Token) & Admin (Duyệt Bác sĩ) | **Phase 4B:** Medical Data Cross-user (Bác sĩ tạo/xem dữ liệu bệnh nhân) |
+| **Phase 3 (Cuối cùng)** | Phase 6: Notifications | Phase 8: Integration & Rate Limit | Phase 8: Integration & Triggers |

@@ -81,6 +81,11 @@ class ConsentPermission(Base):
     )
     granted_at = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
     revoked_at = Column(DateTime(timezone=True), nullable=True)
+    expires_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="NULL = vĩnh viễn. Khi hết hạn, quyền tự động vô hiệu."
+    )
 
     __table_args__ = (
         # Partial Unique: chỉ 1 bản ghi active cho mỗi cặp doctor-patient

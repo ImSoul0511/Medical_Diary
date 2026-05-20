@@ -5,24 +5,20 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.modules.prescriptions import service
 from app.modules.prescriptions.schemas import (
     PrescriptionLogResponse,
     PrescriptionLogUpdateRequest,
     PrescriptionResponse,
 )
+from app.modules.prescriptions.service import PrescriptionsService
 from app.shared.dependencies import require_role
-from app.shared.schemas import ErrorResponse
+from app.shared.schemas import ErrorResponse, error_responses as _error_responses
 
 router = APIRouter(tags=["Prescriptions"])
 
-_error_responses = {
-    400: {"model": ErrorResponse, "description": "Bad Request"},
-    401: {"model": ErrorResponse, "description": "Unauthorized"},
-    403: {"model": ErrorResponse, "description": "Forbidden"},
-    404: {"model": ErrorResponse, "description": "Not Found"},
-    500: {"model": ErrorResponse, "description": "Internal Server Error"},
-}
+
+def _get_service(db: AsyncSession = Depends(get_db)) -> PrescriptionsService:
+    return PrescriptionsService(db)
 
 
 @router.get(
@@ -33,10 +29,10 @@ _error_responses = {
     description="User xem toàn bộ đơn thuốc kèm chi tiết từng loại thuốc. Bác sĩ tạo đơn — xem Phase 4B.",
 )
 async def list_prescriptions(
-    db: AsyncSession = Depends(get_db),
+    service: PrescriptionsService = Depends(_get_service),
     current_user: dict = Depends(require_role(["user"])),
 ) -> List[PrescriptionResponse]:
-    return await service.list_own_prescriptions(db, UUID(current_user["sub"]))
+    return await service.list_own_prescriptions(UUID(current_user["sub"]))
 
 
 @router.get(
@@ -48,10 +44,10 @@ async def list_prescriptions(
 )
 async def list_prescription_logs(
     prescription_id: UUID = Query(..., description="ID của đơn thuốc cần xem"),
-    db: AsyncSession = Depends(get_db),
+    service: PrescriptionsService = Depends(_get_service),
     current_user: dict = Depends(require_role(["user"])),
 ) -> List[PrescriptionLogResponse]:
-    return await service.list_logs(db, UUID(current_user["sub"]), prescription_id)
+    return await service.list_logs(UUID(current_user["sub"]), prescription_id)
 
 
 @router.patch(
@@ -69,7 +65,7 @@ async def list_prescription_logs(
 async def update_log_status(
     log_id: UUID,
     data: PrescriptionLogUpdateRequest,
-    db: AsyncSession = Depends(get_db),
+    service: PrescriptionsService = Depends(_get_service),
     current_user: dict = Depends(require_role(["user"])),
 ) -> PrescriptionLogResponse:
-    return await service.update_log_status(db, UUID(current_user["sub"]), log_id, data)
+    return await service.update_log_status(UUID(current_user["sub"]), log_id, data)
