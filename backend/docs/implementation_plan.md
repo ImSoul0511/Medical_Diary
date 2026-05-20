@@ -221,7 +221,7 @@ async def check_consent(
 
 ---
 
-### Phase 4A: Doctors Cross-user (Coder 1 hoặc 2)
+### Phase 4A: Doctors Cross-user (Linh)
 
 > Bác sĩ tìm kiếm, xem hồ sơ, và xin quyền truy cập bệnh nhân.
 
@@ -242,7 +242,7 @@ async def check_consent(
 
 ---
 
-### Phase 4B: Medical Data Cross-user (Coder 3)
+### Phase 4B: Medical Data Cross-user (Triết)
 
 > Bác sĩ tạo/xem dữ liệu y tế CỦA BỆNH NHÂN. Cần consent check.
 
@@ -266,7 +266,7 @@ async def check_consent(
 
 ---
 
-## Phase 5: Emergency (QR Token)
+## Phase 5: Emergency (Trường)
 
 > **Điều kiện:** Phase 3A (Users) đã xong — cần đọc `profiles` + `privacy_settings`.
 
@@ -286,7 +286,7 @@ async def check_consent(
 
 ---
 
-## Phase 7: Admin
+## Phase 7: Admin (Trường)
 
 > **Điều kiện:** Phase 3A (Users/Doctors) đã xong — cần dữ liệu doctors để verify.
 
