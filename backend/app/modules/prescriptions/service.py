@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, time as time_type, timezone
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.prescriptions.models import Prescription, PrescriptionItem, PrescriptionLog
 from app.modules.prescriptions.schemas import (
+    PrescriptionCreateRequest,
+    PrescriptionItemCreateRequest,
     PrescriptionItemResponse,
     PrescriptionLogResponse,
     PrescriptionLogUpdateRequest,
@@ -48,6 +50,7 @@ class PrescriptionsService:
 
             responses.append(PrescriptionResponse(
                 id=rx.id,
+                patient_id=rx.patient_id,
                 doctor_id=rx.doctor_id,
                 notes=rx.notes,
                 items=[
@@ -139,3 +142,91 @@ class PrescriptionsService:
             status=log.status,
             taken_at=log.taken_at,
         )
+
+    async def create_prescription(
+        self,
+        doctor_id: UUID,
+        data: PrescriptionCreateRequest,
+    ) -> PrescriptionResponse:
+        """Bác sĩ tạo đơn thuốc mới (không có items). Không cần consent."""
+        rx = Prescription(
+            patient_id=data.patient_id,
+            doctor_id=doctor_id,
+            notes=data.notes,
+        )
+        self.db.add(rx)
+        await self.db.flush()
+        await self.db.refresh(rx)
+
+        logger.info(f"Prescription created by doctor {doctor_id} for patient {data.patient_id}")
+        return PrescriptionResponse(
+            id=rx.id,
+            patient_id=rx.patient_id,
+            doctor_id=rx.doctor_id,
+            notes=rx.notes,
+            items=[],
+            created_at=rx.created_at,
+        )
+
+    async def add_item(
+        self,
+        doctor_id: UUID,
+        prescription_id: UUID,
+        data: PrescriptionItemCreateRequest,
+    ) -> PrescriptionItemResponse:
+        """Bác sĩ thêm thuốc vào đơn. Verify ownership, DB trigger tự tạo prescription_logs."""
+        rx_stmt = select(Prescription).where(
+            Prescription.id == prescription_id,
+            Prescription.doctor_id == doctor_id,
+            Prescription.deleted_at.is_(None),
+        )
+        rx_result = await self.db.execute(rx_stmt)
+        if rx_result.scalar_one_or_none() is None:
+            raise HTTPException(status_code=404, detail="Đơn thuốc không tồn tại.")
+
+        parsed_times = []
+        for t_str in data.scheduled_times:
+            parts = t_str.strip().split(":")
+            parsed_times.append(time_type(int(parts[0]), int(parts[1])))
+
+        item = PrescriptionItem(
+            prescription_id=prescription_id,
+            medication_name=data.medication_name,
+            dosage=data.dosage,
+            duration_days=data.duration_days,
+            scheduled_times=parsed_times,
+        )
+        self.db.add(item)
+        await self.db.flush()
+        await self.db.refresh(item)
+
+        logger.info(f"Item added to prescription {prescription_id} by doctor {doctor_id}")
+        return PrescriptionItemResponse(
+            id=item.id,
+            medication_name=item.medication_name,
+            dosage=item.dosage,
+            duration_days=item.duration_days,
+            scheduled_times=[str(t) for t in item.scheduled_times],
+            status=item.status,
+        )
+
+    async def soft_delete_prescription(
+        self,
+        doctor_id: UUID,
+        prescription_id: UUID,
+    ) -> None:
+        """Bác sĩ soft-delete đơn thuốc của mình."""
+        stmt = select(Prescription).where(
+            Prescription.id == prescription_id,
+            Prescription.doctor_id == doctor_id,
+            Prescription.deleted_at.is_(None),
+        )
+        result = await self.db.execute(stmt)
+        rx = result.scalar_one_or_none()
+
+        if rx is None:
+            raise HTTPException(status_code=404, detail="Đơn thuốc không tồn tại.")
+
+        rx.deleted_at = datetime.now(timezone.utc)
+        await self.db.flush()
+        logger.info(f"Prescription {prescription_id} soft-deleted by doctor {doctor_id}")

@@ -247,22 +247,22 @@ async def check_consent(
 > Bác sĩ tạo/xem dữ liệu y tế CỦA BỆNH NHÂN. Cần consent check.
 
 #### 4B.1 Health Metrics (Doctor xem dữ liệu bệnh nhân)
-- [ ] `service.py` — `list_by_patient(doctor_id, patient_id, filters)` (**cần consent scope: heart_rate, step_count, respiratory_rate**)
-- [ ] `router.py` — `GET /health-metrics?patient_id={id}` (Role: Doctor)
+- [x] `service.py` — `list_by_patient(doctor_id, patient_id, filters)` (**cần consent scope: vitals**)
+- [x] `router.py` — `GET /health-metrics?patient_id={id}` (Role: Doctor)
 
 #### 4B.2 Diaries (Doctor xem nhật ký bệnh nhân)
-- [ ] `service.py` — `list_by_patient(doctor_id, patient_id, filters)` (**cần consent scope: diaries**)
-- [ ] `router.py` — `GET /diaries?patient_id={id}` (Role: Doctor)
+- [x] `service.py` — `list_by_patient(doctor_id, patient_id, filters)` (**cần consent scope: diaries**)
+- [x] `router.py` — `GET /diaries?patient_id={id}` (Role: Doctor)
 
 #### 4B.3 Medical Records (Doctor tạo hồ sơ bệnh án)
-- [ ] `schemas.py` — `MedicalRecordCreateRequest`
-- [ ] `service.py` — `create(doctor_id, data)` (doctor only, **không cần consent**), `list_by_patient(doctor_id, patient_id)` (**cần consent scope: medical_records**)
-- [ ] `router.py` — `POST /medical-records` (Role: Doctor), `GET /medical-records/{user_id}` (Role: Doctor)
+- [x] `schemas.py` — `MedicalRecordCreateRequest`
+- [x] `service.py` — `create(doctor_id, data)` (doctor only, **không cần consent**), `list_by_patient(doctor_id, patient_id)` (**cần consent scope: medical_records**)
+- [x] `router.py` — `POST /medical-records` (Role: Doctor), `GET /medical-records/{patient_id}` (Role: Doctor)
 
 #### 4B.4 Prescriptions (Doctor tạo đơn thuốc)
-- [ ] `schemas.py` — `PrescriptionCreateRequest`, `PrescriptionItemCreateRequest`
-- [ ] `service.py` — `create_prescription(doctor_id, data)` (**không cần consent**), `add_item(doctor_id, prescription_id, data)`, `soft_delete_prescription(doctor_id, prescription_id)`
-- [ ] `router.py` — `POST /prescriptions` (Role: Doctor), `POST /prescriptions/{id}/items` (Role: Doctor), `DELETE /prescriptions/{id}` (Role: Doctor)
+- [x] `schemas.py` — `PrescriptionCreateRequest`, `PrescriptionItemCreateRequest`
+- [x] `service.py` — `create_prescription(doctor_id, data)` (**không cần consent**), `add_item(doctor_id, prescription_id, data)`, `soft_delete_prescription(doctor_id, prescription_id)`
+- [x] `router.py` — `POST /prescriptions` (Role: Doctor), `POST /prescriptions/{id}/items` (Role: Doctor), `DELETE /prescriptions/{id}` (Role: Doctor)
 
 ---
 

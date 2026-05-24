@@ -1,18 +1,21 @@
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.modules.prescriptions.schemas import (
+    PrescriptionCreateRequest,
+    PrescriptionItemCreateRequest,
+    PrescriptionItemResponse,
     PrescriptionLogResponse,
     PrescriptionLogUpdateRequest,
     PrescriptionResponse,
 )
 from app.modules.prescriptions.service import PrescriptionsService
 from app.shared.dependencies import require_role
-from app.shared.schemas import ErrorResponse, error_responses as _error_responses
+from app.shared.schemas import error_responses as _error_responses
 
 router = APIRouter(tags=["Prescriptions"])
 
@@ -69,3 +72,51 @@ async def update_log_status(
     current_user: dict = Depends(require_role(["user"])),
 ) -> PrescriptionLogResponse:
     return await service.update_log_status(UUID(current_user["sub"]), log_id, data)
+
+
+@router.post(
+    "/prescriptions",
+    response_model=PrescriptionResponse,
+    status_code=201,
+    responses={401: _error_responses[401], 403: _error_responses[403]},
+    summary="Bác sĩ tạo đơn thuốc",
+    description="Bác sĩ tạo đơn thuốc cho bệnh nhân. Không cần consent. Thêm thuốc vào đơn qua POST /prescriptions/{id}/items.",
+)
+async def create_prescription(
+    data: PrescriptionCreateRequest,
+    service: PrescriptionsService = Depends(_get_service),
+    current_user: dict = Depends(require_role(["doctor"])),
+) -> PrescriptionResponse:
+    return await service.create_prescription(UUID(current_user["sub"]), data)
+
+
+@router.post(
+    "/prescriptions/{prescription_id}/items",
+    response_model=PrescriptionItemResponse,
+    status_code=201,
+    responses={401: _error_responses[401], 403: _error_responses[403], 404: _error_responses[404]},
+    summary="Bác sĩ thêm thuốc vào đơn",
+    description="Bác sĩ thêm 1 loại thuốc vào đơn. DB trigger tự tạo prescription_logs theo duration_days × scheduled_times.",
+)
+async def add_prescription_item(
+    prescription_id: UUID,
+    data: PrescriptionItemCreateRequest,
+    service: PrescriptionsService = Depends(_get_service),
+    current_user: dict = Depends(require_role(["doctor"])),
+) -> PrescriptionItemResponse:
+    return await service.add_item(UUID(current_user["sub"]), prescription_id, data)
+
+
+@router.delete(
+    "/prescriptions/{prescription_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={401: _error_responses[401], 403: _error_responses[403], 404: _error_responses[404]},
+    summary="Bác sĩ xóa đơn thuốc (soft-delete)",
+    description="Bác sĩ soft-delete đơn thuốc của mình. Chỉ cập nhật deleted_at.",
+)
+async def delete_prescription(
+    prescription_id: UUID,
+    service: PrescriptionsService = Depends(_get_service),
+    current_user: dict = Depends(require_role(["doctor"])),
+) -> None:
+    await service.soft_delete_prescription(UUID(current_user["sub"]), prescription_id)

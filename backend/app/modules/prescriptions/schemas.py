@@ -5,6 +5,18 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+class PrescriptionItemCreateRequest(BaseModel):
+    medication_name: str
+    dosage: str
+    duration_days: int = Field(..., gt=0)
+    scheduled_times: list[str] = Field(..., description="Danh sách giờ uống, VD: ['08:00', '13:00', '20:00']")
+
+
+class PrescriptionCreateRequest(BaseModel):
+    patient_id: UUID
+    notes: Optional[str] = None
+
+
 class PrescriptionItemResponse(BaseModel):
     id: UUID
     medication_name: str
@@ -16,6 +28,7 @@ class PrescriptionItemResponse(BaseModel):
 
 class PrescriptionResponse(BaseModel):
     id: UUID
+    patient_id: UUID
     doctor_id: UUID
     notes: Optional[str] = None
     items: list[PrescriptionItemResponse]
