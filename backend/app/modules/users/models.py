@@ -76,6 +76,7 @@ class Doctor(Base):
         ForeignKey("profiles.id", ondelete="CASCADE"),
         primary_key=True,
     )
+    email = Column(String(255), nullable=True)
     specialty = Column(String(100), nullable=False)
     license_number = Column(String(50), unique=True, nullable=False)
     hospital = Column(String(200), nullable=False)
