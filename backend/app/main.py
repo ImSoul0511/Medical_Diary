@@ -17,6 +17,7 @@ from app.modules.diaries.router import router as diaries_router
 from app.modules.prescriptions.router import router as prescriptions_router
 from app.modules.medical_records.router import router as medical_records_router
 from app.modules.users.router import router as users_router
+from app.modules.emergency.router import router as emergency_router
 
 # Cấu hình Logging
 logging.basicConfig(
@@ -70,3 +71,4 @@ app.include_router(diaries_router)
 app.include_router(prescriptions_router)
 app.include_router(medical_records_router)
 app.include_router(users_router)
+app.include_router(emergency_router)
