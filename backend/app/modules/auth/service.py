@@ -114,11 +114,12 @@ class AuthService:
 
             # 3. Lưu thông tin bác sĩ
             doctor_query = text("""
-                INSERT INTO doctors (id, specialty, license_number, hospital, certificate_url, verification_status)
-                VALUES (:id, :specialty, :license_number, :hospital, :cert_url, 'pending_verification')
+                INSERT INTO doctors (id, email, specialty, license_number, hospital, certificate_url, verification_status)
+                VALUES (:id, :email, :specialty, :license_number, :hospital, :cert_url, 'pending_verification')
             """)
             await self.db.execute(doctor_query, {
                 "id": user_id,
+                "email": data.email,
                 "specialty": data.specialty,
                 "license_number": data.license_number,
                 "hospital": data.hospital,
