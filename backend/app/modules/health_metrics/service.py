@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.health_metrics.models import HealthMetric
 from app.modules.health_metrics.schemas import HealthMetricCreateRequest, HealthMetricResponse
+from app.shared.consent import check_consent
 
 logger = logging.getLogger("medical_diary")
 
@@ -72,6 +73,56 @@ class HealthMetricsService:
         rows = result.scalars().all()
 
         logger.info(f"Listed {len(rows)} health metrics for user: {user_id}")
+        return [
+            HealthMetricResponse(
+                id=row.id,
+                user_id=row.user_id,
+                heart_rate=row.heart_rate,
+                step_count=row.step_count,
+                respiratory_rate=row.respiratory_rate,
+                recorded_at=row.recorded_at,
+                created_at=row.created_at,
+            )
+            for row in rows
+        ]
+
+    async def list_by_patient(
+        self,
+        doctor_id: UUID,
+        patient_id: UUID,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+    ) -> list[HealthMetricResponse]:
+        """Doctor xem chỉ số bệnh nhân. Cần consent scope 'vitals'."""
+        has_consent = await check_consent(
+            self.db,
+            str(doctor_id),
+            str(patient_id),
+            "vitals",
+        )
+        if not has_consent:
+            raise HTTPException(
+                status_code=403,
+                detail="Không có quyền truy cập chỉ số của bệnh nhân này.",
+            )
+
+        stmt = (
+            select(HealthMetric)
+            .where(
+                HealthMetric.user_id == patient_id,
+                HealthMetric.deleted_at.is_(None),
+            )
+            .order_by(HealthMetric.recorded_at.desc())
+        )
+        if start:
+            stmt = stmt.where(HealthMetric.recorded_at >= start)
+        if end:
+            stmt = stmt.where(HealthMetric.recorded_at <= end)
+
+        result = await self.db.execute(stmt)
+        rows = result.scalars().all()
+
+        logger.info(f"Doctor {doctor_id} listed {len(rows)} health metrics for patient {patient_id}")
         return [
             HealthMetricResponse(
                 id=row.id,

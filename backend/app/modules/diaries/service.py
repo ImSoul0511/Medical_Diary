@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.diaries.models import Diary
 from app.modules.diaries.schemas import DiaryCreateRequest, DiaryResponse, SymptomEntry
+from app.shared.consent import check_consent
 
 logger = logging.getLogger("medical_diary")
 
@@ -84,3 +85,32 @@ class DiariesService:
         diary.deleted_at = datetime.now(timezone.utc)
         await self.db.flush()
         logger.info(f"Diary {diary_id} soft-deleted by user: {user_id}")
+
+    async def list_by_patient(
+        self,
+        doctor_id: UUID,
+        patient_id: UUID,
+    ) -> list[DiaryResponse]:
+        """Doctor xem nhật ký bệnh nhân. Cần consent scope 'diaries'."""
+        has_consent = await check_consent(
+            self.db,
+            str(doctor_id),
+            str(patient_id),
+            "diaries",
+        )
+        if not has_consent:
+            raise HTTPException(
+                status_code=403,
+                detail="Không có quyền truy cập nhật ký của bệnh nhân này.",
+            )
+
+        stmt = (
+            select(Diary)
+            .where(Diary.user_id == patient_id, Diary.deleted_at.is_(None))
+            .order_by(Diary.created_at.desc())
+        )
+        result = await self.db.execute(stmt)
+        rows = result.scalars().all()
+
+        logger.info(f"Doctor {doctor_id} listed {len(rows)} diaries for patient {patient_id}")
+        return [self._to_response(row) for row in rows]
