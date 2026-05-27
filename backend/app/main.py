@@ -12,6 +12,7 @@ from app.core.exceptions import (
 )
 from app.modules.auth.router import router as auth_router
 from app.modules.consent.router import router as consent_router
+from app.modules.doctors.router import router as doctors_router
 from app.modules.health_metrics.router import router as health_metrics_router
 from app.modules.diaries.router import router as diaries_router
 from app.modules.prescriptions.router import router as prescriptions_router
@@ -65,6 +66,7 @@ async def health_check():
 
 app.include_router(auth_router)
 app.include_router(consent_router)
+app.include_router(doctors_router)
 app.include_router(health_metrics_router)
 app.include_router(diaries_router)
 app.include_router(prescriptions_router)
