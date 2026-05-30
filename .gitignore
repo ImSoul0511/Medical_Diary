@@ -2,3 +2,13 @@ REF_DOCS/
 .venv/
 Medical Diary Design System/
 frontend_images/
+
+# Local secrets and scratch files
+.env
+.env.*
+!.env.example
+**/scratch/
+*.pem
+*.key
+*.p12
+*.pfx

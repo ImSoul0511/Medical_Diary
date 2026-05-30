@@ -6,10 +6,21 @@ venv/
 .venv/
 env/
 .env
+.env.*
+!.env.example
+scratch/
 
 # Database
 *.db
 *.sqlite
+*.dump
+*.sql.gz
+
+# Local secrets
+*.pem
+*.key
+*.p12
+*.pfx
 
 # IDEs
 .vscode/
