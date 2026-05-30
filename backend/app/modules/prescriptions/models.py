@@ -61,12 +61,17 @@ class PrescriptionItem(Base):
     duration_days = Column(
         Integer,
         CheckConstraint("duration_days > 0", name="ck_pi_duration_days"),
-        nullable=False,
+        nullable=True,
     )
     scheduled_times = Column(
         ARRAY(Time),
-        nullable=False,
+        nullable=True,
         comment="Mảng các khung giờ uống thuốc. VD: ['08:00', '13:00', '20:00']",
+    )
+    start_date = Column(
+        Date,
+        nullable=True,
+        comment="Ngày bắt đầu uống thuốc (dành cho chế độ tự động)",
     )
     status = Column(
         String(20),

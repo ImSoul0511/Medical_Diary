@@ -17,6 +17,7 @@ Tài liệu này hướng dẫn AI Agents quy trình từng bước khi được
 3. **Supabase là tài khoản free-tier.** Luôn kiểm tra giới hạn của Supabase Free Tier trước khi dùng bất kỳ tính năng nào (Storage limit, Auth rate limit, RPC limit, v.v.).
 4. **Nếu cần quyền admin của Supabase** (VD: tạo RPC function, trigger, RLS policy) → Tạo file `.sql` trong `supabase/policies/` và yêu cầu user chạy trên SQL Editor của Supabase Dashboard.
 5. **Luôn cập nhật tài liệu** sau khi thay đổi code (SCHEMAS.md, API.md, SYSTEM_DESIGN_SSOT.md, v.v.).
+6. **Khi triển khai tính năng liên quan đến gửi email:** Bắt buộc phải đọc kỹ tài liệu hướng dẫn tại `.vscode/backend/EMAIL.md` để sử dụng đúng email helper và dùng phương pháp chạy ngầm (BackgroundTasks hoặc asyncio.to_thread) để tránh làm nghẽn Event Loop.
 
 ---
 

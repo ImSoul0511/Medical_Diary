@@ -15,16 +15,39 @@ class UserProfileResponse(BaseModel):
 
 class UserProfileUpdateRequest(BaseModel):
     full_name: Optional[str] = Field(None, min_length=2, max_length=100)
-    gender: Optional[Literal['NAM', 'Nữ']] = None
+    gender: Optional[Literal['male', 'female']] = None
     date_of_birth: Optional[date] = None
     blood_type: Optional[str] = Field(None, max_length=5)
     allergies: Optional[str] = Field(None, max_length=2000)
     emergency_contact: Optional[str] = Field(None, max_length=20)
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "full_name": "Nguyen Van A",
+                "gender": "male",
+                "date_of_birth": "2000-01-01",
+                "blood_type": "O+",
+                "allergies": "Penicillin, Aspirin",
+                "emergency_contact": "0912345678"
+            }
+        }
+    }
+
 class PrivacyUpdateRequest(BaseModel):
     show_blood_type: Optional[bool] = None
     show_allergies: Optional[bool] = None
     show_emergency_contact: Optional[bool] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "show_blood_type": True,
+                "show_allergies": True,
+                "show_emergency_contact": True
+            }
+        }
+    }
 
 class AccessHistoryItem(BaseModel):
     doctor_name: str

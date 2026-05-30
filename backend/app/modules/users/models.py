@@ -43,9 +43,9 @@ class Profile(Base):
     cccd_encrypted = Column(Text, nullable=True, comment="Mã hóa pgcrypto — CCCD")
     gender = Column(
         String(10),
-        CheckConstraint("gender IN ('NAM', 'Nữ')", name="ck_profiles_gender"),
+        CheckConstraint("gender IN ('male', 'female')", name="ck_profiles_gender"),
         nullable=False,
-        server_default=text("'NAM'") # Default value required for non-nullable column with existing rows
+        server_default=text("'male'") # Default value required for non-nullable column with existing rows
     )
     date_of_birth = Column(Date, nullable=True)
     blood_type = Column(String(5), nullable=True, comment="VD: O+, AB-")

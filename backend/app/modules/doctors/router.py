@@ -1,7 +1,7 @@
 from uuid import UUID
-
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
+
 
 from app.core.database import get_db
 from app.modules.doctors.schemas import (
@@ -13,6 +13,8 @@ from app.modules.doctors.schemas import (
 from app.modules.doctors.service import DoctorService
 from app.shared.dependencies import require_role
 from app.shared.schemas import error_responses as _error_responses
+from app.core.rate_limiter import limiter
+
 
 
 router = APIRouter(prefix="/doctors", tags=["Doctors"])
@@ -28,11 +30,11 @@ def _get_service(db: AsyncSession = Depends(get_db)) -> DoctorService:
     responses={401: _error_responses[401], 403: _error_responses[403]},
 )
 async def search_patients(
-    query: str = Query(..., min_length=1, max_length=100, description="Tên bệnh nhân cần tìm"),
+    phone_number: str = Query(..., min_length=8, max_length=15, description="Số điện thoại bệnh nhân cần tìm"),
     service: DoctorService = Depends(_get_service),
     current_user: dict = Depends(require_role(["doctor"])),
 ) -> list[PatientPublicResponse]:
-    return await service.search_patients(query)
+    return await service.search_patients(phone_number)
 
 
 @router.get(
@@ -63,9 +65,13 @@ async def get_patient_detail(
         409: {"description": "Conflict — pending request already exists"},
     },
 )
+@limiter.limit("10/day")
 async def request_access(
+    request: Request,
     data: RequestAccessRequest,
+    background_tasks: BackgroundTasks,
     service: DoctorService = Depends(_get_service),
     current_user: dict = Depends(require_role(["doctor"])),
 ) -> RequestAccessResponse:
-    return await service.request_access(UUID(current_user["sub"]), data)
+    from uuid import UUID
+    return await service.request_access(UUID(current_user["sub"]), data, background_tasks)

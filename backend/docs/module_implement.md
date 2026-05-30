@@ -19,6 +19,7 @@ Tài liệu này hướng dẫn AI Agents quy trình từng bước khi được
 5. **Luon cap nhat tai lieu** sau khi thay doi code (SCHEMAS.md, API.md, SYSTEM_DESIGN_SSOT.md, v.v.).
 6. **KHONG duoc tu chay cac lenh install hoac tac vu he thong.** Neu can cai dat dependency (`pip install`, `npm install`, v.v.) hoac chay bat ky lenh nao tren terminal --> **chi duoc huong dan user tu chay**. Agent khong duoc tu dong thuc thi cac lenh nay.
 7. **KHONG su dung emoji** trong code (.py, .sql, v.v.) va trong cac file tai lieu (.md). Dung ky tu ASCII thuan (VD: dung `[x]` thay vi checkbox emoji, dung `-->`  thay vi mui ten emoji, dung `(Da hoan thanh)` thay vi dau tick emoji).
+8. **Khi trien khai tinh nang lien quan den gui email:** Bat buoc phai doc ky tai lieu huong dan tai `.claude/backend/EMAIL.md` de su dung dung email helper và dung phuong phap chay ngam (BackgroundTasks hoac asyncio.to_thread) de tranh block Event Loop.
 
 ---
 

@@ -11,6 +11,17 @@ class MedicalRecordCreateRequest(BaseModel):
     notes: Optional[str] = None
     attachments: Optional[list[str]] = None
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "patient_id": "string",
+                "diagnosis": "Viêm họng cấp tính, không biến chứng",
+                "notes": "Bệnh nhân cần tái khám sau 7 ngày",
+                "attachments": []
+            }
+        }
+    }
+
 
 class MedicalRecordResponse(BaseModel):
     id: UUID

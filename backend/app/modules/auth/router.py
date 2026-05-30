@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form 
+from fastapi import APIRouter, Depends, UploadFile, File, Form, Request 
 from sqlalchemy.ext.asyncio import AsyncSession
 from supabase import Client 
 
@@ -17,6 +17,8 @@ from app.modules.auth.schemas import (
 )
 
 from app.modules.auth.service import AuthService
+from app.core.rate_limiter import limiter
+
 
 def _get_service(
     db: AsyncSession = Depends(get_db),
@@ -27,21 +29,27 @@ def _get_service(
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/login", response_model=LoginResponse, responses={401: _error_responses[401]})
+@limiter.limit("5/minute")
 async def login(
-    request: LoginRequest,
+    request: Request,
+    data: LoginRequest,
     service: AuthService = Depends(_get_service)
 ) -> LoginResponse:
-    return await service.login(request)
+    return await service.login(data)
 
 @router.post("/register", response_model=MessageResponse, responses={400: _error_responses[400]})
+@limiter.limit("3/minute")
 async def register(
+    request: Request,
     data: RegisterRequest,
     service: AuthService = Depends(_get_service)
 ) -> MessageResponse:
     return await service.register(data)
 
 @router.post("/register-doctor", response_model=RegisterDoctorResponse, status_code=201, responses={400: _error_responses[400]})
+@limiter.limit("3/minute")
 async def register_doctor(
+    request: Request,
     # Form fields (multipart/form-data)
     email: str = Form(...),
     phone_number: str = Form(...),
@@ -59,28 +67,54 @@ async def register_doctor(
     supabase: Client = Depends(get_supabase_client),
 ):
     from datetime import date as date_type
+    import uuid
+    from pydantic import ValidationError
+    from fastapi import HTTPException
 
-    # 1. Upload chứng chỉ lên Supabase Storage
+    # 1. Tạo và validate schema object từ form data trước
+    try:
+        data = RegisterDoctorRequest(
+            email=email,
+            phone_number=phone_number,
+            password=password,
+            full_name=full_name,
+            date_of_birth=date_type.fromisoformat(date_of_birth),
+            gender=gender,
+            cccd=cccd,
+            license_number=license_number,
+            specialty=specialty,
+            hospital=hospital,
+        )
+    except ValidationError as e:
+        errors = e.errors()
+        err_msg = "; ".join([f"{err['loc'][0]}: {err['msg']}" for err in errors])
+        raise HTTPException(status_code=400, detail=f"Dữ liệu không hợp lệ: {err_msg}")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Định dạng ngày sinh không hợp lệ. Phải là YYYY-MM-DD")
+
+    # 2. Upload chứng chỉ lên Supabase Storage với tên file unique
     file_bytes = await certificate_file.read()
-    file_path = f"certificates/{certificate_file.filename}"
-    supabase.storage.from_("certificates").upload(file_path, file_bytes)
+    file_ext = certificate_file.filename.split('.')[-1] if '.' in certificate_file.filename else 'png'
+    file_name = f"{uuid.uuid4()}.{file_ext}"
+    file_path = f"certificates/{file_name}"
+    
+    try:
+        supabase.storage.from_("certificates").upload(file_path, file_bytes)
+    except Exception as upload_err:
+        raise HTTPException(status_code=500, detail=f"Lỗi khi upload chứng chỉ: {str(upload_err)}")
+        
     certificate_url = f"{supabase.storage_url}/object/public/certificates/{file_path}"
 
-    # 2. Tạo schema object từ form data
-    data = RegisterDoctorRequest(
-        email=email,
-        phone_number=phone_number,
-        password=password,
-        full_name=full_name,
-        date_of_birth=date_type.fromisoformat(date_of_birth),
-        gender=gender,
-        cccd=cccd,
-        license_number=license_number,
-        specialty=specialty,
-        hospital=hospital,
-    )
-
-    return await service.register_doctor(data, certificate_url)
+    # 3. Tiến hành đăng ký bác sĩ
+    try:
+        return await service.register_doctor(data, certificate_url)
+    except Exception as e:
+        # Nếu đăng ký lỗi, xóa file vừa upload để dọn dẹp storage
+        try:
+            supabase.storage.from_("certificates").remove([file_path])
+        except Exception:
+            pass
+        raise e
 
 @router.post("/logout", response_model=MessageResponse, responses={400: _error_responses[400]})
 async def logout(

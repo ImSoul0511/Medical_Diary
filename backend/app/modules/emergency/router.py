@@ -15,8 +15,9 @@ SET jwt_claims = '{}' nếu không có Bearer header (không raise lỗi).
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+
 
 from app.core.database import get_db
 from app.modules.emergency.schemas import (
@@ -30,6 +31,8 @@ from app.modules.emergency.schemas import (
 from app.modules.emergency.service import EmergencyService
 from app.shared.dependencies import require_role
 from app.shared.schemas import MessageResponse, error_responses as _error_responses
+from app.core.rate_limiter import limiter
+
 
 router = APIRouter(prefix="/emergency", tags=["Emergency"])
 
@@ -158,7 +161,9 @@ async def revoke_token(
         "Mỗi lần truy cập thành công được ghi vào `emergency_access_logs`."
     ),
 )
+@limiter.limit("30/minute")
 async def access_by_token(
+    request: Request,
     token: str,
     service: EmergencyService = Depends(_get_service),
 ) -> EmergencyAccessResponse:

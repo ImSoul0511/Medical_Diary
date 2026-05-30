@@ -18,17 +18,12 @@ class PatientPublicResponse(BaseModel):
 class PatientProfileResponse(BaseModel):
     """Hồ sơ chi tiết bệnh nhân — chỉ trả về khi bác sĩ có consent hợp lệ."""
 
-    id: UUID
     full_name: str
     gender: str
     date_of_birth: Optional[date] = None
     blood_type: Optional[str] = None
     allergies: Optional[str] = None
     emergency_contact: Optional[str] = None
-    consent_scope: list[str] = Field(
-        default_factory=list,
-        description="Danh sách scope mà bác sĩ được phép xem",
-    )
 
 
 class RequestAccessRequest(BaseModel):
@@ -38,7 +33,7 @@ class RequestAccessRequest(BaseModel):
     requested_scope: list[str] = Field(
         ...,
         min_length=1,
-        description="Ít nhất 1 scope hợp lệ (VD: blood_type, allergies, medical_records, ...)",
+        description="Danh sách scope yêu cầu truy cập. Các giá trị hợp lệ: blood_type, allergies, emergency_contact, medical_records, prescriptions, diaries, heart_rate, step_count, respiratory_rate",
     )
     reason: str = Field(
         ...,
@@ -46,6 +41,26 @@ class RequestAccessRequest(BaseModel):
         max_length=1000,
         description="Lý do lâm sàng cho yêu cầu truy cập",
     )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "patient_id": "string",
+                "requested_scope": [
+                    "blood_type",
+                    "allergies",
+                    "emergency_contact",
+                    "medical_records",
+                    "prescriptions",
+                    "diaries",
+                    "heart_rate",
+                    "step_count",
+                    "respiratory_rate"
+                ],
+                "reason": "Yêu cầu quyền truy cập để xem lịch sử y tế và các chỉ số sức khỏe phục vụ chẩn đoán bệnh."
+            }
+        }
+    }
 
     @field_validator("requested_scope")
     @classmethod

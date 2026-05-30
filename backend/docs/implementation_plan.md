@@ -221,24 +221,24 @@ async def check_consent(
 
 ---
 
-### Phase 4A: Doctors Cross-user (Linh)
+### Phase 4A: Doctors Cross-user (Linh) ✅ (Đã hoàn thành)
 
 > Bác sĩ tìm kiếm, xem hồ sơ, và xin quyền truy cập bệnh nhân.
 
 #### 4A.1 `app/modules/doctors/schemas.py`
-- [ ] `PatientPublicResponse` (kết quả tìm kiếm)
-- [ ] `PatientProfileResponse` (hồ sơ chi tiết — lọc theo consent)
-- [ ] `RequestAccessRequest`, `RequestAccessResponse`
+- [x] `PatientPublicResponse` (kết quả tìm kiếm)
+- [x] `PatientProfileResponse` (hồ sơ chi tiết — lọc theo consent)
+- [x] `RequestAccessRequest`, `RequestAccessResponse`
 
 #### 4A.2 `app/modules/doctors/service.py`
-- [ ] `search_patients(query)` — Tìm bệnh nhân (chỉ trả về tên, ID)
-- [ ] `get_patient_detail(doctor_id, patient_id)` — Xem hồ sơ bệnh nhân (**cần consent check**)
-- [ ] `request_access(doctor_id, data)` — Gửi yêu cầu truy cập (tạo bản ghi `consent_requests`)
+- [x] `search_patients(query)` — Tìm bệnh nhân (chỉ trả về tên, ID)
+- [x] `get_patient_detail(doctor_id, patient_id)` — Xem hồ sơ bệnh nhân (**cần consent check**)
+- [x] `request_access(doctor_id, data)` — Gửi yêu cầu truy cập (tạo bản ghi `consent_requests`)
 
 #### 4A.3 `app/modules/doctors/router.py`
-- [ ] `GET /doctors/search-patients` — Auth: Bắt buộc (Role: Doctor)
-- [ ] `GET /users/{id}` — Auth: Bắt buộc (Role: Doctor)
-- [ ] `POST /doctors/request-access` — Auth: Bắt buộc (Role: Doctor)
+- [x] `GET /doctors/search-patients` — Auth: Bắt buộc (Role: Doctor)
+- [x] `GET /users/{id}` — Auth: Bắt buộc (Role: Doctor)
+- [x] `POST /doctors/request-access` — Auth: Bắt buộc (Role: Doctor)
 
 ---
 
@@ -266,47 +266,47 @@ async def check_consent(
 
 ---
 
-## Phase 5: Emergency (Trường)
+## Phase 5: Emergency (Trường) ✅ (Đã hoàn thành)
 
 > **Điều kiện:** Phase 3A (Users) đã xong — cần đọc `profiles` + `privacy_settings`.
 
-- [ ] `schemas.py` — `EmergencyTokenCreateRequest`, `EmergencyTokenResponse`, `EmergencyAccessResponse`, `EmergencyTokenItem`, `EmergencyTokenUpdateRequest`, `EmergencyAccessLogItem`
-- [ ] `service.py` — `create_token()`, `list_tokens()`, `update_token()`, `revoke_token()`, `access_by_token()`, `get_access_history()`
-- [ ] `router.py` — `POST /emergency/token` (Role: User), `GET /emergency/tokens` (Role: User), `PATCH /emergency/tokens/{id}` (Role: User), `DELETE /emergency/tokens/{id}` (Role: User), `GET /emergency/access/{token}` (Public), `GET /emergency/tokens/history` (Role: User)
+- [x] `schemas.py` — `EmergencyTokenCreateRequest`, `EmergencyTokenResponse`, `EmergencyAccessResponse`, `EmergencyTokenItem`, `EmergencyTokenUpdateRequest`, `EmergencyAccessLogItem`
+- [x] `service.py` — `create_token()`, `list_tokens()`, `update_token()`, `revoke_token()`, `access_by_token()`, `get_access_history()`
+- [x] `router.py` — `POST /emergency/token` (Role: User), `GET /emergency/tokens` (Role: User), `PATCH /emergency/tokens/{id}` (Role: User), `DELETE /emergency/tokens/{id}` (Role: User), `GET /emergency/access/{token}` (Public), `GET /emergency/tokens/history` (Role: User)
 
 ---
 
-## Phase 6: Notifications
+## Phase 6: Notifications ✅ (Đã hoàn thành)
 
 > **Điều kiện:** Phase 3B (Consent) + Phase 4B (Prescriptions) đã xong — notification được trigger từ các sự kiện đó.
 
-- [ ] `schemas.py` — `NotificationResponse`
-- [ ] `service.py` — `list_notifications()`, `mark_as_read()`
-- [ ] `router.py` — `GET /notifications` (Auth: Bắt buộc), `PATCH /notifications/{id}/read` (Auth: Bắt buộc)
+- [x] `schemas.py` — `NotificationResponse`
+- [x] `service.py` — `list_notifications()`, `mark_as_read()`
+- [x] `router.py` — `GET /notifications` (Auth: Bắt buộc), `PATCH /notifications/{id}/read` (Auth: Bắt buộc)
 
 ---
 
-## Phase 7: Admin (Trường)
+## Phase 7: Admin (Trường) ✅ (Đã hoàn thành)
 
 > **Điều kiện:** Phase 3A (Users/Doctors) đã xong — cần dữ liệu doctors để verify.
 
-- [ ] `schemas.py` — `PendingDoctorResponse`, `DoctorVerifyRequest`, `AuditLogResponse`
-- [ ] `service.py` — `list_pending_doctors()`, `verify_doctor()`, `get_audit_logs()`
-- [ ] `router.py` — `GET /admin/doctors/pending` (Role: Admin), `PATCH /admin/doctors/{id}/verify` (Role: Admin), `GET /admin/audit-logs` (Role: Admin)
+- [x] `schemas.py` — `PendingDoctorResponse`, `DoctorVerifyRequest`, `AuditLogResponse`
+- [x] `service.py` — `list_pending_doctors()`, `verify_doctor()`, `get_audit_logs()`
+- [x] `router.py` — `GET /admin/doctors/pending` (Role: Admin), `PATCH /admin/doctors/{id}/verify` (Role: Admin), `GET /admin/audit-logs` (Role: Admin)
 
 ---
 
-## Phase 8: Integration & Polish
+## Phase 8: Integration & Polish ✅ (Đã hoàn thành)
 
-- [ ] Đăng ký tất cả routers trong `main.py`
-- [ ] Viết RLS Policies SQL vào `supabase/policies/`
-- [ ] Viết DB Triggers SQL (audit log, prescription_logs auto-generate)
-- [ ] **Rate Limiting (`slowapi`):**
-  - [ ] Khởi tạo `Limiter` instance trong `app/core/rate_limit.py` (key_func = `get_remote_address`)
-  - [ ] Gắn `SlowAPIMiddleware` + `SlowAPIASGIMiddleware` vào `main.py` (global error handler cho 429)
-  - [ ] Gắn `@limiter.limit("5/minute")` vào `POST /auth/login`
-  - [ ] Gắn `@limiter.limit("10/day")` vào `POST /doctors/request-access`
-  - [ ] Gắn rate limit mặc định cho các endpoint nhạy cảm khác (register, emergency access, v.v.)
+- [x] Đăng ký tất cả routers trong `main.py`
+- [x] Viết RLS Policies SQL (Đã cấu hình tự động trên Supabase)
+- [x] Viết DB Triggers SQL (audit log, prescription_logs auto-generate)
+- [x] **Rate Limiting (`slowapi`):**
+  - [x] Khởi tạo `Limiter` instance trong `app/core/rate_limit.py` (key_func = `get_remote_address`)
+  - [x] Gắn `SlowAPIMiddleware` vào `main.py` (global error handler cho 429)
+  - [x] Gắn `@limiter.limit("5/minute")` vào `POST /auth/login`
+  - [x] Gắn `@limiter.limit("10/day")` vào `POST /doctors/request-access`
+  - [x] Gắn rate limit mặc định cho các endpoint nhạy cảm khác (register, emergency access, v.v.)
 - [ ] Test toàn bộ luồng qua Swagger UI (`/docs`)
 - [ ] Commit & push lên `dev` branch
 

@@ -46,6 +46,26 @@ class AccessRequestActionRequest(BaseModel):
         description="Số ngày quyền truy cập có hiệu lực. Mặc định 30 ngày. None = vĩnh viễn."
     )
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "action": "approved",
+                "approved_scope": [
+                    "blood_type",
+                    "allergies",
+                    "emergency_contact",
+                    "medical_records",
+                    "prescriptions",
+                    "diaries",
+                    "heart_rate",
+                    "step_count",
+                    "respiratory_rate"
+                ],
+                "expires_in_days": 30
+            }
+        }
+    }
+
     @field_validator("approved_scope")
     @classmethod
     def validate_approved_scope(cls, value: Optional[list[str]]) -> Optional[list[str]]:

@@ -14,6 +14,18 @@ class DiaryCreateRequest(BaseModel):
     content: Optional[str] = None
     symptoms: Optional[list[SymptomEntry]] = None
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "content": "Hôm nay cảm thấy đau đầu nhẹ sau khi thức dậy, buổi chiều có triệu chứng chóng mặt.",
+                "symptoms": [
+                    {"name": "Đau đầu", "severity": 5},
+                    {"name": "Chóng mặt", "severity": 3}
+                ]
+            }
+        }
+    }
+
 
 class DiaryResponse(BaseModel):
     id: UUID

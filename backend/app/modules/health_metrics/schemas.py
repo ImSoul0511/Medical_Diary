@@ -11,6 +11,17 @@ class HealthMetricCreateRequest(BaseModel):
     respiratory_rate: Optional[int] = Field(None, ge=5, le=60)
     recorded_at: datetime
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "heart_rate": 75,
+                "step_count": 8500,
+                "respiratory_rate": 16,
+                "recorded_at": "2026-05-28T08:00:00Z"
+            }
+        }
+    }
+
 
 class HealthMetricResponse(BaseModel):
     id: UUID

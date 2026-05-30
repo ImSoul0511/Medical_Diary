@@ -1,9 +1,10 @@
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.modules.prescriptions.schemas import (
     PrescriptionCreateRequest,
@@ -15,7 +16,7 @@ from app.modules.prescriptions.schemas import (
 )
 from app.modules.prescriptions.service import PrescriptionsService
 from app.shared.dependencies import require_role
-from app.shared.schemas import error_responses as _error_responses
+from app.shared.schemas import MessageResponse, error_responses as _error_responses
 
 router = APIRouter(tags=["Prescriptions"])
 
@@ -120,3 +121,21 @@ async def delete_prescription(
     current_user: dict = Depends(require_role(["doctor"])),
 ) -> None:
     await service.soft_delete_prescription(UUID(current_user["sub"]), prescription_id)
+
+
+@router.post(
+    "/prescriptions/internal/send-reminders",
+    response_model=MessageResponse,
+    status_code=200,
+    summary="[Internal] Gửi email nhắc nhở uống thuốc định kỳ",
+    description="Endpoint nội bộ (gọi bởi database cron job) để quét và gửi email nhắc nhở uống thuốc.",
+)
+async def send_medication_reminders(
+    x_internal_token: str = Header(..., alias="X-Internal-Token"),
+    service: PrescriptionsService = Depends(_get_service),
+) -> MessageResponse:
+    # Xác thực token nội bộ bảo mật (đối chiếu với JWT_SECRET)
+    if x_internal_token != settings.JWT_SECRET:
+        raise HTTPException(status_code=403, detail="Unauthorized internal request.")
+    
+    return await service.send_scheduled_reminders()

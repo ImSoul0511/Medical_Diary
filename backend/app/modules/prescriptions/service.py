@@ -1,11 +1,17 @@
 import logging
+import os
+import smtplib
 from datetime import datetime, time as time_type, timezone
+from email.mime.text import MIMEText
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+
+from app.modules.notifications.models import Notification
 from app.modules.prescriptions.models import Prescription, PrescriptionItem, PrescriptionLog
 from app.modules.prescriptions.schemas import (
     PrescriptionCreateRequest,
@@ -15,6 +21,7 @@ from app.modules.prescriptions.schemas import (
     PrescriptionLogUpdateRequest,
     PrescriptionResponse,
 )
+from app.shared.schemas import MessageResponse
 
 logger = logging.getLogger("medical_diary")
 
@@ -70,7 +77,8 @@ class PrescriptionsService:
                         medication_name=item.medication_name,
                         dosage=item.dosage,
                         duration_days=item.duration_days,
-                        scheduled_times=[str(t) for t in (item.scheduled_times or [])],
+                        scheduled_times=[str(t) for t in item.scheduled_times] if item.scheduled_times else None,
+                        start_date=item.start_date,
                         status=item.status,
                     )
                     for item in items
@@ -225,59 +233,101 @@ class PrescriptionsService:
         data: PrescriptionItemCreateRequest,
     ) -> PrescriptionItemResponse:
         """
-        Bác sĩ thêm 1 loại thuốc vào đơn. DB trigger tự tạo prescription_logs.
-
-        Input:  doctor_id       — ID bác sĩ (ownership check)
-                prescription_id — ID đơn thuốc cần thêm thuốc vào
-                data            — PrescriptionItemCreateRequest {
-                                    medication_name, dosage, duration_days,
-                                    scheduled_times: ["08:00", "13:00", "20:00"]
-                                  }
-        Output: PrescriptionItemResponse — thuốc vừa được thêm vào
-
-        Luồng:
-        1. Verify đơn thuốc tồn tại và do doctor_id tạo → 404 nếu không tìm thấy
-        2. Parse scheduled_times từ string "HH:MM" sang Python time object
-           (PostgreSQL ARRAY(Time) yêu cầu time object, không nhận string)
-        3. INSERT PrescriptionItem
-        4. DB trigger tự động tạo (duration_days × len(scheduled_times)) bản ghi
-           trong prescription_logs với status = "untaken"
-        5. refresh() để load id và status (server_default = "active")
+        Bác sĩ thêm 1 loại thuốc vào đơn. Hỗ trợ 2 chế độ:
+        1. Tự động: cung cấp duration_days và scheduled_times. Trình kích hoạt (DB trigger) tự tạo prescription_logs.
+        2. Thủ công (custom_logs): bác sĩ cung cấp danh sách cữ uống cụ thể. Backend tự tạo prescription_logs thủ công.
         """
-        # Bước 1 — verify ownership
+        # Bước 1 — verify ownership và lấy patient_id
         rx_stmt = select(Prescription).where(
             Prescription.id == prescription_id,
             Prescription.doctor_id == doctor_id,
             Prescription.deleted_at.is_(None),
         )
         rx_result = await self.db.execute(rx_stmt)
-        if rx_result.scalar_one_or_none() is None:
+        rx = rx_result.scalar_one_or_none()
+        if rx is None:
             raise HTTPException(status_code=404, detail="Đơn thuốc không tồn tại.")
 
-        # Bước 2 — parse "HH:MM" → time object
-        parsed_times = []
-        for t_str in data.scheduled_times:
-            parts = t_str.strip().split(":")
-            parsed_times.append(time_type(int(parts[0]), int(parts[1])))
+        patient_id = rx.patient_id
 
-        item = PrescriptionItem(
-            prescription_id=prescription_id,
-            medication_name=data.medication_name,
-            dosage=data.dosage,
-            duration_days=data.duration_days,
-            scheduled_times=parsed_times,
-        )
-        self.db.add(item)
-        await self.db.flush()
+        # Kiểm tra tính hợp lệ của tham số
+        is_auto = data.duration_days is not None and data.scheduled_times is not None
+        is_manual = data.custom_logs is not None and len(data.custom_logs) > 0
+
+        if not is_auto and not is_manual:
+            raise HTTPException(
+                status_code=400,
+                detail="Phải cung cấp đầy đủ (duration_days & scheduled_times) cho chế độ tự động hoặc danh sách (custom_logs) cho chế độ thủ công."
+            )
+
+        if is_auto:
+            # Chế độ tự động
+            parsed_times = []
+            for t_str in data.scheduled_times:
+                parts = t_str.strip().split(":")
+                if len(parts) < 2:
+                    raise HTTPException(status_code=400, detail=f"Định dạng giờ '{t_str}' không hợp lệ. Phải là HH:MM.")
+                parsed_times.append(time_type(int(parts[0]), int(parts[1])))
+
+            item = PrescriptionItem(
+                prescription_id=prescription_id,
+                medication_name=data.medication_name,
+                dosage=data.dosage,
+                duration_days=data.duration_days,
+                scheduled_times=parsed_times,
+                start_date=data.start_date,
+            )
+            self.db.add(item)
+            await self.db.flush()
+            # Kích hoạt DB trigger tự sinh logs
+
+        else:
+            # Chế độ thủ công
+            item = PrescriptionItem(
+                prescription_id=prescription_id,
+                medication_name=data.medication_name,
+                dosage=data.dosage,
+                duration_days=None,
+                scheduled_times=None,
+                start_date=None,
+            )
+            self.db.add(item)
+            await self.db.flush()  # Sinh item.id trước
+
+            # Tạo logs thủ công từ custom_logs
+            for custom_log in data.custom_logs:
+                parts = custom_log.scheduled_time.strip().split(":")
+                if len(parts) == 2:
+                    log_time = time_type(int(parts[0]), int(parts[1]))
+                elif len(parts) == 3:
+                    log_time = time_type(int(parts[0]), int(parts[1]), int(parts[2]))
+                else:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Định dạng giờ '{custom_log.scheduled_time}' không hợp lệ. Phải là HH:MM hoặc HH:MM:SS."
+                    )
+
+                log_obj = PrescriptionLog(
+                    prescription_item_id=item.id,
+                    user_id=patient_id,
+                    scheduled_date=custom_log.scheduled_date,
+                    scheduled_time=log_time,
+                    status='untaken'
+                )
+                self.db.add(log_obj)
+            
+            await self.db.flush()
+
         await self.db.refresh(item)
 
-        logger.info(f"Item added to prescription {prescription_id} by doctor {doctor_id}")
+        logger.info(f"Item {item.id} added to prescription {prescription_id} by doctor {doctor_id} (Mode: {'Auto' if is_auto else 'Manual'})")
         return PrescriptionItemResponse(
             id=item.id,
             medication_name=item.medication_name,
             dosage=item.dosage,
             duration_days=item.duration_days,
-            scheduled_times=[str(t) for t in item.scheduled_times],
+            scheduled_times=[str(t) for t in item.scheduled_times] if item.scheduled_times else None,
+            start_date=item.start_date,
             status=item.status,
         )
 
@@ -313,3 +363,80 @@ class PrescriptionsService:
         rx.deleted_at = datetime.now(timezone.utc)
         await self.db.flush()
         logger.info(f"Prescription {prescription_id} soft-deleted by doctor {doctor_id}")
+
+    async def send_scheduled_reminders(self) -> MessageResponse:
+        """
+        [Internal API] Quét các cữ uống thuốc đến giờ/quá giờ mà chưa thông báo/gửi mail,
+        tiến hành ghi nhận thông báo vào DB và gửi email nhắc nhở cho bệnh nhân.
+        """
+        # 1. Tìm các cữ uống thuốc đã đến/quá giờ uống thuốc trong vòng 2 giờ qua và có trạng thái là 'untaken'
+        # đồng thời chưa có thông báo tương ứng
+        query = text("""
+            SELECT pl.id as log_id, pl.user_id, pl.scheduled_date, pl.scheduled_time, pi.medication_name, pi.dosage
+            FROM prescription_logs pl
+            JOIN prescription_items pi ON pi.id = pl.prescription_item_id
+            WHERE pl.status = 'untaken'
+              AND pl.scheduled_date = CURRENT_DATE
+              AND pl.scheduled_time <= LOCALTIME
+              AND pl.scheduled_time >= LOCALTIME - INTERVAL '2 hours'
+              AND NOT EXISTS (
+                  SELECT 1 FROM notifications n
+                  WHERE n.type = 'prescription_reminder'
+                    AND n.reference_id = pl.id
+              )
+        """)
+        result = await self.db.execute(query)
+        rows = result.all()
+
+        if not rows:
+            logger.info("No due prescription reminders to send.")
+            return MessageResponse(message="Không có lịch nhắc nhở nào cần gửi.")
+
+        sent_count = 0
+        for row in rows:
+            # 2. Truy vấn email của người dùng từ auth.users của Supabase
+            email_query = text("SELECT email FROM auth.users WHERE id = :user_id")
+            email_res = await self.db.execute(email_query, {"user_id": row.user_id})
+            email = email_res.scalar()
+
+            if not email:
+                logger.warning(f"Email not found for user {row.user_id}, skipping reminder.")
+                continue
+
+            time_str = row.scheduled_time.strftime('%H:%M') if row.scheduled_time else ""
+            date_str = row.scheduled_date.strftime('%d/%m/%Y') if row.scheduled_date else ""
+
+            subject = "[Medical Diary] Nhắc nhở uống thuốc định kỳ"
+            body = (
+                f"Xin chào,\n\n"
+                f"Đã đến giờ uống thuốc theo đơn của bạn:\n"
+                f"- Tên thuốc: {row.medication_name}\n"
+                f"- Liều lượng: {row.dosage}\n"
+                f"- Giờ uống: {time_str} ngày {date_str}\n\n"
+                f"Vui lòng truy cập ứng dụng Medical Diary để cập nhật trạng thái uống thuốc của bạn.\n\n"
+                f"Trân trọng,\n"
+                f"Đội ngũ Medical Diary."
+            )
+
+            # 3. Ghi nhận thông báo vào DB
+            notif = Notification(
+                user_id=row.user_id,
+                type='prescription_reminder',
+                title='Nhắc nhở uống thuốc (Email đã gửi)',
+                message=f"Đã đến giờ uống thuốc: {row.medication_name} ({row.dosage}) - Khung giờ: {time_str} ngày {date_str}.",
+                reference_id=row.log_id,
+                is_read=False
+            )
+            self.db.add(notif)
+
+            # 4. Gửi email thông qua helper dùng chung
+            import asyncio
+            from app.shared.email import send_email_sync
+            await asyncio.to_thread(send_email_sync, email, subject, body)
+            logger.info(f"Email reminder processed for {email} (log: {row.log_id})")
+
+            sent_count += 1
+
+        await self.db.flush()
+        logger.info(f"Processed {sent_count} medication reminders.")
+        return MessageResponse(message=f"Đã xử lý {sent_count} cữ nhắc nhở uống thuốc.")

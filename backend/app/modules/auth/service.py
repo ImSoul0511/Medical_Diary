@@ -1,13 +1,16 @@
 import logging 
 from fastapi import HTTPException
 from supabase import Client
+# pyrefly: ignore [missing-import]
 from sqlalchemy.ext.asyncio import AsyncSession
+# pyrefly: ignore [missing-import]
 from sqlalchemy import text
 from app.modules.auth.schemas import (
     LoginRequest,
     LoginResponse,
     RegisterRequest,
     RegisterDoctorRequest,
+    RegisterDoctorResponse,
     SessionResponse,
     SessionListResponse,
     UserBrief
@@ -78,12 +81,21 @@ class AuthService:
 
         except Exception as e: 
             await self.db.rollback()
+            if 'user_id' in locals():
+                try:
+                    from supabase import create_client
+                    from app.core.config import settings
+                    admin_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+                    admin_client.auth.admin.delete_user(user_id)
+                    logger.info(f"Rollback Supabase Auth: Deleted user {user_id} due to DB registration error")
+                except Exception as rollback_err:
+                    logger.error(f"Failed to rollback Supabase Auth user {user_id}: {rollback_err}")
             logger.error(f"Register failed: {e}")
             raise HTTPException(status_code=400, detail=f"Đăng ký thất bại: {str(e)}")
 
     async def register_doctor(
         self, data: RegisterDoctorRequest, certificate_url: str
-    ) -> MessageResponse:
+    ) -> RegisterDoctorResponse:
         try:
             # 1. Tạo tài khoản trên Supabase Auth
             response = self.supabase.auth.sign_up({
@@ -128,10 +140,24 @@ class AuthService:
             await self.db.flush()
 
             logger.info(f"Doctor registered (pending): {user_id}")
-            return MessageResponse(message="Đăng ký bác sĩ thành công. Vui lòng chờ admin duyệt.")
+            return RegisterDoctorResponse(
+                id=user_id,
+                full_name=data.full_name,
+                status="pending_verification",
+                certificate_url=certificate_url
+            )
 
         except Exception as e:
             await self.db.rollback()
+            if 'user_id' in locals():
+                try:
+                    from supabase import create_client
+                    from app.core.config import settings
+                    admin_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+                    admin_client.auth.admin.delete_user(user_id)
+                    logger.info(f"Rollback Supabase Auth: Deleted doctor user {user_id} due to DB registration error")
+                except Exception as rollback_err:
+                    logger.error(f"Failed to rollback Supabase Auth doctor user {user_id}: {rollback_err}")
             logger.error(f"Register doctor failed: {e}")
             raise HTTPException(status_code=400, detail=f"Đăng ký bác sĩ thất bại: {str(e)}")
 

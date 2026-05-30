@@ -19,6 +19,14 @@ class EmergencyTokenCreateRequest(BaseModel):
 
     ttl_minutes: Optional[int] = Field(None, ge=5)
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "ttl_minutes": 60
+            }
+        }
+    }
+
 
 class EmergencyTokenResponse(BaseModel):
     """Response sau khi tạo token thành công."""
@@ -43,6 +51,14 @@ class EmergencyTokenUpdateRequest(BaseModel):
     """
 
     ttl_minutes: Optional[int] = Field(None, ge=5)
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "ttl_minutes": 120
+            }
+        }
+    }
 
 
 class EmergencyAccessResponse(BaseModel):

@@ -17,6 +17,15 @@ class DoctorVerifyRequest(BaseModel):
     action: Literal["approved", "rejected"]
     notes: Optional[str] = Field(None, max_length=500)
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "action": "approved",
+                "notes": "Chứng chỉ hợp lệ, đã xác minh"
+            }
+        }
+    }
+
 class AuditLogItem(BaseModel):
     id: UUID
     actor_id: UUID
