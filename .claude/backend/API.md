@@ -1,7 +1,3 @@
----
-trigger: always_on
----
-
 # Tài liệu Đặc tả API (API Specifications) - Medical Diary
 
 Tài liệu này định nghĩa cấu trúc Request và Response cho toàn bộ các Endpoint trong hệ thống.
