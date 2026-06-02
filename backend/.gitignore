@@ -6,10 +6,21 @@ venv/
 .venv/
 env/
 .env
+.env.*
+!.env.example
+scratch/
 
 # Database
 *.db
 *.sqlite
+*.dump
+*.sql.gz
+
+# Local secrets
+*.pem
+*.key
+*.p12
+*.pfx
 
 # IDEs
 .vscode/
@@ -23,4 +34,8 @@ Thumbs.db
 CLAUDE.md
 AGENT.md
 future_implement.md
+<<<<<<< HEAD
 Auth_and_Logging_plan.md
+=======
+Auth_and_Logging_plan.md
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54

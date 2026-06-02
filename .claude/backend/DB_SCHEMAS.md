@@ -27,6 +27,10 @@ Lưu trữ thông tin người dùng cơ bản, mở rộng từ bảng `auth.us
 - **role**: `varchar(20)` (Check: `user`, `doctor`, `admin`) (Default: `user`)
 - **cccd_encrypted**: `text` (Nullable — Mã hóa pgcrypto — Căn cước công dân)
 - **gender**: `varchar(10)` (Check: `'NAM'`, `'Nữ'`)
+========
+- **phone_encrypted**: `text` (Nullable — Mã hóa pgcrypto — Số điện thoại)
+- **cccd_encrypted**: `text` (Nullable — Mã hóa pgcrypto — Căn cước công dân)
+- **gender**: `varchar(10)` (Not Null, Check: `male`, `female`) (Default: `male`)
 - **date_of_birth**: `date` (Nullable)
 - **blood_type**: `varchar(5)` (Nullable — vd: `"O+"`, `"AB-"`)
 - **allergies**: `text` (Nullable — vd: `"Penicillin, Aspirin"`)
@@ -41,6 +45,10 @@ Lưu trữ thông tin người dùng cơ bản, mở rộng từ bảng `auth.us
 ### Bảng `doctors`
 Thông tin bổ sung cho người dùng có role là `doctor`.
 - **id**: `uuid` (Primary Key, references `profiles.id`)
+<<<<<<< HEAD
+=======
+- **email**: `varchar(255)` (Nullable)
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 - **specialty**: `varchar(100)` (Not Null)
 - **license_number**: `varchar(50)` (Unique, Not Null)
 - **hospital**: `varchar(200)` (Not Null)
@@ -74,6 +82,10 @@ Quyền truy cập thực tế đã được bệnh nhân phê duyệt.
 - **status**: `varchar(20)` (Check: `active`, `revoked`) (Default: `active`)
 - **granted_at**: `timestamptz` (Default: `now()`)
 - **revoked_at**: `timestamptz`
+<<<<<<< HEAD
+=======
+- **expires_at**: `timestamptz` (Nullable — NULL = vĩnh viễn. Khi hết hạn, quyền tự động vô hiệu)
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 - **Partial Unique Index**: `UNIQUE(doctor_id, patient_id) WHERE status = 'active'`
 
 ---
@@ -129,8 +141,14 @@ Chi tiết từng loại thuốc trong một đơn.
 - **prescription_id**: `uuid` (Not Null, references `prescriptions.id`)
 - **medication_name**: `varchar(200)` (Not Null)
 - **dosage**: `varchar(500)` (Not Null)
+<<<<<<< HEAD
 - **duration_days**: `integer` (Check: `duration_days > 0`)
 - **scheduled_times**: `time[]` (Not Null — Mảng các khung giờ uống thuốc. VD: `['08:00', '13:00', '20:00']`)
+=======
+- **duration_days**: `integer` (Nullable, Check: `duration_days > 0`)
+- **scheduled_times**: `time[]` (Nullable — Mảng các khung giờ uống thuốc. VD: `['08:00', '13:00', '20:00']`)
+- **start_date**: `date` (Nullable — Ngày bắt đầu uống thuốc, dùng cho chế độ tự động)
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 - **status**: `varchar(20)` (Check: `active`, `cancelled`) (Default: `active`)
 - **created_at**: `timestamptz` (Default: `now()`)
 - **deleted_at**: `timestamptz` (Soft Delete)

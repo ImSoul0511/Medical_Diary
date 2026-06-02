@@ -1,9 +1,18 @@
+/**
+ * Tệp: frontend/src/components/AppShell.tsx
+ * Mục đích: Wrapper bố cục ứng dụng. Hiển thị `Topbar`, `Sidebar` và nội dung trang.
+ * Xuất khẩu: `AppShell` - component dùng bởi các trang để cung cấp layout và theme đồng nhất.
+ * Ghi chú: Xử lý flag auto-login cho dev và toast toàn cục.
+ */
+
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { useAuthStore } from "../store/authStore";
 import { useUiStore } from "../store/uiStore";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../constants/routes";
 import type { Role } from "../types/auth";
 import { cn } from "../utils/cn";
 
@@ -15,18 +24,32 @@ type AppShellProps = {
 };
 
 export function AppShell({ role, title, description, children }: AppShellProps) {
-  const loginMock = useAuthStore((state) => state.loginMock);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const loginMock = useAuthStore((state) => state.loginMock);
   const mobileSidebarOpen = useUiStore((state) => state.mobileSidebarOpen);
   const setMobileSidebarOpen = useUiStore((state) => state.setMobileSidebarOpen);
   const setRoleTheme = useUiStore((state) => state.setRoleTheme);
   const toastMessage = useUiStore((state) => state.toastMessage);
   const clearToast = useUiStore((state) => state.clearToast);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setRoleTheme(role === "admin" ? "admin" : role === "doctor" ? "doctor" : "patient");
-    if (!isAuthenticated) loginMock(role);
-  }, [isAuthenticated, loginMock, role, setRoleTheme]);
+    if (!isAuthenticated) {
+      // Feature flag: enable auto mock-login in dev when VITE_DEV_AUTO_LOGIN is not set to 'false'
+      const envFlag = (import.meta.env.VITE_DEV_AUTO_LOGIN as string | undefined);
+      const devAutoLogin = envFlag === undefined ? true : envFlag === "true";
+
+      if (devAutoLogin) {
+        // keep old behavior for fast UI development
+        loginMock(role);
+      } else {
+        if (window.location.pathname !== ROUTES.login && window.location.pathname !== ROUTES.register) {
+          navigate(ROUTES.login);
+        }
+      }
+    }
+  }, [isAuthenticated, role, setRoleTheme, navigate]);
 
   useEffect(() => {
     if (!toastMessage) return undefined;

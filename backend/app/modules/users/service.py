@@ -112,7 +112,11 @@ class UsersService:
                 "user_id": user_id
             })
             row = result.fetchone()
+<<<<<<< HEAD
             await self.db.commit()
+=======
+            await self.db.flush()
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 
             if not row:
                 raise HTTPException(status_code=404, detail="Không tìm thấy hồ sơ người dùng.")

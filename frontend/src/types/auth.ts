@@ -1,3 +1,9 @@
+/**
+ * Tệp: frontend/src/types/auth.ts
+ * Mục đích: Các kiểu TypeScript liên quan đến xác thực được dùng chung trong frontend.
+ * Kiểu: `Role`, `MockUser`, `LoginForm`, v.v.
+ */
+
 export type Role = "user" | "doctor" | "admin";
 
 export type RoleTheme = "patient" | "doctor" | "admin";

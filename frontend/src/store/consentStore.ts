@@ -6,6 +6,8 @@ type ConsentStore = {
   pendingRequests: typeof mockAccessRequests;
   activePermissions: typeof mockPermissions;
   selectedScopes: ConsentScope[];
+  isLoading?: boolean;
+  error?: string | null;
   setSelectedScopes: (scopes: ConsentScope[]) => void;
   approveRequestLocal: (requestId: string, scopes: ConsentScope[]) => void;
   rejectRequestLocal: (requestId: string) => void;
@@ -16,8 +18,11 @@ export const useConsentStore = create<ConsentStore>((set) => ({
   pendingRequests: mockAccessRequests,
   activePermissions: mockPermissions,
   selectedScopes: ["diaries", "heart_rate"],
+  isLoading: false,
+  error: null,
   setSelectedScopes: (scopes) => set({ selectedScopes: scopes }),
   approveRequestLocal: (requestId, scopes) =>
+    set((state) => ({ isLoading: true })),
     set((state) => {
       const request = state.pendingRequests.find((item) => item.id === requestId);
       return {
@@ -35,6 +40,7 @@ export const useConsentStore = create<ConsentStore>((set) => ({
               ...state.activePermissions,
             ]
           : state.activePermissions,
+        isLoading: false,
       };
     }),
   rejectRequestLocal: (requestId) =>

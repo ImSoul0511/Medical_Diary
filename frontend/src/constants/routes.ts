@@ -1,3 +1,9 @@
+/**
+ * Tệp: frontend/src/constants/routes.ts
+ * Mục đích: Định nghĩa tập trung các route và navigation dùng khắp frontend.
+ * Xuất khẩu: `ROUTES`, `roleHomePath`, và các mảng navigation cho từng vai trò.
+ */
+
 import {
   Activity,
   ClipboardList,

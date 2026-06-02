@@ -7,6 +7,18 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
 
+<<<<<<< HEAD
+=======
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "email": "string@gmail.com",
+                "password": "stringst"
+            }
+        }
+    }
+
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 class UserBrief(BaseModel):
     id: UUID
     role: str # user / doctor / admin 
@@ -24,6 +36,22 @@ class RegisterRequest(BaseModel):
     gender: str
     date_of_birth: date
 
+<<<<<<< HEAD
+=======
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "email": "string@gmail.com",
+                "phone_number": "0912345678",
+                "password": "stringst",
+                "full_name": "Nguyen Van A",
+                "gender": "male",
+                "date_of_birth": "2000-01-01"
+            }
+        }
+    }
+
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 class RegisterDoctorRequest(BaseModel):
     email: EmailStr
     phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')

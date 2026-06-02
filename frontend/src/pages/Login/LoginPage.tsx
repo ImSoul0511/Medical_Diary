@@ -1,3 +1,9 @@
+/**
+ * Tệp: frontend/src/pages/Login/LoginPage.tsx
+ * Mục đích: Trang đăng nhập của SPA. Hỗ trợ chọn vai trò mock hoặc thực hiện đăng nhập thật.
+ * Hành vi: Gọi `useAuthStore.login` (thật) và fallback về `loginMock` khi có lỗi.
+ */
+
 import { FormEvent, useState } from "react";
 import { Activity, HeartPulse, Lock, Mail, ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -17,12 +23,12 @@ export function LoginPage() {
   const navigate = useNavigate();
   const selectedRole = useAuthStore((state) => state.selectedRole);
   const setSelectedRole = useAuthStore((state) => state.setSelectedRole);
-  const loginMock = useAuthStore((state) => state.loginMock);
+  const login = useAuthStore((state) => state.login);
   const [email, setEmail] = useState("patient@example.com");
   const [password, setPassword] = useState("12345678");
   const [error, setError] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!isEmail(email)) {
       setError("Email chưa đúng định dạng.");
@@ -33,8 +39,12 @@ export function LoginPage() {
       return;
     }
     setError("");
-    loginMock(selectedRole, email);
-    navigate(roleHomePath[selectedRole]);
+    try {
+      await login(selectedRole, email, password);
+      navigate(roleHomePath[selectedRole]);
+    } catch (err) {
+      setError("Đăng nhập thất bại. Vui lòng thử lại.");
+    }
   }
 
   return (

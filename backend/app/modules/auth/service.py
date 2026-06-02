@@ -1,13 +1,23 @@
 import logging 
 from fastapi import HTTPException
 from supabase import Client
+<<<<<<< HEAD
 from sqlalchemy.ext.asyncio import AsyncSession
+=======
+# pyrefly: ignore [missing-import]
+from sqlalchemy.ext.asyncio import AsyncSession
+# pyrefly: ignore [missing-import]
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 from sqlalchemy import text
 from app.modules.auth.schemas import (
     LoginRequest,
     LoginResponse,
     RegisterRequest,
     RegisterDoctorRequest,
+<<<<<<< HEAD
+=======
+    RegisterDoctorResponse,
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
     SessionResponse,
     SessionListResponse,
     UserBrief
@@ -78,12 +88,28 @@ class AuthService:
 
         except Exception as e: 
             await self.db.rollback()
+<<<<<<< HEAD
+=======
+            if 'user_id' in locals():
+                try:
+                    from supabase import create_client
+                    from app.core.config import settings
+                    admin_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+                    admin_client.auth.admin.delete_user(user_id)
+                    logger.info(f"Rollback Supabase Auth: Deleted user {user_id} due to DB registration error")
+                except Exception as rollback_err:
+                    logger.error(f"Failed to rollback Supabase Auth user {user_id}: {rollback_err}")
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
             logger.error(f"Register failed: {e}")
             raise HTTPException(status_code=400, detail=f"Đăng ký thất bại: {str(e)}")
 
     async def register_doctor(
         self, data: RegisterDoctorRequest, certificate_url: str
+<<<<<<< HEAD
     ) -> MessageResponse:
+=======
+    ) -> RegisterDoctorResponse:
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
         try:
             # 1. Tạo tài khoản trên Supabase Auth
             response = self.supabase.auth.sign_up({
@@ -114,17 +140,27 @@ class AuthService:
 
             # 3. Lưu thông tin bác sĩ
             doctor_query = text("""
+<<<<<<< HEAD
                 INSERT INTO doctors (id, specialty, license_number, hospital, certificate_url, verification_status)
                 VALUES (:id, :specialty, :license_number, :hospital, :cert_url, 'pending_verification')
             """)
             await self.db.execute(doctor_query, {
                 "id": user_id,
+=======
+                INSERT INTO doctors (id, email, specialty, license_number, hospital, certificate_url, verification_status)
+                VALUES (:id, :email, :specialty, :license_number, :hospital, :cert_url, 'pending_verification')
+            """)
+            await self.db.execute(doctor_query, {
+                "id": user_id,
+                "email": data.email,
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
                 "specialty": data.specialty,
                 "license_number": data.license_number,
                 "hospital": data.hospital,
                 "cert_url": certificate_url,
             })
             await self.db.flush()
+<<<<<<< HEAD
 
             logger.info(f"Doctor registered (pending): {user_id}")
             return MessageResponse(message="Đăng ký bác sĩ thành công. Vui lòng chờ admin duyệt.")
@@ -199,6 +235,96 @@ class AuthService:
             if not is_valid.data:
                 raise HTTPException(status_code=401, detail="Mật khẩu không chính xác.")
 
+=======
+
+            logger.info(f"Doctor registered (pending): {user_id}")
+            return RegisterDoctorResponse(
+                id=user_id,
+                full_name=data.full_name,
+                status="pending_verification",
+                certificate_url=certificate_url
+            )
+
+        except Exception as e:
+            await self.db.rollback()
+            if 'user_id' in locals():
+                try:
+                    from supabase import create_client
+                    from app.core.config import settings
+                    admin_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+                    admin_client.auth.admin.delete_user(user_id)
+                    logger.info(f"Rollback Supabase Auth: Deleted doctor user {user_id} due to DB registration error")
+                except Exception as rollback_err:
+                    logger.error(f"Failed to rollback Supabase Auth doctor user {user_id}: {rollback_err}")
+            logger.error(f"Register doctor failed: {e}")
+            raise HTTPException(status_code=400, detail=f"Đăng ký bác sĩ thất bại: {str(e)}")
+
+    async def log_out(self) -> MessageResponse:
+        try: 
+            self.supabase.auth.sign_out() 
+            logger.info(f"User logged out successfully")
+            return MessageResponse("Đã đăng xuất thành công.")
+        except Exception as e:
+            logger.error(f"Logout failed: {e}")
+            raise HTTPException(status_code=400, detail="Không thể đăng xuất.") 
+    
+    async def list_session(self, user_id: str) -> SessionListResponse:
+        try: 
+            response = self.supabase.rpc("list_user_sessions", {
+                "target_user_id": user_id
+            }).execute()
+            logger.info(f"Sessions listed of user: {user_id}")
+            return SessionListResponse(
+                sessions=[
+                    SessionResponse(
+                        session_id=row["id"],
+                        user_id=user_id,
+                        created_at=row["created_at"],
+                        updated_at=row["updated_at"],
+                        user_agent=row.get("user_agent") or "Unknown",
+                        ip=row.get("ip") or "Unknown"
+                    ) for row in (response.data or [])
+                ]
+            )
+        except Exception as e:
+            logger.error(f"List sessions failed: {e}")
+            raise HTTPException(status_code=400, detail="Không thể lấy danh sách phiên đăng nhập.")
+
+    async def revoke_selected_session(self, session_id: str, user_id: str, password: str) -> MessageResponse:
+        try:
+            # Xác thực mật khẩu trước
+            is_valid = self.supabase.rpc("verify_user_password", {
+                "target_user_id": user_id,
+                "plain_password": password
+            }).execute()
+            
+            if not is_valid.data:
+                raise HTTPException(status_code=401, detail="Mật khẩu không chính xác.")
+
+            self.supabase.rpc("revoke_selected_session", {
+                "target_session_id": session_id,
+                "target_user_id": user_id
+            }).execute()
+            logger.info(f"Selected session {session_id} revoked successfully of user: {user_id}")
+            return MessageResponse(message="Đã thu hồi phiên đăng nhập.")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Revoke selected session failed: {e}")
+            raise HTTPException(status_code=400, detail="Không thể thu hồi phiên đăng nhập.")
+
+    async def revoke_all_user_sessions(self, user_id: str, password: str) -> MessageResponse:
+        try:
+            # Xác thực mật khẩu trước
+            is_valid = self.supabase.rpc("verify_user_password", {
+                "target_user_id": user_id,
+                "plain_password": password
+            }).execute()
+            
+            if not is_valid.data:
+                raise HTTPException(status_code=401, detail="Mật khẩu không chính xác.")
+
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
             self.supabase.rpc("revoke_all_user_sessions", {
                 "target_user_id": user_id,
             }).execute()

@@ -1,5 +1,11 @@
-import { AlertTriangle, Phone, ShieldAlert } from "lucide-react";
-import { useParams } from "react-router-dom";
+/**
+ * Tệp: frontend/src/pages/Profile/EmergencyPublicView.tsx
+ * Mục đích: Trang công khai cấp cứu hiển thị thông tin bệnh nhân hạn chế theo token.
+ * Ghi chú: Dùng cho demo — hiện không gọi backend trong triển khai mock này.
+ */
+
+import { AlertTriangle, Phone, ShieldAlert, ArrowLeft } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Badge } from "../../components/Badge";
 import { Card } from "../../components/Card";
 import { QRPreview } from "../../components/QRPreview";
@@ -7,6 +13,7 @@ import { useUserStore } from "../../store/userStore";
 
 export function EmergencyPublicView() {
   const { token = "demo-token" } = useParams();
+  const navigate = useNavigate();
   const profile = useUserStore((state) => state.profile);
   const settings = profile.privacySettings;
 
@@ -24,7 +31,17 @@ export function EmergencyPublicView() {
               Route công khai mock. Token: {token}
             </p>
           </div>
-          <QRPreview compact label="Token mock" token={token} />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="rounded-input bg-white/10 px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/20"
+            >
+              <ArrowLeft className="-ml-1 mr-2 h-4 w-4" />
+              Quay lại
+            </button>
+            <QRPreview compact label="Token mock" token={token} />
+          </div>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr]">

@@ -1,3 +1,10 @@
+/**
+ * Tệp: frontend/src/app/router.tsx
+ * Mục đích: Định nghĩa các route của SPA và ánh xạ đường dẫn sang các trang.
+ * Xuất khẩu: `AppRouter` - bọc `Routes` của React Router được dùng ở entry của app.
+ * Ghi chú: Giữ routes rõ ràng; các trang nằm trong thư mục `pages/`.
+ */
+
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ROUTES } from "../constants/routes";
 import { AdminAuditLogs } from "../pages/Dashboard/AdminAuditLogs";

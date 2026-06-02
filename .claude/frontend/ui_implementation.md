@@ -1,5 +1,9 @@
 ---
+<<<<<<< HEAD
 trigger: always
+=======
+trigger: always_on
+>>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 ---
 
 # Kế hoạch triển khai UI - Medical Diary

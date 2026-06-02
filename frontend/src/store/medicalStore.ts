@@ -19,6 +19,8 @@ type MedicalStore = {
   medicalRecords: typeof mockRecords;
   prescriptions: typeof mockPrescriptions;
   prescriptionLogs: typeof mockPrescriptionLogs;
+  isLoading?: boolean;
+  error?: string | null;
   addMetricLocal: (metric: Omit<HealthMetric, "id">) => void;
   addDiaryLocal: (content: string, symptoms: SymptomEntry[]) => void;
   deleteDiaryLocal: (diaryId: string) => void;
@@ -35,11 +37,14 @@ export const useMedicalStore = create<MedicalStore>((set) => ({
   medicalRecords: mockRecords,
   prescriptions: mockPrescriptions,
   prescriptionLogs: mockPrescriptionLogs,
+  isLoading: false,
+  error: null,
   addMetricLocal: (metric) =>
     set((state) => ({
       healthMetrics: [{ ...metric, id: makeId("metric") }, ...state.healthMetrics],
     })),
   addDiaryLocal: (content, symptoms) =>
+    set((state) => ({ isLoading: true })),
     set((state) => ({
       diaries: [
         {
@@ -51,6 +56,7 @@ export const useMedicalStore = create<MedicalStore>((set) => ({
         },
         ...state.diaries,
       ],
+      isLoading: false,
     })),
   deleteDiaryLocal: (diaryId) =>
     set((state) => ({ diaries: state.diaries.filter((entry) => entry.id !== diaryId) })),
