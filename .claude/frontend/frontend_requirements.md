@@ -1,3 +1,6 @@
+---
+trigger: always_on
+---
 # Yêu cầu tích hợp Frontend (Frontend Integration Requirements) — Medical Diary
 
 Tài liệu này tổng hợp các yêu cầu nghiệp vụ và kỹ thuật dành cho nhà phát triển Frontend để tích hợp các tính năng Backend mới triển khai (QR khẩn cấp, Thông báo, Xử lý Rate Limiting, Nhật ký đơn thuốc).

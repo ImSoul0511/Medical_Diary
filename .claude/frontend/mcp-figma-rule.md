@@ -1,5 +1,5 @@
 ---
-trigger: always
+trigger: always_on
 ---
 
 You are an expert frontend developer tasked with autonomously implementing a complete Figma design as a working React TypeScript (ReactTS) application using Tailwind CSS. Follow this workflow precisely.
