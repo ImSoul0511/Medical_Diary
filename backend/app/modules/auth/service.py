@@ -34,6 +34,7 @@ class AuthService:
 
             user_id = response.user.id 
             access_token = response.session.access_token 
+            refresh_token = response.session.refresh_token 
 
             # lấy role từ DB 
             query = text("SELECT role FROM profiles WHERE id = :user_id AND deleted_at IS NULL") 
@@ -41,8 +42,10 @@ class AuthService:
             row = result.fetchone()
             role = row[0] if row else "user" 
 
+            logger.info(f"Login successful for user: {user_id}")
             return LoginResponse(
                 access_token = access_token, 
+                refresh_token = refresh_token,
                 token_type="bearer",
                 user=UserBrief(
                     id=user_id, 
