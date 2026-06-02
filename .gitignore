@@ -1,9 +1,6 @@
 REF_DOCS/
 .venv/
 Medical Diary Design System/
-<<<<<<< HEAD
-frontend_images/
-=======
 frontend_images/
 
 # Local secrets and scratch files
@@ -15,4 +12,26 @@ frontend_images/
 *.key
 *.p12
 *.pfx
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
+
+# Python & virtualenvs
+venv/
+backend/.venv/
+**/.venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build / output
+dist/
+build/
+
+# Logs and local files
+*.log
+.DS_Store
+
+# Editor folders
+.vscode/
+.idea/
