@@ -8,10 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.diaries.models import Diary
 from app.modules.diaries.schemas import DiaryCreateRequest, DiaryResponse, SymptomEntry
-<<<<<<< HEAD
-=======
 from app.shared.consent import check_consent
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 
 logger = logging.getLogger("medical_diary")
 
@@ -88,8 +85,6 @@ class DiariesService:
         diary.deleted_at = datetime.now(timezone.utc)
         await self.db.flush()
         logger.info(f"Diary {diary_id} soft-deleted by user: {user_id}")
-<<<<<<< HEAD
-=======
 
     async def list_by_patient(
         self,
@@ -119,4 +114,3 @@ class DiariesService:
 
         logger.info(f"Doctor {doctor_id} listed {len(rows)} diaries for patient {patient_id}")
         return [self._to_response(row) for row in rows]
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54

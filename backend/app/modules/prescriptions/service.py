@@ -1,15 +1,4 @@
 import logging
-<<<<<<< HEAD
-from datetime import datetime, timezone
-from uuid import UUID
-
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.modules.prescriptions.models import Prescription, PrescriptionItem, PrescriptionLog
-from app.modules.prescriptions.schemas import (
-=======
 import os
 import smtplib
 from datetime import datetime, time as time_type, timezone
@@ -27,16 +16,12 @@ from app.modules.prescriptions.models import Prescription, PrescriptionItem, Pre
 from app.modules.prescriptions.schemas import (
     PrescriptionCreateRequest,
     PrescriptionItemCreateRequest,
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
     PrescriptionItemResponse,
     PrescriptionLogResponse,
     PrescriptionLogUpdateRequest,
     PrescriptionResponse,
 )
-<<<<<<< HEAD
-=======
 from app.shared.schemas import MessageResponse
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 
 logger = logging.getLogger("medical_diary")
 
@@ -49,9 +34,6 @@ class PrescriptionsService:
         self,
         user_id: UUID,
     ) -> list[PrescriptionResponse]:
-<<<<<<< HEAD
-        """User xem danh sách đơn thuốc của mình, kèm chi tiết từng loại thuốc."""
-=======
         """
         Bệnh nhân xem tất cả đơn thuốc của mình.
 
@@ -63,7 +45,6 @@ class PrescriptionsService:
         2. Với mỗi đơn, query thêm PrescriptionItem để lấy chi tiết từng loại thuốc
         3. scheduled_times lưu dạng PostgreSQL Time array → convert sang list[str] trước khi trả về
         """
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
         rx_stmt = (
             select(Prescription)
             .where(
@@ -77,10 +58,7 @@ class PrescriptionsService:
 
         responses = []
         for rx in prescriptions:
-<<<<<<< HEAD
-=======
             # Query items riêng vì không dùng lazy loading (async session không hỗ trợ)
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
             items_stmt = select(PrescriptionItem).where(
                 PrescriptionItem.prescription_id == rx.id,
                 PrescriptionItem.deleted_at.is_(None),
@@ -90,10 +68,7 @@ class PrescriptionsService:
 
             responses.append(PrescriptionResponse(
                 id=rx.id,
-<<<<<<< HEAD
-=======
                 patient_id=rx.patient_id,
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
                 doctor_id=rx.doctor_id,
                 notes=rx.notes,
                 items=[
@@ -102,12 +77,8 @@ class PrescriptionsService:
                         medication_name=item.medication_name,
                         dosage=item.dosage,
                         duration_days=item.duration_days,
-<<<<<<< HEAD
-                        scheduled_times=[str(t) for t in (item.scheduled_times or [])],
-=======
                         scheduled_times=[str(t) for t in item.scheduled_times] if item.scheduled_times else None,
                         start_date=item.start_date,
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
                         status=item.status,
                     )
                     for item in items
@@ -123,10 +94,6 @@ class PrescriptionsService:
         user_id: UUID,
         prescription_id: UUID,
     ) -> list[PrescriptionLogResponse]:
-<<<<<<< HEAD
-        """User xem lịch uống thuốc của 1 đơn. Verify ownership trước."""
-        # Kiểm tra đơn thuốc thuộc về user
-=======
         """
         Bệnh nhân xem lịch uống thuốc của 1 đơn cụ thể.
 
@@ -142,7 +109,6 @@ class PrescriptionsService:
         4. scheduled_time lưu dạng PostgreSQL Time → convert sang str khi trả về
         """
         # Bước 1 — verify ownership
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
         rx_stmt = select(Prescription).where(
             Prescription.id == prescription_id,
             Prescription.patient_id == user_id,
@@ -152,11 +118,7 @@ class PrescriptionsService:
         if rx_result.scalar_one_or_none() is None:
             raise HTTPException(status_code=404, detail="Đơn thuốc không tồn tại.")
 
-<<<<<<< HEAD
-        # Lấy logs qua JOIN prescription_items → prescription_logs
-=======
         # Bước 2 — lấy logs qua JOIN prescription_items → prescription_logs
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
         stmt = (
             select(PrescriptionLog)
             .join(PrescriptionItem, PrescriptionItem.id == PrescriptionLog.prescription_item_id)
@@ -188,9 +150,6 @@ class PrescriptionsService:
         log_id: UUID,
         data: PrescriptionLogUpdateRequest,
     ) -> PrescriptionLogResponse:
-<<<<<<< HEAD
-        """User cập nhật trạng thái 1 cữ uống thuốc. taken_at tự set khi status='taken'."""
-=======
         """
         Bệnh nhân cập nhật trạng thái 1 cữ uống thuốc.
 
@@ -206,7 +165,6 @@ class PrescriptionsService:
            Nếu status != "taken" → xóa taken_at (set None)
         4. flush() để ghi xuống DB trong transaction hiện tại
         """
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
         stmt = select(PrescriptionLog).where(
             PrescriptionLog.id == log_id,
             PrescriptionLog.user_id == user_id,  # ownership check
@@ -230,8 +188,6 @@ class PrescriptionsService:
             status=log.status,
             taken_at=log.taken_at,
         )
-<<<<<<< HEAD
-=======
 
     async def create_prescription(
         self,
@@ -484,4 +440,3 @@ class PrescriptionsService:
         await self.db.flush()
         logger.info(f"Processed {sent_count} medication reminders.")
         return MessageResponse(message=f"Đã xử lý {sent_count} cữ nhắc nhở uống thuốc.")
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54

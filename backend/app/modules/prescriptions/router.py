@@ -1,13 +1,6 @@
 from typing import List
 from uuid import UUID
 
-<<<<<<< HEAD
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.database import get_db
-from app.modules.prescriptions.schemas import (
-=======
 from fastapi import APIRouter, Depends, Query, status, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,18 +10,13 @@ from app.modules.prescriptions.schemas import (
     PrescriptionCreateRequest,
     PrescriptionItemCreateRequest,
     PrescriptionItemResponse,
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
     PrescriptionLogResponse,
     PrescriptionLogUpdateRequest,
     PrescriptionResponse,
 )
 from app.modules.prescriptions.service import PrescriptionsService
 from app.shared.dependencies import require_role
-<<<<<<< HEAD
-from app.shared.schemas import ErrorResponse, error_responses as _error_responses
-=======
 from app.shared.schemas import MessageResponse, error_responses as _error_responses
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 
 router = APIRouter(tags=["Prescriptions"])
 
@@ -85,8 +73,6 @@ async def update_log_status(
     current_user: dict = Depends(require_role(["user"])),
 ) -> PrescriptionLogResponse:
     return await service.update_log_status(UUID(current_user["sub"]), log_id, data)
-<<<<<<< HEAD
-=======
 
 
 @router.post(
@@ -153,4 +139,3 @@ async def send_medication_reminders(
         raise HTTPException(status_code=403, detail="Unauthorized internal request.")
     
     return await service.send_scheduled_reminders()
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54

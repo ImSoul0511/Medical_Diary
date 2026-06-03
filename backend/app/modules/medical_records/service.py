@@ -1,20 +1,13 @@
 import logging
 from uuid import UUID
 
-<<<<<<< HEAD
-=======
 from fastapi import HTTPException
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.medical_records.models import MedicalRecord
-<<<<<<< HEAD
-from app.modules.medical_records.schemas import MedicalRecordResponse
-=======
 from app.modules.medical_records.schemas import MedicalRecordCreateRequest, MedicalRecordResponse
 from app.shared.consent import check_consent
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 
 logger = logging.getLogger("medical_diary")
 
@@ -23,8 +16,6 @@ class MedicalRecordsService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-<<<<<<< HEAD
-=======
     def _to_response(self, record: MedicalRecord) -> MedicalRecordResponse:
         return MedicalRecordResponse(
             id=record.id,
@@ -36,16 +27,11 @@ class MedicalRecordsService:
             created_at=record.created_at,
         )
 
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
     async def list_own_records(
         self,
         user_id: UUID,
     ) -> list[MedicalRecordResponse]:
-<<<<<<< HEAD
-        """User xem hồ sơ bệnh án của chính mình. Bác sĩ xem của bệnh nhân → Phase 4B."""
-=======
         """User xem hồ sơ bệnh án của chính mình."""
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
         stmt = (
             select(MedicalRecord)
             .where(
@@ -58,19 +44,6 @@ class MedicalRecordsService:
         rows = result.scalars().all()
 
         logger.info(f"Listed {len(rows)} medical records for user: {user_id}")
-<<<<<<< HEAD
-        return [
-            MedicalRecordResponse(
-                id=row.id,
-                doctor_id=row.doctor_id,
-                diagnosis=row.diagnosis,
-                notes=row.notes,
-                attachments=row.attachments,
-                created_at=row.created_at,
-            )
-            for row in rows
-        ]
-=======
         return [self._to_response(row) for row in rows]
 
     async def create(
@@ -124,4 +97,3 @@ class MedicalRecordsService:
 
         logger.info(f"Doctor {doctor_id} listed {len(rows)} medical records for patient {patient_id}")
         return [self._to_response(row) for row in rows]
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54

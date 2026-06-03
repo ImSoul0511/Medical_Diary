@@ -9,10 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.health_metrics.models import HealthMetric
 from app.modules.health_metrics.schemas import HealthMetricCreateRequest, HealthMetricResponse
-<<<<<<< HEAD
-=======
 from app.shared.consent import check_consent
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 
 logger = logging.getLogger("medical_diary")
 
@@ -88,8 +85,6 @@ class HealthMetricsService:
             )
             for row in rows
         ]
-<<<<<<< HEAD
-=======
 
     async def list_by_patient(
         self,
@@ -140,4 +135,3 @@ class HealthMetricsService:
             )
             for row in rows
         ]
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54

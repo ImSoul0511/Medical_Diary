@@ -11,8 +11,6 @@ class HealthMetricCreateRequest(BaseModel):
     respiratory_rate: Optional[int] = Field(None, ge=5, le=60)
     recorded_at: datetime
 
-<<<<<<< HEAD
-=======
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -24,7 +22,6 @@ class HealthMetricCreateRequest(BaseModel):
         }
     }
 
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 
 class HealthMetricResponse(BaseModel):
     id: UUID

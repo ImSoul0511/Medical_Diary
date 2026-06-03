@@ -21,8 +21,8 @@ export const useConsentStore = create<ConsentStore>((set) => ({
   isLoading: false,
   error: null,
   setSelectedScopes: (scopes) => set({ selectedScopes: scopes }),
-  approveRequestLocal: (requestId, scopes) =>
-    set((state) => ({ isLoading: true })),
+  approveRequestLocal: (requestId, scopes) => {
+    set({ isLoading: true });
     set((state) => {
       const request = state.pendingRequests.find((item) => item.id === requestId);
       return {
@@ -42,7 +42,8 @@ export const useConsentStore = create<ConsentStore>((set) => ({
           : state.activePermissions,
         isLoading: false,
       };
-    }),
+    });
+  },
   rejectRequestLocal: (requestId) =>
     set((state) => ({
       pendingRequests: state.pendingRequests.filter((item) => item.id !== requestId),

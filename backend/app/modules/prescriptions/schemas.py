@@ -5,8 +5,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
-<<<<<<< HEAD
-=======
 class CustomLogCreate(BaseModel):
     scheduled_date: date
     scheduled_time: str = Field(..., description="Giờ uống, định dạng HH:MM hoặc HH:MM:SS")
@@ -48,28 +46,19 @@ class PrescriptionCreateRequest(BaseModel):
     }
 
 
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 class PrescriptionItemResponse(BaseModel):
     id: UUID
     medication_name: str
     dosage: str
-<<<<<<< HEAD
-    duration_days: int
-    scheduled_times: list[str]  # e.g. ["08:00", "13:00", "20:00"]
-=======
     duration_days: Optional[int] = None
     scheduled_times: Optional[list[str]] = None  # e.g. ["08:00", "13:00", "20:00"]
     start_date: Optional[date] = None
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
     status: str  # "active" | "cancelled"
 
 
 class PrescriptionResponse(BaseModel):
     id: UUID
-<<<<<<< HEAD
-=======
     patient_id: UUID
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
     doctor_id: UUID
     notes: Optional[str] = None
     items: list[PrescriptionItemResponse]
@@ -87,8 +76,6 @@ class PrescriptionLogResponse(BaseModel):
 
 class PrescriptionLogUpdateRequest(BaseModel):
     status: str = Field(..., pattern="^(taken|skipped|untaken)$")
-<<<<<<< HEAD
-=======
 
     model_config = {
         "json_schema_extra": {
@@ -97,4 +84,3 @@ class PrescriptionLogUpdateRequest(BaseModel):
             }
         }
     }
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54

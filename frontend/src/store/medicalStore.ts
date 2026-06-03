@@ -43,8 +43,8 @@ export const useMedicalStore = create<MedicalStore>((set) => ({
     set((state) => ({
       healthMetrics: [{ ...metric, id: makeId("metric") }, ...state.healthMetrics],
     })),
-  addDiaryLocal: (content, symptoms) =>
-    set((state) => ({ isLoading: true })),
+  addDiaryLocal: (content, symptoms) => {
+    set({ isLoading: true });
     set((state) => ({
       diaries: [
         {
@@ -57,7 +57,8 @@ export const useMedicalStore = create<MedicalStore>((set) => ({
         ...state.diaries,
       ],
       isLoading: false,
-    })),
+    }));
+  },
   deleteDiaryLocal: (diaryId) =>
     set((state) => ({ diaries: state.diaries.filter((entry) => entry.id !== diaryId) })),
   updatePrescriptionLogLocal: (logId, status) =>

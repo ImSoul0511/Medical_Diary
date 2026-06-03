@@ -7,8 +7,6 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
 
-<<<<<<< HEAD
-=======
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -18,13 +16,13 @@ class LoginRequest(BaseModel):
         }
     }
 
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 class UserBrief(BaseModel):
     id: UUID
     role: str # user / doctor / admin 
 
 class LoginResponse(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
     user: UserBrief 
 
@@ -36,8 +34,6 @@ class RegisterRequest(BaseModel):
     gender: str
     date_of_birth: date
 
-<<<<<<< HEAD
-=======
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -51,7 +47,6 @@ class RegisterRequest(BaseModel):
         }
     }
 
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 class RegisterDoctorRequest(BaseModel):
     email: EmailStr
     phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')

@@ -5,10 +5,6 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-<<<<<<< HEAD
-class MedicalRecordResponse(BaseModel):
-    id: UUID
-=======
 class MedicalRecordCreateRequest(BaseModel):
     patient_id: UUID
     diagnosis: str
@@ -30,7 +26,6 @@ class MedicalRecordCreateRequest(BaseModel):
 class MedicalRecordResponse(BaseModel):
     id: UUID
     patient_id: UUID
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
     doctor_id: UUID
     diagnosis: str
     notes: Optional[str] = None

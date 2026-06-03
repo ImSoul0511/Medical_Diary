@@ -21,10 +21,6 @@ def get_supabase_client() -> Client:
         )
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Database connection error: {str(e)}")
-<<<<<<< HEAD
-
-=======
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
 def get_current_user(
     request: Request,
     _token: HTTPAuthorizationCredentials = Depends(security)

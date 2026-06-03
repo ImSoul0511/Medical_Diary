@@ -43,15 +43,9 @@ class Profile(Base):
     cccd_encrypted = Column(Text, nullable=True, comment="Mã hóa pgcrypto — CCCD")
     gender = Column(
         String(10),
-<<<<<<< HEAD
-        CheckConstraint("gender IN ('NAM', 'Nữ')", name="ck_profiles_gender"),
-        nullable=False,
-        server_default=text("'NAM'") # Default value required for non-nullable column with existing rows
-=======
         CheckConstraint("gender IN ('male', 'female')", name="ck_profiles_gender"),
         nullable=False,
         server_default=text("'male'") # Default value required for non-nullable column with existing rows
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
     )
     date_of_birth = Column(Date, nullable=True)
     blood_type = Column(String(5), nullable=True, comment="VD: O+, AB-")
@@ -82,10 +76,7 @@ class Doctor(Base):
         ForeignKey("profiles.id", ondelete="CASCADE"),
         primary_key=True,
     )
-<<<<<<< HEAD
-=======
     email = Column(String(255), nullable=True)
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
     specialty = Column(String(100), nullable=False)
     license_number = Column(String(50), unique=True, nullable=False)
     hospital = Column(String(200), nullable=False)

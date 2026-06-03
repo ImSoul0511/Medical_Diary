@@ -46,8 +46,6 @@ class AccessRequestActionRequest(BaseModel):
         description="Số ngày quyền truy cập có hiệu lực. Mặc định 30 ngày. None = vĩnh viễn."
     )
 
-<<<<<<< HEAD
-=======
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -68,7 +66,6 @@ class AccessRequestActionRequest(BaseModel):
         }
     }
 
->>>>>>> af481a325f693a35f1ace32e8b82eb35be120a54
     @field_validator("approved_scope")
     @classmethod
     def validate_approved_scope(cls, value: Optional[list[str]]) -> Optional[list[str]]:
