@@ -1,4 +1,4 @@
-import { apiClient } from './axios';
+import { apiClient } from './apiClient';
 import { UserProfile, UserProfileUpdateRequest, PrivacySettings, PrivacyUpdateRequest } from './types';
 
 /**

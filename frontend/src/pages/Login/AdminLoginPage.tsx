@@ -9,13 +9,20 @@ import { useAuthStore } from "../../store/authStore";
 
 export function AdminLoginPage() {
   const navigate = useNavigate();
-  const loginMock = useAuthStore((state) => state.loginMock);
+  const login = useAuthStore((state) => state.login);
   const [email, setEmail] = useState("admin@example.com");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    loginMock("admin", email);
-    navigate(roleHomePath.admin);
+    setError("");
+    try {
+      const user = await login("admin", email, password);
+      navigate(roleHomePath[user.role]);
+    } catch (err) {
+      setError("Đăng nhập quản trị thất bại.");
+    }
   }
 
   return (
@@ -31,12 +38,19 @@ export function AdminLoginPage() {
           </div>
           <h1 className="text-2xl font-semibold text-secondary">Đăng nhập quản trị</h1>
           <p className="mt-2 text-sm text-mutedForeground">
-            Admin dashboard dùng mock state, không kết nối API.
+            Tài khoản admin được xác thực qua backend API.
           </p>
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <FormInput label="Email quản trị" onChange={(event) => setEmail(event.target.value)} value={email} />
-          <FormInput icon={<LockKeyhole className="h-4 w-4" />} label="Mật khẩu" type="password" value="admin1234" readOnly />
+          <FormInput
+            icon={<LockKeyhole className="h-4 w-4" />}
+            label="Mật khẩu"
+            onChange={(event) => setPassword(event.target.value)}
+            type="password"
+            value={password}
+          />
+          {error ? <p className="text-sm text-emergency">{error}</p> : null}
           <Button className="w-full bg-adminPrimary hover:bg-adminSecondary" type="submit">
             Vào trang quản trị
           </Button>

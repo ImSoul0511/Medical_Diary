@@ -28,6 +28,11 @@ export interface LoginResponse {
   user: UserBrief;
 }
 
+export interface RefreshResponse {
+  access_token: string;
+  token_type: string;
+}
+
 export interface RegisterRequest {
   email: string;
   phone_number: string;

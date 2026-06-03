@@ -8,7 +8,7 @@ export type Role = "user" | "doctor" | "admin";
 
 export type RoleTheme = "patient" | "doctor" | "admin";
 
-export type MockUser = {
+export type AuthUser = {
   id: string;
   role: Role;
   fullName: string;
@@ -16,6 +16,8 @@ export type MockUser = {
   subtitle: string;
   initials: string;
 };
+
+export type MockUser = AuthUser;
 
 export type LoginForm = {
   email: string;

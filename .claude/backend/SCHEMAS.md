@@ -51,11 +51,13 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     user: UserBrief
 
+class RefreshResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
 class UserBrief(BaseModel):
     id: UUID
     role: str   # "user" | "doctor" | "admin"
-    email: EmailStr
-    phone_number: str
 ```
 
 ### RegisterRequest

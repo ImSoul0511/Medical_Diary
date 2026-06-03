@@ -4,15 +4,17 @@
  * Xuất khẩu: `authApi` gồm `login`, `register`, `logout` và helper quản lý session.
  */
 
-import { apiClient } from './axios';
-import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from './types';
+import { apiClient } from './apiClient';
+import { LoginRequest, LoginResponse, RefreshResponse, RegisterRequest, RegisterResponse } from './types';
 
 export const authApi = {
   /**
    * Login with email and password
    */
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
+    const response = await apiClient.post<LoginResponse>('/auth/login', credentials, {
+      withCredentials: true,
+    });
     return response.data;
   },
 
@@ -28,7 +30,21 @@ export const authApi = {
    * Logout current user
    */
   logout: async (): Promise<void> => {
-    await apiClient.post('/auth/logout');
+    await apiClient.post('/auth/logout', undefined, {
+      skipAuthRefresh: true,
+      withCredentials: true,
+    });
+  },
+
+  /**
+   * Refresh access token using the HttpOnly refresh cookie
+   */
+  refresh: async (): Promise<RefreshResponse> => {
+    const response = await apiClient.post<RefreshResponse>('/auth/refresh', undefined, {
+      skipAuthRefresh: true,
+      withCredentials: true,
+    });
+    return response.data;
   },
 
   /**

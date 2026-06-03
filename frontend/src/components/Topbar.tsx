@@ -8,6 +8,7 @@ import { Bell, Menu, QrCode } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "../constants/routes";
+import { roleLabels } from "../constants/roles";
 import { useNotifications } from "../hooks/useNotifications";
 import { useAuthStore } from "../store/authStore";
 import { useUiStore } from "../store/uiStore";
@@ -25,7 +26,7 @@ export function Topbar({ role, title, description }: TopbarProps) {
   const { unreadCount, items, markAsReadLocal, clearAllLocal } = useNotifications();
   const [open, setOpen] = useState(false);
   const setMobileSidebarOpen = useUiStore((state) => state.setMobileSidebarOpen);
-  const mockUser = useAuthStore((state) => state.mockUser);
+  const currentUser = useAuthStore((state) => state.currentUser);
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
@@ -96,7 +97,7 @@ export function Topbar({ role, title, description }: TopbarProps) {
         </div>
         <div className="hidden items-center gap-2 pl-2 md:flex">
           <Badge tone={role === "admin" ? "admin" : role === "doctor" ? "success" : "info"}>
-            {mockUser?.fullName ?? "UI mock"}
+            {currentUser?.fullName ?? roleLabels[role]}
           </Badge>
         </div>
       </div>

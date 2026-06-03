@@ -1,4 +1,4 @@
-import { apiClient } from './axios';
+import { apiClient } from './apiClient';
 import { DiaryEntry, DiaryCreateRequest } from './types';
 
 /**

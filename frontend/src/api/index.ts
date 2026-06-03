@@ -4,7 +4,7 @@
  */
 
 export * from './types';
-export { apiClient } from './axios';
+export { apiClient } from './apiClient';
 export { authApi } from './authApi';
 export { userApi } from './userApi';
 export { diaryApi } from './diaryApi';

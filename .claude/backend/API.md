@@ -49,13 +49,36 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
     "token_type": "bearer",
     "user": {
       "id": "uuid",
-      "role": "user",
-      "email": "test@example.com"
+      "role": "user"
     }
   }
   ```
+* **Cookie:** Backend sets an HttpOnly refresh cookie. Frontend JavaScript must not read or store refresh tokens.
 
-### 1.2 Đăng ký (Role mặc định là User)
+### 1.2 Làm mới phiên đăng nhập
+* **Endpoint:** `POST /auth/refresh`
+* **Auth:** Refresh cookie (`md_refresh_token`)
+* **Response (200 OK):**
+  ```json
+  {
+    "access_token": "eyJhbG...",
+    "token_type": "bearer"
+  }
+  ```
+* **Cookie:** Backend rotates and resets the HttpOnly refresh cookie.
+
+### 1.3 Đăng xuất
+* **Endpoint:** `POST /auth/logout`
+* **Auth:** Refresh cookie if available
+* **Response (200 OK):**
+  ```json
+  {
+    "message": "Đã đăng xuất thành công."
+  }
+  ```
+* **Cookie:** Backend clears the refresh cookie.
+
+### 1.4 Đăng ký (Role mặc định là User)
 * **Endpoint:** `POST /auth/register`
 * **Auth:** Public
 * **Body:**

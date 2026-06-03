@@ -2,7 +2,7 @@
  * Tệp: frontend/src/components/AppShell.tsx
  * Mục đích: Wrapper bố cục ứng dụng. Hiển thị `Topbar`, `Sidebar` và nội dung trang.
  * Xuất khẩu: `AppShell` - component dùng bởi các trang để cung cấp layout và theme đồng nhất.
- * Ghi chú: Xử lý flag auto-login cho dev và toast toàn cục.
+ * Ghi chú: Bảo vệ layout cần đăng nhập và toast toàn cục.
  */
 
 import type { ReactNode } from "react";
@@ -25,7 +25,8 @@ type AppShellProps = {
 
 export function AppShell({ role, title, description, children }: AppShellProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const loginMock = useAuthStore((state) => state.loginMock);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+  const refreshSession = useAuthStore((state) => state.refreshSession);
   const mobileSidebarOpen = useUiStore((state) => state.mobileSidebarOpen);
   const setMobileSidebarOpen = useUiStore((state) => state.setMobileSidebarOpen);
   const setRoleTheme = useUiStore((state) => state.setRoleTheme);
@@ -35,21 +36,17 @@ export function AppShell({ role, title, description, children }: AppShellProps) 
 
   useEffect(() => {
     setRoleTheme(role === "admin" ? "admin" : role === "doctor" ? "doctor" : "patient");
-    if (!isAuthenticated) {
-      // Feature flag: enable auto mock-login in dev when VITE_DEV_AUTO_LOGIN is not set to 'false'
-      const envFlag = (import.meta.env.VITE_DEV_AUTO_LOGIN as string | undefined);
-      const devAutoLogin = envFlag === undefined ? true : envFlag === "true";
+    if (isAuthenticated) return;
 
-      if (devAutoLogin) {
-        // keep old behavior for fast UI development
-        loginMock(role);
-      } else {
-        if (window.location.pathname !== ROUTES.login && window.location.pathname !== ROUTES.register) {
-          navigate(ROUTES.login);
-        }
-      }
+    if (!isHydrated) {
+      void refreshSession().catch(() => undefined);
+      return;
     }
-  }, [isAuthenticated, role, setRoleTheme, navigate]);
+
+    if (window.location.pathname !== ROUTES.login && window.location.pathname !== ROUTES.register) {
+      navigate(ROUTES.login);
+    }
+  }, [isAuthenticated, isHydrated, refreshSession, role, setRoleTheme, navigate]);
 
   useEffect(() => {
     if (!toastMessage) return undefined;
@@ -58,6 +55,8 @@ export function AppShell({ role, title, description, children }: AppShellProps) 
   }, [clearToast, toastMessage]);
 
   const isAdmin = role === "admin";
+
+  if (!isAuthenticated) return null;
 
   return (
     <div className={cn("flex min-h-screen bg-background", isAdmin && "bg-adminBackground")}>
