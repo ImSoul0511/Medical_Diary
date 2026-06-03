@@ -40,3 +40,7 @@ build/
 axios_refresh_changes_report.md
 fix.md 
 response.md
+.claude/backend/API.md
+.claude/backend/API_FLOW.md
+.claude/backend/SCHEMAS.md
+.claude/backend/DB_SCHEMAS.md
