@@ -34,3 +34,6 @@ build/
 # Editor folders
 .vscode/
 .idea/
+
+.cursorrules
+.antigravity/
