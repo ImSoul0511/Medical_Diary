@@ -25,10 +25,6 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     user: UserBrief 
 
-class RefreshResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
 class RegisterRequest(BaseModel):
     email: EmailStr
     phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')

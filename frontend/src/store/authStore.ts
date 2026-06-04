@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { authApi } from "../api/authApi";
+import { authApi } from "../api/auth/authApi";
 import type { AuthUser, Role } from "../types/auth";
 
 type AuthStore = {
@@ -51,7 +51,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await authApi.login({ email, password });
-      const role = response.user.role;
+      const role = response.user.role as Role;
       const user = toDisplayUser(response.user.id, role, email);
 
       set({
@@ -78,9 +78,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
   refreshSession: async () => {
     if (refreshSessionPromise) return refreshSessionPromise;
 
-    refreshSessionPromise = authApi
-      .refresh()
-      .then((response) => {
+    refreshSessionPromise = (async () => {
+      try {
+        const refreshFn = (authApi as any).refreshToken || (authApi as any).refresh || (authApi as any).refreshSession;
+        if (typeof refreshFn !== "function") {
+          throw new Error("No refresh token method available on authApi");
+        }
+        const response = await refreshFn();
         set({
           accessToken: response.access_token,
           isAuthenticated: true,
@@ -88,8 +92,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
           error: null,
         });
         return response.access_token;
-      })
-      .catch((error) => {
+      } catch (error: any) {
         set({
           accessToken: null,
           isAuthenticated: false,
@@ -97,10 +100,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
           error: error?.message ?? "Session refresh failed.",
         });
         throw error;
-      })
-      .finally(() => {
+      } finally {
         refreshSessionPromise = null;
-      });
+      }
+    })();
 
     return refreshSessionPromise;
   },
