@@ -1,64 +1,49 @@
-import { apiClient } from '../apiClient';
-import { 
+import { apiClient } from "../apiClient";
+import type {
+  AccessHistoryItem,
+  DoctorPublicResponse,
+  DoctorSearchRequest,
+  PrivacyUpdateRequest,
   UserProfileResponse,
   UserProfileUpdateRequest,
-  PrivacyUpdateRequest,
-  AccessHistoryItem,
-  DoctorPublicResponse
- } from './types';
+} from "./types";
 
-/**
- * User API endpoints
- */
 export const userApi = {
-  /**
-   * Get current user profile
-   */
   getProfile: async (): Promise<UserProfileResponse> => {
-    const response = await apiClient.get<UserProfileResponse>('/users/me');
+    const response = await apiClient.get<UserProfileResponse>("/users/me");
     return response.data;
   },
 
-  /**
-   * Update current user profile
-   */
   updateProfile: async (data: UserProfileUpdateRequest): Promise<UserProfileResponse> => {
-    const response = await apiClient.patch<UserProfileResponse>('/users/me', data);
+    const response = await apiClient.patch<UserProfileResponse>("/users/me", data);
     return response.data;
   },
 
-  /**
-   * Update privacy settings
-   */
-  updatePrivacySettings: async (data: PrivacyUpdateRequest): Promise<UserProfileResponse> => {
-    const response = await apiClient.patch<UserProfileResponse>('/users/privacy', data);
+  updatePrivacySettings: async (
+    data: PrivacyUpdateRequest,
+  ): Promise<Record<string, unknown>> => {
+    const response = await apiClient.patch<Record<string, unknown>>("/users/privacy", data);
     return response.data;
   },
 
-  /**
-   * Export user data (JSON or PDF)
-   */
-  exportData: async (format: 'json' | 'pdf'): Promise<Blob> => {
-    const response = await apiClient.get(`/users/me/export`, {
-      responseType: 'blob',
+  exportData: async (format: "json" | "pdf", scope = "profile"): Promise<Blob> => {
+    const response = await apiClient.get("/users/me/export", {
+      params: { format, scope },
+      responseType: "blob",
     });
     return response.data;
   },
 
-  /**
-   * Get access history for the current user
-   */
   getAccessHistory: async (): Promise<AccessHistoryItem[]> => {
-    const response = await apiClient.get<AccessHistoryItem[]>('/users/me/access-history');
+    const response = await apiClient.get<AccessHistoryItem[]>("/users/me/access-history");
     return response.data;
   },
 
-  /**
-   * Search for doctors by name or specialty
-   */
-  searchDoctors: async (query: string): Promise<DoctorPublicResponse[]> => {
-    const response = await apiClient.get<DoctorPublicResponse[]>('/users/search-doctors', {
-      params: { q: query },
+  searchDoctors: async (
+    filters: DoctorSearchRequest = {},
+  ): Promise<DoctorPublicResponse[]> => {
+    const response = await apiClient.get<DoctorPublicResponse[]>("/users/search-doctors", {
+      params: filters,
     });
     return response.data;
   },

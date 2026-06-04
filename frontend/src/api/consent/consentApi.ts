@@ -1,41 +1,38 @@
-import { apiClient } from '../apiClient';
-import { 
+import { apiClient } from "../apiClient";
+import type {
   AccessRequestActionRequest,
   AccessRequestItem,
-  ConsentHistoryItem, } from './types';
+  ConsentHistoryItem,
+} from "./types";
 
-/**
- * Consent & Access Control API endpoints
- */
+type MessageResponse = {
+  message: string;
+};
+
 export const consentApi = {
-  /**
-   * Get list of pending access requests
-   */
   getAccessRequests: async (): Promise<AccessRequestItem[]> => {
-    const response = await apiClient.get<AccessRequestItem[]>('/consent/access-requests');
+    const response = await apiClient.get<AccessRequestItem[]>("/consent/access-requests");
     return response.data;
   },
 
-  /**
-   * Review (approve/deny) a specific access request — backend expects PATCH
-   */
-  reviewAccessRequest: async (data: AccessRequestActionRequest): Promise<any> => {
-    const response = await apiClient.patch('/consent/access-requests/review', data);
-    return response.data;
-  },  
-
-  revokeDoctorPermission: async (doctor_id: string): Promise<any> => {
-    const response = await apiClient.post(`/consent/${doctor_id}`);
+  reviewAccessRequest: async (
+    requestId: string,
+    data: AccessRequestActionRequest,
+  ): Promise<MessageResponse> => {
+    const response = await apiClient.patch<MessageResponse>(
+      `/consent/access-requests/${requestId}`,
+      data,
+    );
     return response.data;
   },
 
-  /**
-   * Get consent history
-   */
+  revokeDoctorPermission: async (doctorId: string): Promise<MessageResponse> => {
+    const response = await apiClient.post<MessageResponse>(`/consent/revoke/${doctorId}`);
+    return response.data;
+  },
+
   getConsentHistory: async (): Promise<ConsentHistoryItem[]> => {
-    const response = await apiClient.get<ConsentHistoryItem[]>('/consent/history');
+    const response = await apiClient.get<ConsentHistoryItem[]>("/consent/history");
     return response.data;
   },
-
-  
 };

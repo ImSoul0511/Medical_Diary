@@ -97,21 +97,37 @@ export const useAuthStore = create<AuthStore>((set) => ({
       throw error;
     }
   },
-  registerDoctor: async () => {
-    const error = new Error("Doctor registration API wrapper is not available yet.");
-    set({ isLoading: false, error: error.message });
-    throw error;
+  registerDoctor: async (form) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authApi.registerDoctor({
+        email: form.email,
+        phone_number: form.phoneNumber,
+        password: form.password,
+        full_name: form.fullName,
+        gender: form.gender,
+        date_of_birth: form.dateOfBirth,
+        cccd: form.cccd,
+        license_number: form.licenseNumber,
+        specialty: form.specialty,
+        hospital: form.hospital,
+        certificate_file: form.certificateFile,
+      });
+      set({ isLoading: false, error: null });
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error?.message ?? "Doctor registration failed.",
+      });
+      throw error;
+    }
   },
   refreshSession: async () => {
     if (refreshSessionPromise) return refreshSessionPromise;
 
     refreshSessionPromise = (async () => {
       try {
-        const refreshFn = (authApi as any).refreshToken || (authApi as any).refresh || (authApi as any).refreshSession;
-        if (typeof refreshFn !== "function") {
-          throw new Error("No refresh token method available on authApi");
-        }
-        const response = await refreshFn();
+        const response = await authApi.refresh();
         set({
           accessToken: response.access_token,
           isAuthenticated: true,

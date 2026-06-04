@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import { medicalRecordApi } from "../api/medicalRecordApi";
+import { medicalRecordApi } from "../api/medical_records/medicalRecordApi";
 import { mapMedicalRecordDto, mapMedicalRecordFormToDto } from "../mappers/medicalRecordMapper";
 import type { MedicalRecord, MedicalRecordForm } from "../types/medicalRecord";
-import { apiWrapperMissing, getErrorMessage } from "./storeUtils";
+import { getErrorMessage } from "./storeUtils";
 
 type MedicalRecordStore = {
   myRecords: MedicalRecord[];
@@ -27,14 +27,30 @@ export const useMedicalRecordStore = create<MedicalRecordStore>((set) => ({
   isCreating: false,
   error: null,
   loadMine: async () => {
-    const error = apiWrapperMissing("loadMine medical records (/medical-records/me)");
-    set({ error: error.message });
-    throw error;
+    set({ isLoadingMine: true, error: null });
+    try {
+      const myRecords = (await medicalRecordApi.list()).map(mapMedicalRecordDto);
+      set({ myRecords, isLoadingMine: false });
+      return myRecords;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load medical records.");
+      set({ isLoadingMine: false, error: message });
+      throw error;
+    }
   },
   loadPatientRecords: async (patientId) => {
-    const error = apiWrapperMissing(`loadPatientRecords(${patientId})`);
-    set({ selectedPatientId: patientId, error: error.message });
-    throw error;
+    set({ selectedPatientId: patientId, isLoadingPatient: true, error: null });
+    try {
+      const patientRecords = (await medicalRecordApi.listPatientRecords(patientId)).map(
+        mapMedicalRecordDto,
+      );
+      set({ patientRecords, isLoadingPatient: false });
+      return patientRecords;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load patient medical records.");
+      set({ isLoadingPatient: false, error: message });
+      throw error;
+    }
   },
   createRecord: async (form) => {
     set({ isCreating: true, error: null });

@@ -1,41 +1,46 @@
-import { apiClient } from '../apiClient';
-import { 
-    EmergencyAccessLogItem,
-    EmergencyAccessResponse,
-    EmergencyTokenCreateRequest,
-    EmergencyTokenItem,
-    EmergencyTokenResponse,
-    EmergencyTokenUpdateRequest,
- } from './types';
+import { apiClient } from "../apiClient";
+import type {
+  EmergencyAccessLogItem,
+  EmergencyAccessResponse,
+  EmergencyTokenCreateRequest,
+  EmergencyTokenItem,
+  EmergencyTokenResponse,
+  EmergencyTokenUpdateRequest,
+} from "./types";
 
 export const emergencyApi = {
   createToken: async (data: EmergencyTokenCreateRequest): Promise<EmergencyTokenResponse> => {
-    const resp = await apiClient.post('/emergency/token', data);
-    return resp.data;
+    const response = await apiClient.post<EmergencyTokenResponse>("/emergency/token", data);
+    return response.data;
   },
 
   listTokens: async (): Promise<EmergencyTokenItem[]> => {
-    const resp = await apiClient.get('/emergency/tokens');
-    return resp.data;
+    const response = await apiClient.get<EmergencyTokenItem[]>("/emergency/tokens");
+    return response.data;
   },
 
   getAccessHistory: async (): Promise<EmergencyAccessLogItem[]> => {
-    const resp = await apiClient.get('/emergency/tokens/history');
-    return resp.data;
+    const response = await apiClient.get<EmergencyAccessLogItem[]>("/emergency/tokens/history");
+    return response.data;
   },
 
-  updateToken: async (token_id: string, data: EmergencyTokenUpdateRequest): Promise<EmergencyTokenResponse> => {
-    const resp = await apiClient.patch(`/emergency/tokens/${token_id}`, data);
-    return resp.data;
+  updateToken: async (
+    tokenId: string,
+    data: EmergencyTokenUpdateRequest,
+  ): Promise<EmergencyTokenItem> => {
+    const response = await apiClient.patch<EmergencyTokenItem>(
+      `/emergency/tokens/${tokenId}`,
+      data,
+    );
+    return response.data;
   },
 
-  revokeToken: async (token_id: string): Promise<void> => {
-    await apiClient.delete(`/emergency/tokens/${token_id}`);
+  revokeToken: async (tokenId: string): Promise<void> => {
+    await apiClient.delete(`/emergency/tokens/${tokenId}`);
   },
 
-  // Public access by token (no auth required)
   accessByToken: async (token: string): Promise<EmergencyAccessResponse> => {
-    const resp = await apiClient.post(`/emergency/access/${token}`, { token });
-    return resp.data;
+    const response = await apiClient.get<EmergencyAccessResponse>(`/emergency/access/${token}`);
+    return response.data;
   },
 };

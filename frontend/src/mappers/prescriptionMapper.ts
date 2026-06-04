@@ -6,6 +6,11 @@ import type {
   PrescriptionLog,
   PrescriptionLogStatus,
 } from "../types/prescriptions";
+import type {
+  PrescriptionCreateRequest,
+  PrescriptionItemCreateRequest,
+  PrescriptionLogUpdateRequest,
+} from "../api/prescriptions/types";
 import { asArray, asNullableString, asNumberOrNull, asRecord, asString, compactPayload, emptyToNull } from "./common";
 
 function mapLogStatus(value: unknown): PrescriptionLogStatus {
@@ -56,30 +61,36 @@ export function mapPrescriptionLogDto(dto: unknown): PrescriptionLog {
   };
 }
 
-export function mapPrescriptionDraftToDto(draft: PrescriptionDraft) {
-  return compactPayload({
+export function mapPrescriptionDraftToDto(draft: PrescriptionDraft): PrescriptionCreateRequest {
+  return {
     patient_id: draft.patientId,
     notes: emptyToNull(draft.notes),
-  });
+  };
 }
 
-export function mapPrescriptionItemDraftToDto(draft: PrescriptionItemDraft) {
-  return compactPayload({
+export function mapPrescriptionItemDraftToDto(
+  draft: PrescriptionItemDraft,
+): PrescriptionItemCreateRequest {
+  const payload: PrescriptionItemCreateRequest = {
     medication_name: draft.medicationName,
     dosage: draft.dosage,
-    duration_days: draft.durationDays > 0 ? draft.durationDays : undefined,
-    scheduled_times: draft.scheduledTimes.length > 0 ? draft.scheduledTimes : undefined,
-    start_date: emptyToNull(draft.startDate),
-    custom_logs:
-      draft.customLogs.length > 0
-        ? draft.customLogs.map((log) => ({
-            scheduled_date: log.scheduledDate,
-            scheduled_time: log.scheduledTime,
-          }))
-        : undefined,
-  });
+  };
+
+  if (draft.durationDays > 0) payload.duration_days = draft.durationDays;
+  if (draft.scheduledTimes.length > 0) payload.scheduled_times = draft.scheduledTimes;
+  if (emptyToNull(draft.startDate)) payload.start_date = emptyToNull(draft.startDate) ?? undefined;
+  if (draft.customLogs.length > 0) {
+    payload.custom_logs = draft.customLogs.map((log) => ({
+      scheduled_date: log.scheduledDate,
+      scheduled_time: log.scheduledTime,
+    }));
+  }
+
+  return payload;
 }
 
-export function mapPrescriptionLogStatusToDto(status: PrescriptionLogStatus) {
+export function mapPrescriptionLogStatusToDto(
+  status: PrescriptionLogStatus,
+): PrescriptionLogUpdateRequest {
   return { status };
 }

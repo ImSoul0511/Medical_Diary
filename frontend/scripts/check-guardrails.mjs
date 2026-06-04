@@ -7,7 +7,7 @@ const srcRoot = join(scriptDir, "../src");
 
 const allowedAxiosClient = "api/apiClient.ts";
 const allowedApiBaseUrlFiles = new Set(["api/apiClient.ts", "vite-env.d.ts"]);
-const allowedWithCredentialsFiles = new Set(["api/authApi.ts"]);
+const allowedWithCredentialsFiles = new Set(["api/auth/authApi.ts"]);
 
 const bannedTokens = [
   "fetch(",

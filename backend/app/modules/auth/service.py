@@ -1,4 +1,5 @@
 import logging 
+from dataclasses import dataclass
 from fastapi import HTTPException
 from supabase import Client
 # pyrefly: ignore [missing-import]
@@ -19,12 +20,17 @@ from app.shared.schemas import MessageResponse
 
 logger = logging.getLogger("medical_diary")
 
+@dataclass
+class LoginResult:
+    response: LoginResponse
+    refresh_token: str
+
 class AuthService: 
     def __init__(self, db: AsyncSession, supabase: Client):
         self.db = db
         self.supabase = supabase 
     
-    async def login(self, data: LoginRequest) -> LoginResponse: 
+    async def login(self, data: LoginRequest) -> LoginResult: 
         try: 
             # xác thực với Supabase Auth 
             response = self.supabase.auth.sign_in_with_password({
@@ -34,6 +40,7 @@ class AuthService:
 
             user_id = response.user.id 
             access_token = response.session.access_token 
+            refresh_token = response.session.refresh_token 
 
             # lấy role từ DB 
             query = text("SELECT role FROM profiles WHERE id = :user_id AND deleted_at IS NULL") 
@@ -41,18 +48,56 @@ class AuthService:
             row = result.fetchone()
             role = row[0] if row else "user" 
 
-            return LoginResponse(
-                access_token = access_token, 
-                token_type="bearer",
-                user=UserBrief(
-                    id=user_id, 
-                    role=role
-                )
+            logger.info(f"Login successful for user: {user_id}")
+            return LoginResult(
+                response=LoginResponse(
+                    access_token=access_token,
+                    token_type="bearer",
+                    user=UserBrief(
+                        id=user_id,
+                        role=role
+                    )
+                ),
+                refresh_token=refresh_token,
             )
         except Exception as e: 
             logger.warning(f"Login failed for {data.email}")
             raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không đúng")
         
+    async def refresh_session(self, refresh_token: str) -> LoginResult:
+        try:
+            response = self.supabase.auth.refresh_session(refresh_token)
+
+            if not response.session or not response.user:
+                raise HTTPException(status_code=401, detail="Invalid session")
+
+            user_id = response.user.id
+            access_token = response.session.access_token
+            new_refresh_token = response.session.refresh_token
+
+            query = text("SELECT role FROM profiles WHERE id = :user_id AND deleted_at IS NULL")
+            result = await self.db.execute(query, {"user_id": user_id})
+            row = result.fetchone()
+            role = row[0] if row else "user"
+
+            logger.info(f"Session refreshed for user: {user_id}")
+            return LoginResult(
+                response=LoginResponse(
+                    access_token=access_token,
+                    token_type="bearer",
+                    user=UserBrief(
+                        id=user_id,
+                        role=role,
+                    )
+                ),
+                refresh_token=new_refresh_token,
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning(f"Refresh session failed: {e}")
+            raise HTTPException(status_code=401, detail="Session expired")
+
     async def register(self, data: RegisterRequest) -> MessageResponse:
         try: 
             response = self.supabase.auth.sign_up({
@@ -165,7 +210,7 @@ class AuthService:
         try: 
             self.supabase.auth.sign_out() 
             logger.info(f"User logged out successfully")
-            return MessageResponse("Đã đăng xuất thành công.")
+            return MessageResponse(message="Đã đăng xuất thành công.")
         except Exception as e:
             logger.error(f"Logout failed: {e}")
             raise HTTPException(status_code=400, detail="Không thể đăng xuất.") 

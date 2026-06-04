@@ -74,7 +74,7 @@
 - It allows `axios` only in `src/api/apiClient.ts`.
 - It allows at most one `axios.create(...)`.
 - It allows `VITE_API_BASE_URL` only in `src/api/apiClient.ts` and `src/vite-env.d.ts`.
-- It allows `withCredentials` only in `src/api/authApi.ts`.
+- It allows `withCredentials` only in `src/api/auth/authApi.ts`.
 - It should fail CI/build checks when pages, components, stores, or endpoint wrappers bypass the central client.
 
 ## Endpoint Wiring

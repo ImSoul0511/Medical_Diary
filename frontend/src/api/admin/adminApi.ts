@@ -1,19 +1,40 @@
-import { apiClient } from '../apiClient';
-import { PendingDoctorResponse, DoctorVerifyRequest, AuditLogItem } from './types';
+import { apiClient } from "../apiClient";
+import type {
+  AuditLogItem,
+  AuditLogQuery,
+  DoctorVerifyRequest,
+  PaginatedResponse,
+  PendingDoctorResponse,
+} from "./types";
+
+type MessageResponse = {
+  message: string;
+};
 
 export const adminApi = {
-	listPendingDoctors: async (): Promise<PendingDoctorResponse[]> => {
-		const resp = await apiClient.get<PendingDoctorResponse[]>('/admin/doctors/pending');
-		return resp.data;
-	},
+  listPendingDoctors: async (): Promise<PendingDoctorResponse[]> => {
+    const response = await apiClient.get<PendingDoctorResponse[]>("/admin/doctors/pending");
+    return response.data;
+  },
 
-	verifyDoctor: async (doctor_id: string, data: DoctorVerifyRequest) => {
-		const resp = await apiClient.patch(`/admin/doctors/${doctor_id}/verify`, data);
-		return resp.data;
-	},
+  verifyDoctor: async (
+    doctorId: string,
+    data: DoctorVerifyRequest,
+  ): Promise<MessageResponse> => {
+    const response = await apiClient.patch<MessageResponse>(
+      `/admin/doctors/${doctorId}/verify`,
+      data,
+    );
+    return response.data;
+  },
 
-	getAuditLogs: async (): Promise<AuditLogItem[]> => {
-        const resp = await apiClient.get<AuditLogItem[]>('/admin/audit-logs');
-        return resp.data;
-    },
+  getAuditLogs: async (
+    params: AuditLogQuery = {},
+  ): Promise<PaginatedResponse<AuditLogItem>> => {
+    const response = await apiClient.get<PaginatedResponse<AuditLogItem>>(
+      "/admin/audit-logs",
+      { params },
+    );
+    return response.data;
+  },
 };

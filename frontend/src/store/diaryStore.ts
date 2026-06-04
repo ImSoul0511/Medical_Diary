@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import { diaryApi } from "../api/diaryApi";
-import { mapDiaryDto, mapDiaryFiltersToParams, mapDiaryFormToDto } from "../mappers/diaryMapper";
+import { diaryApi } from "../api/diaries/diaryApi";
+import { mapDiaryDto, mapDiaryFormToDto } from "../mappers/diaryMapper";
 import type { DiaryEntry, DiaryFilters, DiaryForm } from "../types/diary";
-import { apiWrapperMissing, getErrorMessage } from "./storeUtils";
+import { getErrorMessage } from "./storeUtils";
 
 type DiaryStore = {
   items: DiaryEntry[];
@@ -39,16 +39,22 @@ export const useDiaryStore = create<DiaryStore>((set) => ({
     }
   },
   loadPatientDiaries: async (patientId) => {
-    mapDiaryFiltersToParams({ patientId });
-    const error = apiWrapperMissing("loadPatientDiaries(patientId)");
-    set({ error: error.message });
-    throw error;
+    set({ isLoading: true, error: null, filters: { patientId } });
+    try {
+      const items = (await diaryApi.list(patientId)).map(mapDiaryDto);
+      set({ items, isLoading: false });
+      return items;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load patient diaries.");
+      set({ isLoading: false, error: message });
+      throw error;
+    }
   },
   createDiary: async (form) => {
     set({ isCreating: true, error: null });
     try {
       const created = mapDiaryDto(
-        await diaryApi.create(mapDiaryFormToDto(form) as { content: string }),
+        await diaryApi.create(mapDiaryFormToDto(form)),
       );
       set((state) => ({
         items: [created, ...state.items],

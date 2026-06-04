@@ -1,4 +1,5 @@
 import type { AuditLog, AuditLogFilters, DoctorApproval, DoctorVerifyForm } from "../types/admin";
+import type { AuditLogQuery, DoctorVerifyRequest } from "../api/admin/types";
 import type { PaginationState } from "../types/api";
 import { asNullableString, asRecord, asString, compactPayload } from "./common";
 
@@ -25,11 +26,11 @@ export function mapDoctorApprovalDto(dto: unknown): DoctorApproval {
   };
 }
 
-export function mapDoctorVerifyFormToDto(form: DoctorVerifyForm) {
-  return compactPayload({
+export function mapDoctorVerifyFormToDto(form: DoctorVerifyForm): DoctorVerifyRequest {
+  return {
     action: form.action,
     notes: form.note.trim() || null,
-  });
+  };
 }
 
 export function mapAuditLogDto(dto: unknown): AuditLog {
@@ -48,14 +49,14 @@ export function mapAuditLogDto(dto: unknown): AuditLog {
   };
 }
 
-export function mapAuditLogFiltersToParams(filters: AuditLogFilters) {
+export function mapAuditLogFiltersToParams(filters: AuditLogFilters): AuditLogQuery {
   return compactPayload({
     page: filters.page,
     limit: filters.limit,
     action: filters.action,
     user_id: filters.userId,
     date_from: filters.dateFrom,
-  });
+  }) as AuditLogQuery;
 }
 
 export function mapPaginationDto(dto: unknown): PaginationState {

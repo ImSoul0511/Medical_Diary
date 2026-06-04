@@ -10,8 +10,8 @@ export interface PendingDoctorResponse {
 }
 
 export interface DoctorVerifyRequest {
-  notes?: string;
-  action: 'approved' | 'rejected';
+  action: "approved" | "rejected";
+  notes?: string | null;
 }
 
 export interface AuditLogItem {
@@ -20,9 +20,23 @@ export interface AuditLogItem {
   actor_name: string;
   action: string;
   table_name: string;
-  target_name: string;
-  target_user_id?: string;
-  old_data?: any;
-  new_data?: any;
+  target_user_id?: string | null;
+  old_data?: Record<string, unknown> | null;
+  new_data?: Record<string, unknown> | null;
   created_at: string;
+}
+
+export interface AuditLogQuery {
+  page?: number;
+  limit?: number;
+  action?: string;
+  user_id?: string;
+  date_from?: string;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
 }

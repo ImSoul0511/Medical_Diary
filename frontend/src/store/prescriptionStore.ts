@@ -1,9 +1,9 @@
 import { create } from "zustand";
-import { prescriptionApi } from "../api/prescriptionApi";
-import { prescriptionsApi } from "../api/prescriptionsApi";
+import { prescriptionApi } from "../api/prescriptions/prescriptionsApi";
 import {
   mapPrescriptionDraftToDto,
   mapPrescriptionDto,
+  mapPrescriptionItemDto,
   mapPrescriptionItemDraftToDto,
   mapPrescriptionLogDto,
   mapPrescriptionLogStatusToDto,
@@ -15,7 +15,7 @@ import type {
   PrescriptionLog,
   PrescriptionLogStatus,
 } from "../types/prescriptions";
-import { apiWrapperMissing, getErrorMessage } from "./storeUtils";
+import { getErrorMessage } from "./storeUtils";
 
 type PrescriptionStore = {
   prescriptions: Prescription[];
@@ -104,16 +104,33 @@ export const usePrescriptionStore = create<PrescriptionStore>((set) => ({
     }
   },
   updateLogStatus: async (logId, status) => {
-    mapPrescriptionLogStatusToDto(status);
-    const error = apiWrapperMissing(`updateLogStatus(${logId})`);
-    set({ updatingLogId: null, error: error.message });
-    throw error;
+    set({ updatingLogId: logId, error: null });
+    try {
+      const updatedLog = mapPrescriptionLogDto(
+        await prescriptionApi.updateLogStatus(logId, mapPrescriptionLogStatusToDto(status)),
+      );
+      set((state) => ({
+        logsByPrescriptionId: Object.fromEntries(
+          Object.entries(state.logsByPrescriptionId).map(([prescriptionId, logs]) => [
+            prescriptionId,
+            logs.map((log) => (log.id === logId ? updatedLog : log)),
+          ]),
+        ),
+        todayLogs: state.todayLogs.map((log) => (log.id === logId ? updatedLog : log)),
+        updatingLogId: null,
+      }));
+      return updatedLog;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to update prescription log.");
+      set({ updatingLogId: null, error: message });
+      throw error;
+    }
   },
   createPrescription: async (draft) => {
     set({ isCreatingPrescription: true, error: null });
     try {
       const created = mapPrescriptionDto(
-        await prescriptionsApi.create(mapPrescriptionDraftToDto(draft)),
+        await prescriptionApi.createPrescription(mapPrescriptionDraftToDto(draft)),
       );
       set((state) => ({
         prescriptions: [created, ...state.prescriptions],
@@ -127,15 +144,50 @@ export const usePrescriptionStore = create<PrescriptionStore>((set) => ({
     }
   },
   addPrescriptionItem: async (prescriptionId, draft) => {
-    mapPrescriptionItemDraftToDto(draft);
-    const error = apiWrapperMissing(`addPrescriptionItem(${prescriptionId})`);
-    set({ isAddingItem: false, error: error.message });
-    throw error;
+    set({ isAddingItem: true, error: null });
+    try {
+      const item = mapPrescriptionItemDto(
+        await prescriptionApi.addPrescriptionItem(
+          prescriptionId,
+          mapPrescriptionItemDraftToDto(draft),
+        ),
+      );
+      set((state) => ({
+        prescriptions: state.prescriptions.map((prescription) =>
+          prescription.id === prescriptionId
+            ? { ...prescription, items: [...prescription.items, item] }
+            : prescription,
+        ),
+        isAddingItem: false,
+      }));
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to add prescription item.");
+      set({ isAddingItem: false, error: message });
+      throw error;
+    }
   },
   deletePrescription: async (prescriptionId) => {
-    const error = apiWrapperMissing(`deletePrescription(${prescriptionId})`);
-    set({ deletingPrescriptionId: null, error: error.message });
-    throw error;
+    set({ deletingPrescriptionId: prescriptionId, error: null });
+    try {
+      await prescriptionApi.deletePrescription(prescriptionId);
+      set((state) => {
+        const { [prescriptionId]: _removedLogs, ...logsByPrescriptionId } =
+          state.logsByPrescriptionId;
+        return {
+          prescriptions: state.prescriptions.filter(
+            (prescription) => prescription.id !== prescriptionId,
+          ),
+          logsByPrescriptionId,
+          selectedPrescriptionId:
+            state.selectedPrescriptionId === prescriptionId ? null : state.selectedPrescriptionId,
+          deletingPrescriptionId: null,
+        };
+      });
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to delete prescription.");
+      set({ deletingPrescriptionId: null, error: message });
+      throw error;
+    }
   },
   setBuilderDraft: (draft) => set({ builderDraft: draft }),
   addItemDraft: () =>

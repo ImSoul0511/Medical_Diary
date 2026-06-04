@@ -1,14 +1,16 @@
 export interface PatientPublicResponse {
   id: string;
   full_name: string;
-  phone_number?: string;
+  gender: string;
 }
 
 export interface PatientProfileResponse {
-  id: string;
   full_name: string;
-  phone_number?: string;
-  medical_summary?: string;
+  gender: string;
+  date_of_birth?: string | null;
+  blood_type?: string | null;
+  allergies?: string | null;
+  emergency_contact?: string | null;
 }
 
 export interface RequestAccessRequest {
@@ -20,5 +22,5 @@ export interface RequestAccessRequest {
 export interface RequestAccessResponse {
   request_id: string;
   status: string;
-  requested_at: string;
+  created_at: string;
 }

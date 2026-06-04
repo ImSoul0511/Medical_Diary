@@ -1,6 +1,8 @@
 import { create } from "zustand";
+import { notificationsApi } from "../api/notifications/notificationsApi";
+import { mapNotificationDto } from "../mappers/notificationMapper";
 import type { Notification } from "../types/notification";
-import { apiWrapperMissing } from "./storeUtils";
+import { getErrorMessage } from "./storeUtils";
 
 type NotificationStore = {
   items: Notification[];
@@ -22,14 +24,40 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
   markingReadId: null,
   error: null,
   loadNotifications: async () => {
-    const error = apiWrapperMissing("loadNotifications()");
-    set({ isLoading: false, error: error.message });
-    throw error;
+    set({ isLoading: true, error: null });
+    try {
+      const items = (await notificationsApi.list()).map(mapNotificationDto);
+      set({
+        items,
+        unreadCount: items.filter((item) => !item.isRead).length,
+        isLoading: false,
+      });
+      return items;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load notifications.");
+      set({ isLoading: false, error: message });
+      throw error;
+    }
   },
   markAsRead: async (id) => {
-    const error = apiWrapperMissing(`markAsRead(${id})`);
-    set({ markingReadId: null, error: error.message });
-    throw error;
+    set({ markingReadId: id, error: null });
+    try {
+      await notificationsApi.markAsRead(id);
+      set((state) => {
+        const items = state.items.map((item) =>
+          item.id === id ? { ...item, isRead: true } : item,
+        );
+        return {
+          items,
+          unreadCount: items.filter((item) => !item.isRead).length,
+          markingReadId: null,
+        };
+      });
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to mark notification as read.");
+      set({ markingReadId: null, error: message });
+      throw error;
+    }
   },
   receiveNotification: (notification) =>
     set((state) => ({

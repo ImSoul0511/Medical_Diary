@@ -7,7 +7,7 @@ Ke hoach nay dung de theo doi cac phase dua frontend den trang thai deploy duoc 
 Pham vi hien tai:
 
 - Cap nhat `pages/components` theo `types/store/api wrapper` voi assumption API wrapper da dung backend.
-- Khong chuan hoa lai `frontend/src/api` trong plan nay, tru khi co confirm rieng.
+- `frontend/src/api` da duoc dua vao scope sau confirm rieng ngay 2026-06-04.
 - Khong them Supabase client o frontend.
 - Khong fallback sang mock data khi API loi.
 
@@ -23,7 +23,7 @@ Pham vi hien tai:
 - `frontend/src/api` la wrapper cua backend endpoint va do dev khac phu trach.
 - Endpoint path, method, request, response se duoc doi chieu voi backend routers/schemas neu gap loi.
 - API wrapper co the khac backend raw shape o diem camelCase, nhung phai giu semantic tuong ung voi backend.
-- Neu page/store gap mismatch do API wrapper chua xong, report lai thay vi sua `src/api` khi chua co confirm.
+- Sau confirm 2026-06-04, duoc phep sua `src/api` de khop backend routers/schemas hien tai.
 - Store goi API wrapper, khong import Axios hoac `apiClient` truc tiep.
 - Page/component goi store selectors/actions, khong import Axios, khong direct `fetch`, khong import `mockData` runtime.
 
@@ -42,8 +42,14 @@ Pham vi hien tai:
 - [x] 2026-06-04 implementation update: deleted unused compatibility `frontend/src/store/medicalStore.ts`.
 - [x] 2026-06-04 verification update: `npm run build` passed.
 - [x] 2026-06-04 verification update: `npm run lint:guardrails` passed.
-- [x] 2026-06-04 local run update: Vite dev server is running at `http://127.0.0.1:5174/`.
-- [ ] Phase tiep theo: smoke test voi backend reachable va resolve API-wrapper placeholders.
+- [x] 2026-06-04 local cookie update: Vite dev server is running at `http://localhost:5174/` to match `VITE_API_BASE_URL=http://localhost:8000`.
+- [x] 2026-06-04 API update: removed `apiClient` export from `src/api/index.ts`.
+- [x] 2026-06-04 API update: aligned module wrappers with current backend routers/schemas for users, consent, diaries, doctors, emergency, health_metrics, medical_records, notifications, prescriptions, and admin.
+- [x] 2026-06-04 store update: replaced runtime `apiWrapperMissing` call sites with real API wrapper calls through mappers.
+- [x] 2026-06-04 import update: stores now import API wrappers from module folders such as `api/auth/authApi` and `api/medical_records/medicalRecordApi`.
+- [x] 2026-06-04 verification update: `npm run build` passed after API/store rewiring.
+- [x] 2026-06-04 verification update: `npm run lint:guardrails` passed after guardrail path update.
+- [ ] Phase tiep theo: smoke test voi backend reachable.
 
 ## Phase Dependencies
 
@@ -88,7 +94,8 @@ Current result:
 - [x] Runtime mock imports were removed from pages.
 - [x] Hooks/pages were moved off old local/mock store action names.
 - [x] Pages were moved off removed `types/medical` and old mock-only fields.
-- [ ] Runtime API-wrapper placeholders remain in several stores; see "Remaining Runtime Gaps".
+- [x] Runtime API-wrapper placeholders were removed from store actions.
+- [x] Backend auth refresh mismatch resolved: `backend/app/modules/auth/router.py` exposes `POST /auth/refresh` again.
 
 Previous build-error snapshot:
 
@@ -120,15 +127,16 @@ Main blockers found:
 
 Remaining Runtime Gaps:
 
-- `notificationStore.loadNotifications()` and `markAsRead()` still use `apiWrapperMissing` because no notification API wrapper exists in `src/api`.
-- `doctorStore` actions still use `apiWrapperMissing` because no doctor API wrapper exists in `src/api`.
-- `adminStore` actions still use `apiWrapperMissing` because no admin API wrapper exists in `src/api`.
-- `emergencyStore` actions still use `apiWrapperMissing` because no emergency API wrapper exists in `src/api`.
-- `consentStore` review/approve/reject/revoke actions still use `apiWrapperMissing`; existing `consentApi` does not match backend `PATCH /consent/access-requests/{request_id}` and `POST /consent/revoke/{doctor_id}`.
-- `medicalRecordStore.loadMine()` and `loadPatientRecords()` still use `apiWrapperMissing`; current wrapper does not expose backend `GET /medical-records/me` and `GET /medical-records/{patient_id}` correctly.
-- `prescriptionStore.updateLogStatus()`, `addPrescriptionItem()`, and `deletePrescription()` still use `apiWrapperMissing`.
-- `authStore.registerDoctor()` reports missing wrapper because `authApi` does not expose multipart `POST /auth/register-doctor`.
-- These are not TypeScript/build blockers anymore, but they must be resolved before full backend smoke testing can pass.
+- [x] `notificationStore.loadNotifications()` and `markAsRead()` now use `notificationsApi`.
+- [x] `doctorStore` actions now use `doctorsApi`.
+- [x] `adminStore` actions now use `adminApi`.
+- [x] `emergencyStore` actions now use `emergencyApi`.
+- [x] `consentStore` review/approve/reject/revoke actions now use backend-aligned consent endpoints.
+- [x] `medicalRecordStore.loadMine()` and `loadPatientRecords()` now use backend-aligned medical record endpoints.
+- [x] `prescriptionStore.updateLogStatus()`, `addPrescriptionItem()`, and `deletePrescription()` now use `prescriptionApi`.
+- [x] `authStore.registerDoctor()` now uses multipart `authApi.registerDoctor()`.
+- [x] Backend mismatch resolved: `auth/router.py` exposes `POST /auth/refresh` for frontend refresh lock.
+- [ ] Smoke test with real backend still pending.
 
 ## Phase 0: Baseline And Rule Audit
 
@@ -139,7 +147,8 @@ Remaining Runtime Gaps:
 - [x] Xac nhan backend routers/schemas la source of truth khi can endpoint.
 - [x] Xac nhan khong dung API docs cu lam source of truth.
 - [x] Xac nhan khong them Supabase frontend client.
-- [x] Xac nhan khong sua `src/api` trong task planning nay.
+- [x] Xac nhan khong sua `src/api` trong task planning nay before API-scope confirm.
+- [x] 2026-06-04 user confirmed API import/wrapper fix scope, so `src/api` changes are allowed for this pass.
 
 Exit criteria:
 
@@ -243,7 +252,7 @@ Muc tieu: frontend pass cac check toi thieu de deploy.
 
 - [x] Chay `npm run lint:guardrails`. Latest result: passed.
 - [x] Chay `npm run build`. Latest result: passed. Vite emitted only a chunk-size warning.
-- [x] Start local dev server. Latest result: running at `http://127.0.0.1:5174/`.
+- [x] Start local dev server. Latest result: running at `http://localhost:5174/`.
 - [x] Fix TypeScript errors trong pham vi pages/components/hooks/store/types.
 - [x] Khong fix bang cach bypass type voi `any` neu co the map dung contract.
 - [x] Neu loi den tu `src/api`, report de dev API xu ly hoac xin confirm truoc khi sua.

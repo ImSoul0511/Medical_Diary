@@ -1,6 +1,10 @@
 import { create } from "zustand";
+import { emergencyApi } from "../api/emergency/emergencyApi";
 import {
+  mapEmergencyAccessLogDto,
+  mapEmergencyProfileDto,
   mapEmergencyTokenCreateFormToDto,
+  mapEmergencyTokenDto,
   mapEmergencyTokenUpdateFormToDto,
 } from "../mappers/emergencyMapper";
 import type {
@@ -10,7 +14,7 @@ import type {
   EmergencyTokenCreateForm,
   EmergencyTokenUpdateForm,
 } from "../types/emergency";
-import { apiWrapperMissing } from "./storeUtils";
+import { getErrorMessage } from "./storeUtils";
 
 type EmergencyStore = {
   tokens: EmergencyToken[];
@@ -47,36 +51,85 @@ export const useEmergencyStore = create<EmergencyStore>((set) => ({
   revokingTokenId: null,
   error: null,
   createToken: async (form) => {
-    mapEmergencyTokenCreateFormToDto(form);
-    const error = apiWrapperMissing("createToken(form)");
-    set({ isCreating: false, error: error.message });
-    throw error;
+    set({ isCreating: true, error: null });
+    try {
+      const created = mapEmergencyTokenDto(
+        await emergencyApi.createToken(mapEmergencyTokenCreateFormToDto(form)),
+      );
+      set({ createdToken: created.token, isCreating: false });
+      return created;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to create emergency token.");
+      set({ isCreating: false, error: message });
+      throw error;
+    }
   },
   loadTokens: async () => {
-    const error = apiWrapperMissing("loadTokens()");
-    set({ isLoadingTokens: false, error: error.message });
-    throw error;
+    set({ isLoadingTokens: true, error: null });
+    try {
+      const tokens = (await emergencyApi.listTokens()).map(mapEmergencyTokenDto);
+      set({ tokens, isLoadingTokens: false });
+      return tokens;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load emergency tokens.");
+      set({ isLoadingTokens: false, error: message });
+      throw error;
+    }
   },
   loadTokenHistory: async () => {
-    const error = apiWrapperMissing("loadTokenHistory()");
-    set({ isLoadingHistory: false, error: error.message });
-    throw error;
+    set({ isLoadingHistory: true, error: null });
+    try {
+      const accessHistory = (await emergencyApi.getAccessHistory()).map(mapEmergencyAccessLogDto);
+      set({ accessHistory, isLoadingHistory: false });
+      return accessHistory;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load emergency access history.");
+      set({ isLoadingHistory: false, error: message });
+      throw error;
+    }
   },
   updateToken: async (tokenId, form) => {
-    mapEmergencyTokenUpdateFormToDto(form);
-    const error = apiWrapperMissing(`updateToken(${tokenId})`);
-    set({ updatingTokenId: null, error: error.message });
-    throw error;
+    set({ updatingTokenId: tokenId, error: null });
+    try {
+      const updated = mapEmergencyTokenDto(
+        await emergencyApi.updateToken(tokenId, mapEmergencyTokenUpdateFormToDto(form)),
+      );
+      set((state) => ({
+        tokens: state.tokens.map((token) => (token.id === tokenId ? updated : token)),
+        updatingTokenId: null,
+      }));
+      return updated;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to update emergency token.");
+      set({ updatingTokenId: null, error: message });
+      throw error;
+    }
   },
   revokeToken: async (tokenId) => {
-    const error = apiWrapperMissing(`revokeToken(${tokenId})`);
-    set({ revokingTokenId: null, error: error.message });
-    throw error;
+    set({ revokingTokenId: tokenId, error: null });
+    try {
+      await emergencyApi.revokeToken(tokenId);
+      set((state) => ({
+        tokens: state.tokens.filter((token) => token.id !== tokenId),
+        revokingTokenId: null,
+      }));
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to revoke emergency token.");
+      set({ revokingTokenId: null, error: message });
+      throw error;
+    }
   },
   loadPublicProfile: async (token) => {
-    const error = apiWrapperMissing(`loadPublicProfile(${token})`);
-    set({ isLoadingPublicProfile: false, error: error.message });
-    throw error;
+    set({ isLoadingPublicProfile: true, error: null });
+    try {
+      const publicProfile = mapEmergencyProfileDto(await emergencyApi.accessByToken(token));
+      set({ publicProfile, isLoadingPublicProfile: false });
+      return publicProfile;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load emergency profile.");
+      set({ isLoadingPublicProfile: false, error: message });
+      throw error;
+    }
   },
   clearPublicProfile: () => set({ publicProfile: null, isLoadingPublicProfile: false }),
   clearCreatedToken: () => set({ createdToken: null }),

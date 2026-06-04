@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { consentApi } from "../api/consentApi";
+import { consentApi } from "../api/consent/consentApi";
 import {
   mapAccessRequestDto,
   mapActivePermissionFromHistory,
@@ -13,7 +13,7 @@ import type {
   ConsentReviewForm,
   ConsentScope,
 } from "../types/consent";
-import { apiWrapperMissing, getErrorMessage } from "./storeUtils";
+import { getErrorMessage } from "./storeUtils";
 
 type ConsentStore = {
   pendingRequests: AccessRequest[];
@@ -74,35 +74,76 @@ export const useConsentStore = create<ConsentStore>((set) => ({
     }
   },
   reviewAccessRequest: async (requestId, form) => {
-    mapConsentReviewFormToDto(form);
-    const error = apiWrapperMissing(`reviewAccessRequest(${requestId})`);
-    set({ reviewingRequestId: null, error: error.message });
-    throw error;
+    set({ reviewingRequestId: requestId, error: null });
+    try {
+      await consentApi.reviewAccessRequest(requestId, mapConsentReviewFormToDto(form));
+      set((state) => ({
+        pendingRequests: state.pendingRequests.filter((request) => request.id !== requestId),
+        reviewingRequestId: null,
+      }));
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to review access request.");
+      set({ reviewingRequestId: null, error: message });
+      throw error;
+    }
   },
   approveRequest: async (requestId, scopes, expiresInDays = "30") => {
-    mapConsentReviewFormToDto({
-      action: "approved",
-      approvedScopes: scopes,
-      expiresInDays,
-    });
-    const error = apiWrapperMissing(`approveRequest(${requestId})`);
-    set({ reviewingRequestId: null, error: error.message });
-    throw error;
+    set({ reviewingRequestId: requestId, error: null });
+    try {
+      await consentApi.reviewAccessRequest(
+        requestId,
+        mapConsentReviewFormToDto({
+          action: "approved",
+          approvedScopes: scopes,
+          expiresInDays,
+        }),
+      );
+      set((state) => ({
+        pendingRequests: state.pendingRequests.filter((request) => request.id !== requestId),
+        reviewingRequestId: null,
+      }));
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to approve access request.");
+      set({ reviewingRequestId: null, error: message });
+      throw error;
+    }
   },
   rejectRequest: async (requestId) => {
-    mapConsentReviewFormToDto({
-      action: "rejected",
-      approvedScopes: [],
-      expiresInDays: "",
-    });
-    const error = apiWrapperMissing(`rejectRequest(${requestId})`);
-    set({ reviewingRequestId: null, error: error.message });
-    throw error;
+    set({ reviewingRequestId: requestId, error: null });
+    try {
+      await consentApi.reviewAccessRequest(
+        requestId,
+        mapConsentReviewFormToDto({
+          action: "rejected",
+          approvedScopes: [],
+          expiresInDays: "",
+        }),
+      );
+      set((state) => ({
+        pendingRequests: state.pendingRequests.filter((request) => request.id !== requestId),
+        reviewingRequestId: null,
+      }));
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to reject access request.");
+      set({ reviewingRequestId: null, error: message });
+      throw error;
+    }
   },
   revokeDoctorPermission: async (doctorId) => {
-    const error = apiWrapperMissing(`revokeDoctorPermission(${doctorId})`);
-    set({ revokingDoctorId: null, error: error.message });
-    throw error;
+    set({ revokingDoctorId: doctorId, error: null });
+    try {
+      await consentApi.revokeDoctorPermission(doctorId);
+      set((state) => ({
+        activePermissions: state.activePermissions.filter(
+          (permission) => permission.doctorId !== doctorId,
+        ),
+        revokingDoctorId: null,
+      }));
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to revoke doctor permission.");
+      set({ revokingDoctorId: null, error: message });
+      throw error;
+    }
   },
   setSelectedScopes: (scopes) => set({ selectedScopes: scopes }),
   clearError: () => set({ error: null }),

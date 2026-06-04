@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { healthMetricsApi } from "../api/healthMetricsApi";
+import { healthMetricsApi } from "../api/health_metrics/healthMetricsApi";
 import {
   mapHealthMetricDto,
   mapHealthMetricFiltersToParams,
@@ -11,7 +11,7 @@ import type {
   HealthMetricFilters,
   HealthMetricForm,
 } from "../types/healthMetrics";
-import { apiWrapperMissing, getErrorMessage } from "./storeUtils";
+import { getErrorMessage } from "./storeUtils";
 
 type HealthMetricsStore = {
   items: HealthMetric[];
@@ -64,10 +64,23 @@ export const useHealthMetricsStore = create<HealthMetricsStore>((set) => ({
       throw error;
     }
   },
-  loadPatientMetrics: async () => {
-    const error = apiWrapperMissing("loadPatientMetrics(patientId)");
-    set({ error: error.message });
-    throw error;
+  loadPatientMetrics: async (patientId, filters = {}) => {
+    set({ isLoading: true, error: null, filters: { ...filters, patientId } });
+    try {
+      const data = await healthMetricsApi.list(filters.start, filters.end, patientId);
+      const items = data.map(mapHealthMetricDto);
+      set({
+        items,
+        latest: items[0] ?? null,
+        chartData: toChartData(items),
+        isLoading: false,
+      });
+      return items;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load patient health metrics.");
+      set({ isLoading: false, error: message });
+      throw error;
+    }
   },
   createMetric: async (form) => {
     set({ isCreating: true, error: null });

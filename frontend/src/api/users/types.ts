@@ -2,10 +2,10 @@ export interface UserProfileResponse {
   id: string;
   full_name: string;
   gender: string;
-  date_of_birth?: string;
-  blood_type?: string;
-  allergies?: string;
-  emergency_contact?: string;
+  date_of_birth?: string | null;
+  blood_type?: string | null;
+  allergies?: string | null;
+  emergency_contact?: string | null;
   privacy_settings: {
     show_blood_type: boolean;
     show_allergies: boolean;
@@ -14,12 +14,12 @@ export interface UserProfileResponse {
 }
 
 export interface UserProfileUpdateRequest {
-  full_name?: string;
-  gender?: string;
-  date_of_birth?: string;
-  blood_type?: string;
-  allergies?: string;
-  emergency_contact?: string;
+  full_name?: string | null;
+  gender?: string | null;
+  date_of_birth?: string | null;
+  blood_type?: string | null;
+  allergies?: string | null;
+  emergency_contact?: string | null;
 }
 
 export interface PrivacyUpdateRequest {
@@ -29,6 +29,7 @@ export interface PrivacyUpdateRequest {
 }
 
 export interface AccessHistoryItem {
+  id: string;
   doctor_name: string;
   action: string;
   data_type: string;
@@ -40,4 +41,9 @@ export interface DoctorPublicResponse {
   full_name: string;
   specialty: string;
   hospital: string;
+}
+
+export interface DoctorSearchRequest {
+  name?: string;
+  specialty?: string;
 }

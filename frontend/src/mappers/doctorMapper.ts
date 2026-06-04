@@ -4,6 +4,7 @@ import type {
   RequestAccessForm,
   RequestAccessResult,
 } from "../types/doctor";
+import type { RequestAccessRequest } from "../api/doctors/types";
 import { asNullableString, asRecord, asString, compactPayload } from "./common";
 
 export function mapPatientSearchResultDto(dto: unknown): PatientSearchResult {
@@ -29,12 +30,12 @@ export function mapPatientProfileDto(dto: unknown): PatientProfile {
   };
 }
 
-export function mapRequestAccessFormToDto(form: RequestAccessForm) {
-  return compactPayload({
+export function mapRequestAccessFormToDto(form: RequestAccessForm): RequestAccessRequest {
+  return {
     patient_id: form.patientId,
     requested_scope: form.requestedScopes,
     reason: form.reason,
-  });
+  };
 }
 
 export function mapRequestAccessResultDto(dto: unknown): RequestAccessResult {

@@ -1,4 +1,5 @@
 import type { MedicalRecord, MedicalRecordForm } from "../types/medicalRecord";
+import type { MedicalRecordCreateRequest } from "../api/medical_records/types";
 import { asArray, asNullableString, asRecord, asString, compactPayload, emptyToNull } from "./common";
 
 export function mapMedicalRecordDto(dto: unknown): MedicalRecord {
@@ -19,11 +20,11 @@ export function mapMedicalRecordDto(dto: unknown): MedicalRecord {
   };
 }
 
-export function mapMedicalRecordFormToDto(form: MedicalRecordForm) {
-  return compactPayload({
+export function mapMedicalRecordFormToDto(form: MedicalRecordForm): MedicalRecordCreateRequest {
+  return {
     patient_id: form.patientId,
     diagnosis: form.diagnosis,
     notes: emptyToNull(form.notes),
     attachments: form.attachments ?? [],
-  });
+  };
 }

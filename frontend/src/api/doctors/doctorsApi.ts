@@ -1,26 +1,26 @@
-import { apiClient } from '../apiClient';
-import { 
-    PatientProfileResponse,
-    PatientPublicResponse,
-    RequestAccessRequest,
-    RequestAccessResponse,
- } from './types';
+import { apiClient } from "../apiClient";
+import type {
+  PatientProfileResponse,
+  PatientPublicResponse,
+  RequestAccessRequest,
+  RequestAccessResponse,
+} from "./types";
 
 export const doctorsApi = {
-  searchPatients: async (query: string) => {
-    const resp = await apiClient.get('/doctors/search-patients', {
-      params: { q: query },
+  searchPatients: async (phoneNumber: string): Promise<PatientPublicResponse[]> => {
+    const response = await apiClient.get<PatientPublicResponse[]>("/doctors/search-patients", {
+      params: { phone_number: phoneNumber },
     });
-    return resp.data;
+    return response.data;
   },
 
-  getPatientDetail: async (patient_id: string): Promise<PatientProfileResponse> => {
-    const resp = await apiClient.get(`/doctors/patients/${patient_id}`);
-    return resp.data;
+  getPatientDetail: async (patientId: string): Promise<PatientProfileResponse> => {
+    const response = await apiClient.get<PatientProfileResponse>(`/doctors/patients/${patientId}`);
+    return response.data;
   },
 
   requestAccess: async (data: RequestAccessRequest): Promise<RequestAccessResponse> => {
-    const resp = await apiClient.post('/doctors/request-access', data);
-    return resp.data;
+    const response = await apiClient.post<RequestAccessResponse>("/doctors/request-access", data);
+    return response.data;
   },
 };

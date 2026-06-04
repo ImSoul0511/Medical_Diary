@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { userApi } from "../api/userApi";
+import { userApi } from "../api/users/userApi";
 import {
   mapAccessHistoryItemDto,
   mapDoctorPublicProfileDto,
@@ -14,7 +14,7 @@ import type {
   UserProfile,
   UserProfileForm,
 } from "../types/users";
-import { apiWrapperMissing, getErrorMessage } from "./storeUtils";
+import { getErrorMessage } from "./storeUtils";
 
 type UserStore = {
   profile: UserProfile | null;
@@ -122,19 +122,35 @@ export const useUserStore = create<UserStore>((set, get) => ({
     }
   },
   loadAccessHistory: async () => {
-    const error = apiWrapperMissing("loadAccessHistory()");
-    set({ isLoadingAccessHistory: false, error: error.message });
-    throw error;
+    set({ isLoadingAccessHistory: true, error: null });
+    try {
+      const accessHistory = (await userApi.getAccessHistory()).map(mapAccessHistoryItemDto);
+      set({ accessHistory, isLoadingAccessHistory: false });
+      return accessHistory;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load access history.");
+      set({ isLoadingAccessHistory: false, error: message });
+      throw error;
+    }
   },
-  searchDoctors: async () => {
-    const error = apiWrapperMissing("searchDoctors(filters)");
-    set({ isSearchingDoctors: false, error: error.message });
-    throw error;
+  searchDoctors: async (filters) => {
+    set({ isSearchingDoctors: true, error: null });
+    try {
+      const doctorSearchResults = (await userApi.searchDoctors(filters)).map(
+        mapDoctorPublicProfileDto,
+      );
+      set({ doctorSearchResults, isSearchingDoctors: false });
+      return doctorSearchResults;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to search doctors.");
+      set({ isSearchingDoctors: false, error: message });
+      throw error;
+    }
   },
-  exportData: async (format) => {
+  exportData: async (format, scope = "profile") => {
     set({ isExporting: true, error: null });
     try {
-      const blob = await userApi.exportData(format);
+      const blob = await userApi.exportData(format, scope);
       set({ isExporting: false });
       return blob;
     } catch (error) {

@@ -5,6 +5,7 @@ import type {
   ConsentReviewForm,
   ConsentScope,
 } from "../types/consent";
+import type { AccessRequestActionRequest } from "../api/consent/types";
 import { asArray, asNullableString, asRecord, asString, compactPayload } from "./common";
 
 function mapScopes(value: unknown): ConsentScope[] {
@@ -50,12 +51,12 @@ export function mapActivePermissionFromHistory(item: ConsentHistoryItem): Active
   };
 }
 
-export function mapConsentReviewFormToDto(form: ConsentReviewForm) {
+export function mapConsentReviewFormToDto(form: ConsentReviewForm): AccessRequestActionRequest {
   const expiresInDays = form.expiresInDays.trim() ? Number(form.expiresInDays) : null;
 
-  return compactPayload({
+  return {
     action: form.action,
     approved_scope: form.action === "approved" ? form.approvedScopes : undefined,
     expires_in_days: Number.isFinite(expiresInDays) ? expiresInDays : null,
-  });
+  };
 }

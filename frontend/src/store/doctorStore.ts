@@ -1,12 +1,18 @@
 import { create } from "zustand";
-import { mapRequestAccessFormToDto } from "../mappers/doctorMapper";
+import { doctorsApi } from "../api/doctors/doctorsApi";
+import {
+  mapPatientProfileDto,
+  mapPatientSearchResultDto,
+  mapRequestAccessFormToDto,
+  mapRequestAccessResultDto,
+} from "../mappers/doctorMapper";
 import type {
   PatientProfile,
   PatientSearchResult,
   RequestAccessForm,
   RequestAccessResult,
 } from "../types/doctor";
-import { apiWrapperMissing } from "./storeUtils";
+import { getErrorMessage } from "./storeUtils";
 
 type DoctorStore = {
   patientSearchResults: PatientSearchResult[];
@@ -37,21 +43,45 @@ export const useDoctorStore = create<DoctorStore>((set) => ({
   isLoadingPatient: false,
   isRequestingAccess: false,
   error: null,
-  searchPatients: async () => {
-    const error = apiWrapperMissing("searchPatients(phoneNumber)");
-    set({ isSearching: false, error: error.message });
-    throw error;
+  searchPatients: async (phoneNumber) => {
+    set({ isSearching: true, error: null });
+    try {
+      const patientSearchResults = (await doctorsApi.searchPatients(phoneNumber)).map(
+        mapPatientSearchResultDto,
+      );
+      set({ patientSearchResults, isSearching: false });
+      return patientSearchResults;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to search patients.");
+      set({ isSearching: false, error: message });
+      throw error;
+    }
   },
   loadPatientDetail: async (patientId) => {
-    const error = apiWrapperMissing(`loadPatientDetail(${patientId})`);
-    set({ selectedPatientId: patientId, isLoadingPatient: false, error: error.message });
-    throw error;
+    set({ selectedPatientId: patientId, isLoadingPatient: true, error: null });
+    try {
+      const selectedPatient = mapPatientProfileDto(await doctorsApi.getPatientDetail(patientId));
+      set({ selectedPatient, isLoadingPatient: false });
+      return selectedPatient;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load patient detail.");
+      set({ isLoadingPatient: false, error: message });
+      throw error;
+    }
   },
   requestAccess: async (form) => {
-    mapRequestAccessFormToDto(form);
-    const error = apiWrapperMissing("requestAccess(form)");
-    set({ isRequestingAccess: false, error: error.message });
-    throw error;
+    set({ isRequestingAccess: true, error: null });
+    try {
+      const requestAccessResult = mapRequestAccessResultDto(
+        await doctorsApi.requestAccess(mapRequestAccessFormToDto(form)),
+      );
+      set({ requestAccessResult, isRequestingAccess: false });
+      return requestAccessResult;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to request access.");
+      set({ isRequestingAccess: false, error: message });
+      throw error;
+    }
   },
   setRequestAccessDraft: (draft) => set({ requestAccessDraft: draft }),
   clearSearch: () => set({ patientSearchResults: [], error: null }),

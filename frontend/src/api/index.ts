@@ -1,9 +1,8 @@
 /**
  * API Layer - Central Export
- * Provides clean access to all API endpoints
+ * Exposes module-level endpoint wrappers. Keep apiClient private to this layer.
  */
 
-export { apiClient } from './apiClient';
 export { authApi } from './auth/authApi';
 export { userApi } from './users/userApi';
 export { diaryApi } from './diaries/diaryApi';

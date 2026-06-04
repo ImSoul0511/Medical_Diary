@@ -3,10 +3,10 @@ export interface ConsentHistoryItem {
   doctor_name: string;
   scope: string[];
   granted_at: string;
-  expires_at?: string;
+  expires_at?: string | null;
 }
 
-export  interface AccessRequestItem {
+export interface AccessRequestItem {
   request_id: string;
   doctor_id: string;
   doctor_name: string;
@@ -17,7 +17,7 @@ export  interface AccessRequestItem {
 }
 
 export interface AccessRequestActionRequest {
-  action: 'approved' | 'rejected';
-  approval_scope?: string[];
-  expires_in_days?: number;
+  action: "approved" | "rejected";
+  approved_scope?: string[];
+  expires_in_days?: number | null;
 }

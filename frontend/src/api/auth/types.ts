@@ -7,11 +7,16 @@ export interface UserBrief {
   id: string;
   role: string;
 }
-  
+
 export interface LoginResponse {
   access_token: string;
   token_type: "bearer";
   user: UserBrief;
+}
+
+export interface RefreshResponse {
+  access_token: string;
+  token_type: "bearer";
 }
 
 export interface RegisterRequest {
@@ -28,6 +33,7 @@ export interface RegisterDoctorRequest extends RegisterRequest {
   license_number: string;
   specialty: string;
   hospital: string;
+  certificate_file?: File | null;
 }
 
 export interface RegisterDoctorResponse {
