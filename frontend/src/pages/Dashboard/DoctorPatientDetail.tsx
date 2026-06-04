@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Activity, FileText, HeartPulse, NotebookText, Pill } from "lucide-react";
 import {
   CartesianGrid,
@@ -8,26 +9,47 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
 import { Card } from "../../components/Card";
 import { DataTable, type DataTableColumn } from "../../components/DataTable";
 import { ROUTES } from "../../constants/routes";
-import { mockProfile } from "../../constants/mockData";
-import { useMedicalStore } from "../../store/medicalStore";
-import type { DiaryEntry, MedicalRecord } from "../../types/medical";
+import { useDiaryStore } from "../../store/diaryStore";
+import { useDoctorStore } from "../../store/doctorStore";
+import { useHealthMetricsStore } from "../../store/healthMetricsStore";
+import { useMedicalRecordStore } from "../../store/medicalRecordStore";
+import { usePrescriptionStore } from "../../store/prescriptionStore";
+import type { DiaryEntry } from "../../types/diary";
+import type { MedicalRecord } from "../../types/medicalRecord";
 import { formatDate, formatDateTime } from "../../utils/date";
 
 export function DoctorPatientDetail() {
-  const healthMetrics = useMedicalStore((state) => state.healthMetrics);
-  const diaries = useMedicalStore((state) => state.diaries);
-  const medicalRecords = useMedicalStore((state) => state.medicalRecords);
-  const prescriptions = useMedicalStore((state) => state.prescriptions);
+  const { patientId = "" } = useParams();
+  const patient = useDoctorStore((state) => state.selectedPatient);
+  const loadPatientDetail = useDoctorStore((state) => state.loadPatientDetail);
+  const doctorError = useDoctorStore((state) => state.error);
+  const healthMetrics = useHealthMetricsStore((state) => state.items);
+  const loadPatientMetrics = useHealthMetricsStore((state) => state.loadPatientMetrics);
+  const diaries = useDiaryStore((state) => state.items);
+  const loadPatientDiaries = useDiaryStore((state) => state.loadPatientDiaries);
+  const medicalRecords = useMedicalRecordStore((state) => state.patientRecords);
+  const loadPatientRecords = useMedicalRecordStore((state) => state.loadPatientRecords);
+  const prescriptions = usePrescriptionStore((state) => state.prescriptions);
+  const loadPrescriptions = usePrescriptionStore((state) => state.loadPrescriptions);
   const chartData = healthMetrics.map((metric) => ({
     day: formatDate(metric.recordedAt, "dd/MM"),
     heartRate: metric.heartRate,
   }));
+
+  useEffect(() => {
+    if (!patientId) return;
+    void loadPatientDetail(patientId).catch(() => undefined);
+    void loadPatientMetrics(patientId).catch(() => undefined);
+    void loadPatientDiaries(patientId).catch(() => undefined);
+    void loadPatientRecords(patientId).catch(() => undefined);
+    void loadPrescriptions().catch(() => undefined);
+  }, [loadPatientDetail, loadPatientDiaries, loadPatientMetrics, loadPatientRecords, loadPrescriptions, patientId]);
 
   const diaryColumns: DataTableColumn<DiaryEntry>[] = [
     { key: "time", header: "Thời gian", render: (row) => formatDateTime(row.createdAt) },
@@ -40,14 +62,14 @@ export function DoctorPatientDetail() {
   ];
 
   const recordColumns: DataTableColumn<MedicalRecord>[] = [
-    { key: "title", header: "Hồ sơ", render: (row) => row.title },
-    { key: "doctor", header: "Bác sĩ", render: (row) => row.doctorName },
+    { key: "diagnosis", header: "Hồ sơ", render: (row) => row.diagnosis },
+    { key: "doctor", header: "Bác sĩ", render: (row) => row.doctorName ?? "Không rõ" },
     { key: "date", header: "Ngày", render: (row) => formatDate(row.createdAt) },
   ];
 
   return (
     <AppShell
-      description="Chi tiết bệnh nhân mock sau khi bác sĩ có consent."
+      description="Chi tiết bệnh nhân sau khi bác sĩ có consent hợp lệ."
       role="doctor"
       title="Chi tiết bệnh nhân"
     >
@@ -55,15 +77,15 @@ export function DoctorPatientDetail() {
         <Card padding="lg">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <Badge tone="success">Consent mock active</Badge>
-              <h2 className="mt-3 text-2xl font-semibold text-secondary">{mockProfile.fullName}</h2>
+              <Badge tone={patient ? "success" : "pending"}>{patient ? "Consent active" : "Đang chờ dữ liệu"}</Badge>
+              <h2 className="mt-3 text-2xl font-semibold text-secondary">{patient?.fullName ?? "Chưa có hồ sơ"}</h2>
               <p className="text-sm text-mutedForeground">
-                {mockProfile.phoneNumber} - Nhóm máu {mockProfile.bloodType}
+                {patient ? `Giới tính ${patient.gender} - Nhóm máu ${patient.bloodType ?? "chưa cập nhật"}` : doctorError ?? "Chọn bệnh nhân từ trang tìm kiếm."}
               </p>
             </div>
             <Link
               className="inline-flex h-10 items-center justify-center gap-2 rounded-input bg-accent px-4 text-sm font-medium text-white transition hover:bg-teal-700"
-              to={ROUTES.doctorPrescription}
+              to={patientId ? `/bac-si/tao-don-thuoc/${patientId}` : ROUTES.doctorPrescription}
             >
               <Pill className="h-4 w-4" />
               Tạo đơn thuốc
@@ -73,8 +95,8 @@ export function DoctorPatientDetail() {
 
         <section className="grid gap-4 lg:grid-cols-4">
           {[
-            { Icon: HeartPulse, label: "Nhịp tim", value: `${healthMetrics[0].heartRate} bpm` },
-            { Icon: Activity, label: "Bước chân", value: `${healthMetrics[0].stepCount}` },
+            { Icon: HeartPulse, label: "Nhịp tim", value: `${healthMetrics[0]?.heartRate ?? "--"} bpm` },
+            { Icon: Activity, label: "Bước chân", value: `${healthMetrics[0]?.stepCount ?? "--"}` },
             { Icon: NotebookText, label: "Nhật ký", value: `${diaries.length} bản ghi` },
             { Icon: FileText, label: "Hồ sơ", value: `${medicalRecords.length} hồ sơ` },
           ].map(({ Icon, label, value }) => (
@@ -113,7 +135,9 @@ export function DoctorPatientDetail() {
 
         <Card>
           <h2 className="font-semibold text-secondary">Đơn thuốc gần nhất</h2>
-          <p className="mt-2 text-sm text-mutedForeground">{prescriptions[0]?.title}</p>
+          <p className="mt-2 text-sm text-mutedForeground">
+            {prescriptions[0]?.items.map((item) => item.medicationName).join(", ") || prescriptions[0]?.notes || "Chưa có đơn thuốc."}
+          </p>
         </Card>
       </div>
     </AppShell>

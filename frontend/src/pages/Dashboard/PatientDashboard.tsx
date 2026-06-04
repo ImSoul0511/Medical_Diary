@@ -1,5 +1,4 @@
 import {
-  Activity,
   CalendarClock,
   Footprints,
   HeartPulse,
@@ -7,6 +6,7 @@ import {
   Shield,
   Wind,
 } from "lucide-react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   CartesianGrid,
@@ -24,26 +24,46 @@ import { Card } from "../../components/Card";
 import { QRPreview } from "../../components/QRPreview";
 import { StatCard } from "../../components/StatCard";
 import { ROUTES } from "../../constants/routes";
-import { useMedicalStore } from "../../store/medicalStore";
+import { useDiaryStore } from "../../store/diaryStore";
+import { useHealthMetricsStore } from "../../store/healthMetricsStore";
+import { useMedicalRecordStore } from "../../store/medicalRecordStore";
+import { usePrescriptionStore } from "../../store/prescriptionStore";
 import { useUserStore } from "../../store/userStore";
 import { formatDate } from "../../utils/date";
 import { formatNumber } from "../../utils/format";
 
+function metricValue(value: number | null | undefined) {
+  return value == null ? "--" : String(value);
+}
+
 export function PatientDashboard() {
   const profile = useUserStore((state) => state.profile);
-  const healthMetrics = useMedicalStore((state) => state.healthMetrics);
-  const diaries = useMedicalStore((state) => state.diaries);
-  const medicalRecords = useMedicalStore((state) => state.medicalRecords);
-  const prescriptionLogs = useMedicalStore((state) => state.prescriptionLogs);
-  const updatePrescriptionLogLocal = useMedicalStore((state) => state.updatePrescriptionLogLocal);
+  const loadMe = useUserStore((state) => state.loadMe);
+  const healthMetrics = useHealthMetricsStore((state) => state.items);
+  const loadMetrics = useHealthMetricsStore((state) => state.loadMine);
+  const diaries = useDiaryStore((state) => state.items);
+  const loadDiaries = useDiaryStore((state) => state.loadMine);
+  const medicalRecords = useMedicalRecordStore((state) => state.myRecords);
+  const loadRecords = useMedicalRecordStore((state) => state.loadMine);
+  const prescriptionLogs = usePrescriptionStore((state) => state.todayLogs);
+  const loadPrescriptions = usePrescriptionStore((state) => state.loadPrescriptions);
+  const updateLogStatus = usePrescriptionStore((state) => state.updateLogStatus);
 
-  const latestMetric = healthMetrics[healthMetrics.length - 1];
+  useEffect(() => {
+    void loadMe().catch(() => undefined);
+    void loadMetrics().catch(() => undefined);
+    void loadDiaries().catch(() => undefined);
+    void loadRecords().catch(() => undefined);
+    void loadPrescriptions().catch(() => undefined);
+  }, [loadDiaries, loadMe, loadMetrics, loadPrescriptions, loadRecords]);
+
+  const latestMetric = healthMetrics[0];
   const takenCount = prescriptionLogs.filter((log) => log.status === "taken").length;
-  const medicationProgress = `${takenCount}/${prescriptionLogs.length}`;
+  const medicationProgress =
+    prescriptionLogs.length > 0 ? `${takenCount}/${prescriptionLogs.length}` : "0/0";
   const chartData = healthMetrics.map((metric) => ({
     day: formatDate(metric.recordedAt, "dd/MM"),
     heartRate: metric.heartRate,
-    steps: metric.stepCount,
     respiratoryRate: metric.respiratoryRate,
   }));
 
@@ -58,20 +78,21 @@ export function PatientDashboard() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm text-white/75">Xin chào</p>
-              <h2 className="mt-1 text-2xl font-semibold">{profile.fullName}</h2>
+              <h2 className="mt-1 text-2xl font-semibold">
+                {profile?.fullName ?? "Đang tải hồ sơ"}
+              </h2>
               <p className="mt-2 max-w-2xl text-sm text-white/80">
-                Dữ liệu trong bản UI này là mock local state. Các hành động chỉ cập nhật giao
-                diện để bạn review flow trước khi tự nối API.
+                Dữ liệu được tải qua store và API wrapper. Khi backend chưa có dữ liệu, trang sẽ hiển thị trạng thái trống.
               </p>
             </div>
-            <QRPreview compact label="Public QR mock" token="patient-dashboard" />
+            <QRPreview compact label="Public QR" token="patient-dashboard" />
           </div>
         </section>
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard icon={HeartPulse} label="Nhịp tim" trend="stable" unit="bpm" value={`${latestMetric.heartRate}`} />
-          <StatCard icon={Activity} label="Huyết áp" tone="accent" unit="mmHg" value={`${latestMetric.systolic}/${latestMetric.diastolic}`} />
-          <StatCard icon={Footprints} label="Bước chân" tone="success" unit="bước" value={formatNumber(latestMetric.stepCount)} />
+          <StatCard icon={HeartPulse} label="Nhịp tim" trend="stable" unit="bpm" value={metricValue(latestMetric?.heartRate)} />
+          <StatCard icon={Wind} label="Nhịp thở" tone="accent" unit="lần/phút" value={metricValue(latestMetric?.respiratoryRate)} />
+          <StatCard icon={Footprints} label="Bước chân" tone="success" unit="bước" value={latestMetric?.stepCount == null ? "--" : formatNumber(latestMetric.stepCount)} />
           <StatCard icon={Pill} label="Thuốc hôm nay" tone="warning" value={medicationProgress} />
         </section>
 
@@ -80,9 +101,9 @@ export function PatientDashboard() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-secondary">Xu hướng sức khỏe</h2>
-                <p className="text-sm text-mutedForeground">Nhịp tim và nhịp thở 6 ngày gần nhất.</p>
+                <p className="text-sm text-mutedForeground">Nhịp tim và nhịp thở theo thời gian.</p>
               </div>
-              <Badge tone="info">Mock chart</Badge>
+              <Badge tone="info">API data</Badge>
             </div>
             <div className="h-64">
               <ResponsiveContainer height="100%" width="100%">
@@ -102,17 +123,22 @@ export function PatientDashboard() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-secondary">Thuốc hôm nay</h2>
-                <p className="text-sm text-mutedForeground">Cập nhật trạng thái cục bộ.</p>
+                <p className="text-sm text-mutedForeground">Cập nhật trạng thái dùng thuốc.</p>
               </div>
               <Pill className="h-5 w-5 text-warning" />
             </div>
             <div className="space-y-3">
+              {prescriptionLogs.length === 0 ? (
+                <p className="text-sm text-mutedForeground">Chưa có lịch uống thuốc.</p>
+              ) : null}
               {prescriptionLogs.map((log) => (
                 <div className="rounded-card border border-border p-3" key={log.id}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-medium text-secondary">{log.medicineName}</p>
-                      <p className="text-xs text-mutedForeground">{formatDate(log.scheduledAt, "HH:mm dd/MM")}</p>
+                      <p className="font-medium text-secondary">Lịch uống thuốc</p>
+                      <p className="text-xs text-mutedForeground">
+                        {log.scheduledTime} {formatDate(log.scheduledDate)}
+                      </p>
                     </div>
                     <Badge tone={log.status === "taken" ? "success" : "pending"}>
                       {log.status === "taken" ? "Đã uống" : "Chưa uống"}
@@ -120,9 +146,9 @@ export function PatientDashboard() {
                   </div>
                   <Button
                     className="mt-3 w-full"
-                    onClick={() =>
-                      updatePrescriptionLogLocal(log.id, log.status === "taken" ? "untaken" : "taken")
-                    }
+                    onClick={() => {
+                      void updateLogStatus(log.id, log.status === "taken" ? "untaken" : "taken");
+                    }}
                     size="sm"
                     variant={log.status === "taken" ? "outline" : "success"}
                   >
@@ -149,7 +175,9 @@ export function PatientDashboard() {
               <Wind className="h-5 w-5 text-accent" />
               <div>
                 <h3 className="font-semibold text-secondary">Hồ sơ mới</h3>
-                <p className="text-sm text-mutedForeground">{medicalRecords[0]?.title}</p>
+                <p className="text-sm text-mutedForeground">
+                  {medicalRecords[0]?.diagnosis ?? "Chưa có hồ sơ bệnh án."}
+                </p>
               </div>
             </div>
           </Card>
@@ -159,7 +187,7 @@ export function PatientDashboard() {
               <div>
                 <h3 className="font-semibold text-secondary">Quyền riêng tư</h3>
                 <p className="text-sm text-mutedForeground">
-                  {profile.privacySettings.showEmergencyContact ? "Có SĐT khẩn cấp" : "Ẩn SĐT khẩn cấp"}
+                  {profile?.privacySettings.showEmergencyContact ? "Có SĐT khẩn cấp" : "Ẩn SĐT khẩn cấp"}
                 </p>
               </div>
             </div>

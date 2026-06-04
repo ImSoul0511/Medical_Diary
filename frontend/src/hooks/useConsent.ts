@@ -3,15 +3,21 @@ import { useConsentStore } from "../store/consentStore";
 export function useConsent() {
   const pendingRequests = useConsentStore((state) => state.pendingRequests);
   const activePermissions = useConsentStore((state) => state.activePermissions);
-  const approveRequestLocal = useConsentStore((state) => state.approveRequestLocal);
-  const rejectRequestLocal = useConsentStore((state) => state.rejectRequestLocal);
-  const revokeDoctorLocal = useConsentStore((state) => state.revokeDoctorLocal);
+  const loadAccessRequests = useConsentStore((state) => state.loadAccessRequests);
+  const loadHistory = useConsentStore((state) => state.loadHistory);
+  const approveRequest = useConsentStore((state) => state.approveRequest);
+  const rejectRequest = useConsentStore((state) => state.rejectRequest);
+  const revokeDoctorPermission = useConsentStore((state) => state.revokeDoctorPermission);
+  const error = useConsentStore((state) => state.error);
 
   return {
     pendingRequests,
     activePermissions,
-    approveRequestLocal,
-    rejectRequestLocal,
-    revokeDoctorLocal,
+    loadAccessRequests,
+    loadHistory,
+    approveRequest,
+    rejectRequest,
+    revokeDoctorPermission,
+    error,
   };
 }

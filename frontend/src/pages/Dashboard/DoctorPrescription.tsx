@@ -1,30 +1,37 @@
 import { FormEvent, useState } from "react";
 import { Plus, Save, Trash2 } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { FormInput } from "../../components/FormInput";
+import { usePrescriptionStore } from "../../store/prescriptionStore";
 import { useUiStore } from "../../store/uiStore";
 
 type MedicineRow = {
   id: string;
-  name: string;
+  medicationName: string;
   dosage: string;
-  schedule: string;
+  scheduledTimes: string;
   durationDays: number;
 };
 
 export function DoctorPrescription() {
+  const { patientId = "" } = useParams();
   const showToast = useUiStore((state) => state.showToast);
-  const [diagnosis, setDiagnosis] = useState("Theo dõi huyết áp và đường huyết định kỳ.");
+  const createPrescription = usePrescriptionStore((state) => state.createPrescription);
+  const addPrescriptionItem = usePrescriptionStore((state) => state.addPrescriptionItem);
+  const error = usePrescriptionStore((state) => state.error);
+  const isCreating = usePrescriptionStore((state) => state.isCreatingPrescription);
+  const [notes, setNotes] = useState("Theo dõi điều trị và tái khám đúng lịch.");
   const [rows, setRows] = useState<MedicineRow[]>([
     {
       id: "medicine-1",
-      name: "Amlodipine 5mg",
-      dosage: "1 viên",
-      schedule: "Sáng",
-      durationDays: 30,
+      medicationName: "",
+      dosage: "",
+      scheduledTimes: "08:00",
+      durationDays: 7,
     },
   ]);
 
@@ -34,12 +41,32 @@ export function DoctorPrescription() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    showToast("Đơn thuốc mock đã được lưu cục bộ. Chưa gọi API.");
+    if (!patientId) return;
+
+    void createPrescription({ patientId, notes })
+      .then(async (prescription) => {
+        for (const row of rows) {
+          if (!row.medicationName.trim()) continue;
+          await addPrescriptionItem(prescription.id, {
+            medicationName: row.medicationName,
+            dosage: row.dosage,
+            durationDays: row.durationDays,
+            scheduledTimes: row.scheduledTimes
+              .split(",")
+              .map((time) => time.trim())
+              .filter(Boolean),
+            startDate: new Date().toISOString().slice(0, 10),
+            customLogs: [],
+          });
+        }
+        showToast("Đã gửi đơn thuốc.");
+      })
+      .catch(() => undefined);
   }
 
   return (
     <AppShell
-      description="Prescription builder UI, chưa gửi đơn thuốc tới backend."
+      description="Prescription builder gửi dữ liệu qua prescription store."
       role="doctor"
       title="Tạo đơn thuốc"
     >
@@ -47,24 +74,25 @@ export function DoctorPrescription() {
         <Card padding="lg">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <Badge tone="pending">Ready for manual API later</Badge>
-              <h2 className="mt-3 text-lg font-semibold text-secondary">Chẩn đoán và ghi chú</h2>
+              <Badge tone={patientId ? "info" : "pending"}>{patientId ? "Ready" : "Thiếu patient id"}</Badge>
+              <h2 className="mt-3 text-lg font-semibold text-secondary">Ghi chú đơn thuốc</h2>
               <p className="mt-1 text-sm text-mutedForeground">
-                Submit hiện tại chỉ tạo toast local.
+                Thuốc sẽ được tạo qua backend khi API wrapper prescription item sẵn sàng.
               </p>
             </div>
-            <Button leftIcon={<Save className="h-4 w-4" />} type="submit" variant="success">
-              Lưu mock
+            <Button disabled={isCreating || !patientId} leftIcon={<Save className="h-4 w-4" />} type="submit" variant="success">
+              Lưu đơn thuốc
             </Button>
           </div>
           <label className="mt-5 block">
-            <span className="mb-1.5 block text-sm font-medium text-secondary">Chẩn đoán</span>
+            <span className="mb-1.5 block text-sm font-medium text-secondary">Ghi chú</span>
             <textarea
               className="min-h-24 w-full rounded-input border border-border px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
-              onChange={(event) => setDiagnosis(event.target.value)}
-              value={diagnosis}
+              onChange={(event) => setNotes(event.target.value)}
+              value={notes}
             />
           </label>
+          {error ? <p className="mt-3 text-sm text-emergency">{error}</p> : null}
         </Card>
 
         <Card padding="lg">
@@ -77,9 +105,9 @@ export function DoctorPrescription() {
                   ...current,
                   {
                     id: `medicine-${Date.now()}`,
-                    name: "",
+                    medicationName: "",
                     dosage: "",
-                    schedule: "Sáng",
+                    scheduledTimes: "08:00",
                     durationDays: 7,
                   },
                 ])
@@ -93,9 +121,9 @@ export function DoctorPrescription() {
           <div className="space-y-4">
             {rows.map((row) => (
               <div className="grid gap-3 rounded-card border border-border p-4 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.6fr_auto]" key={row.id}>
-                <FormInput label="Tên thuốc" onChange={(event) => updateRow(row.id, { name: event.target.value })} value={row.name} />
+                <FormInput label="Tên thuốc" onChange={(event) => updateRow(row.id, { medicationName: event.target.value })} value={row.medicationName} />
                 <FormInput label="Liều dùng" onChange={(event) => updateRow(row.id, { dosage: event.target.value })} value={row.dosage} />
-                <FormInput label="Lịch uống" onChange={(event) => updateRow(row.id, { schedule: event.target.value })} value={row.schedule} />
+                <FormInput label="Giờ uống" helperText="Có thể nhập nhiều giờ, cách nhau bằng dấu phẩy." onChange={(event) => updateRow(row.id, { scheduledTimes: event.target.value })} value={row.scheduledTimes} />
                 <FormInput label="Số ngày" onChange={(event) => updateRow(row.id, { durationDays: Number(event.target.value) })} type="number" value={row.durationDays} />
                 <div className="flex items-end">
                   <Button

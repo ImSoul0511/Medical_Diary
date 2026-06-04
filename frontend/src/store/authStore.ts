@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { authApi } from "../api/authApi";
-import type { AuthUser, Role } from "../types/auth";
+import type { AuthUser, RegisterDoctorForm, RegisterPatientForm, Role } from "../types/auth";
 
 type AuthStore = {
   selectedRole: Role;
@@ -11,6 +11,8 @@ type AuthStore = {
   isAuthenticated: boolean;
   isHydrated: boolean;
   login: (role: Role, email: string, password: string) => Promise<AuthUser>;
+  registerPatient: (form: RegisterPatientForm) => Promise<void>;
+  registerDoctor: (form: RegisterDoctorForm) => Promise<void>;
   refreshSession: () => Promise<string>;
   logout: () => Promise<void>;
   setAccessToken: (accessToken: string | null) => void;
@@ -74,6 +76,31 @@ export const useAuthStore = create<AuthStore>((set) => ({
       });
       throw error;
     }
+  },
+  registerPatient: async (form) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authApi.register({
+        email: form.email,
+        phone_number: form.phoneNumber,
+        password: form.password,
+        full_name: form.fullName,
+        gender: form.gender,
+        date_of_birth: form.dateOfBirth,
+      });
+      set({ isLoading: false, error: null });
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error?.message ?? "Register failed.",
+      });
+      throw error;
+    }
+  },
+  registerDoctor: async () => {
+    const error = new Error("Doctor registration API wrapper is not available yet.");
+    set({ isLoading: false, error: error.message });
+    throw error;
   },
   refreshSession: async () => {
     if (refreshSessionPromise) return refreshSessionPromise;

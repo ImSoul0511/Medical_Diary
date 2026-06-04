@@ -1,23 +1,27 @@
-/**
- * Tệp: frontend/src/types/auth.ts
- * Mục đích: Các kiểu TypeScript liên quan đến xác thực được dùng chung trong frontend.
- * Kiểu: `Role`, `MockUser`, `LoginForm`, v.v.
- */
-
+import { Gender } from "./users";
 export type Role = "user" | "doctor" | "admin";
 
 export type RoleTheme = "patient" | "doctor" | "admin";
+
+export type RegisterMode = "patient" | "doctor";
 
 export type AuthUser = {
   id: string;
   role: Role;
   fullName: string;
-  email: string;
-  subtitle: string;
+  email?: string;
+  subtitle?: string;
   initials: string;
 };
 
-export type MockUser = AuthUser;
+export type AuthSession = {
+  sessionId: string;
+  userID: string;
+  createdAt: string; 
+  updatedAt: string; 
+  userAgent: string; 
+  ip: string; 
+};
 
 export type LoginForm = {
   email: string;
@@ -25,4 +29,19 @@ export type LoginForm = {
   role: Role;
 };
 
-export type RegisterMode = "patient" | "doctor";
+export type RegisterPatientForm = {
+  email: string;
+  phoneNumber: string;
+  password: string;
+  fullName: string;
+  gender: Gender;
+  dateOfBirth: string;
+}
+
+export type RegisterDoctorForm = RegisterPatientForm & {
+  cccd: string;
+  licenseNumber: string;
+  specialty: string; 
+  hospital: string;
+  certificateFile: File | null;
+}

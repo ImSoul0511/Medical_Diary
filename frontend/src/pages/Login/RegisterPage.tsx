@@ -5,17 +5,49 @@ import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { FormInput } from "../../components/FormInput";
 import { ROUTES } from "../../constants/routes";
+import { useAuthStore } from "../../store/authStore";
+import type { Gender } from "../../types/users";
 import type { RegisterMode } from "../../types/auth";
 import { cn } from "../../utils/cn";
 
+const defaultGender: Gender = "male";
+
 export function RegisterPage() {
   const navigate = useNavigate();
+  const registerPatient = useAuthStore((state) => state.registerPatient);
+  const registerDoctor = useAuthStore((state) => state.registerDoctor);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const error = useAuthStore((state) => state.error);
   const [mode, setMode] = useState<RegisterMode>("patient");
   const [submitted, setSubmitted] = useState(false);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubmitted(true);
+    const formData = new FormData(event.currentTarget);
+    const base = {
+      email: String(formData.get("email") ?? ""),
+      phoneNumber: String(formData.get("phoneNumber") ?? ""),
+      password: String(formData.get("password") ?? ""),
+      fullName: String(formData.get("fullName") ?? ""),
+      gender: String(formData.get("gender") ?? defaultGender) as Gender,
+      dateOfBirth: String(formData.get("dateOfBirth") ?? ""),
+    };
+
+    const action =
+      mode === "doctor"
+        ? registerDoctor({
+            ...base,
+            cccd: String(formData.get("cccd") ?? ""),
+            licenseNumber: String(formData.get("licenseNumber") ?? ""),
+            specialty: String(formData.get("specialty") ?? ""),
+            hospital: String(formData.get("hospital") ?? ""),
+            certificateFile: (formData.get("certificateFile") as File | null) ?? null,
+          })
+        : registerPatient(base);
+
+    void action
+      .then(() => setSubmitted(true))
+      .catch(() => undefined);
   }
 
   return (
@@ -31,8 +63,7 @@ export function RegisterPage() {
             <HeartPulse className="h-10 w-10 text-primary" />
             <h1 className="mt-6 text-2xl font-semibold">Đăng ký Medical Diary</h1>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              Form này chỉ mô phỏng UI. Khi nối API thủ công, patient dùng JSON, doctor dùng
-              FormData và không set Content-Type bằng tay.
+              Bệnh nhân đăng ký qua backend auth. Đăng ký bác sĩ cần wrapper multipart cho `/auth/register-doctor`.
             </p>
           </Card>
 
@@ -64,7 +95,7 @@ export function RegisterPage() {
                   {mode === "doctor" ? "Hồ sơ bác sĩ đang chờ duyệt" : "Tạo tài khoản thành công"}
                 </h2>
                 <p className="mt-2 text-sm">
-                  Đây là trạng thái mock. Bạn có thể quay về đăng nhập để tiếp tục xem UI.
+                  Bạn có thể quay về đăng nhập sau khi backend hoàn tất xử lý tài khoản.
                 </p>
                 <Button className="mt-4" onClick={() => navigate(ROUTES.login)}>
                   Về đăng nhập
@@ -72,30 +103,42 @@ export function RegisterPage() {
               </div>
             ) : (
               <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
-                <FormInput label="Họ và tên" name="fullName" placeholder="Nguyễn Văn An" />
-                <FormInput label="Email" name="email" placeholder="email@example.com" />
-                <FormInput label="Số điện thoại" name="phone" placeholder="0987 654 321" />
-                <FormInput label="Ngày sinh" name="dateOfBirth" type="date" />
-                <FormInput label="Mật khẩu" name="password" type="password" />
-                <FormInput label="Xác nhận mật khẩu" name="confirmPassword" type="password" />
+                <FormInput label="Họ và tên" name="fullName" placeholder="Nguyễn Văn An" required />
+                <FormInput label="Email" name="email" placeholder="email@example.com" required type="email" />
+                <FormInput label="Số điện thoại" name="phoneNumber" placeholder="0987654321" required />
+                <FormInput label="Ngày sinh" name="dateOfBirth" required type="date" />
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-medium text-secondary">Giới tính</span>
+                  <select
+                    className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    defaultValue={defaultGender}
+                    name="gender"
+                  >
+                    <option value="male">Nam</option>
+                    <option value="female">Nữ</option>
+                  </select>
+                </label>
+                <FormInput label="Mật khẩu" name="password" required type="password" />
                 {mode === "doctor" ? (
                   <>
-                    <FormInput label="Số giấy phép" name="licenseNumber" placeholder="HCM-2026-..." />
-                    <FormInput label="Chuyên khoa" name="specialty" placeholder="Tim mạch" />
-                    <FormInput label="Bệnh viện" name="hospital" placeholder="Bệnh viện..." />
-                    <label className="block">
+                    <FormInput label="CCCD" name="cccd" placeholder="12 chữ số" required />
+                    <FormInput label="Số giấy phép" name="licenseNumber" placeholder="HCM-2026-..." required />
+                    <FormInput label="Chuyên khoa" name="specialty" placeholder="Tim mạch" required />
+                    <FormInput label="Bệnh viện" name="hospital" placeholder="Bệnh viện..." required />
+                    <label className="block sm:col-span-2">
                       <span className="mb-1.5 block text-sm font-medium text-secondary">
                         Chứng chỉ hành nghề
                       </span>
-                      <span className="flex h-10 items-center gap-2 rounded-input border border-dashed border-border px-3 text-sm text-mutedForeground">
+                      <span className="flex min-h-10 items-center gap-2 rounded-input border border-dashed border-border px-3 text-sm text-mutedForeground">
                         <FileUp className="h-4 w-4" />
-                        Chọn file mock
+                        <input className="text-sm" name="certificateFile" required type="file" />
                       </span>
                     </label>
                   </>
                 ) : null}
+                {error ? <p className="text-sm text-emergency sm:col-span-2">{error}</p> : null}
                 <div className="sm:col-span-2">
-                  <Button className="w-full" leftIcon={<UserRound className="h-4 w-4" />} type="submit">
+                  <Button className="w-full" disabled={isLoading} leftIcon={<UserRound className="h-4 w-4" />} type="submit">
                     {mode === "doctor" ? "Gửi hồ sơ bác sĩ" : "Tạo tài khoản bệnh nhân"}
                   </Button>
                 </div>

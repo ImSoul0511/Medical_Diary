@@ -59,7 +59,11 @@ class PrescriptionItemResponse(BaseModel):
 class PrescriptionResponse(BaseModel):
     id: UUID
     patient_id: UUID
+    patient_name: Optional[str] = None
     doctor_id: UUID
+    doctor_name: Optional[str] = None
+    doctor_hospital: Optional[str] = None
+    doctor_specialty: Optional[str] = None
     notes: Optional[str] = None
     items: list[PrescriptionItemResponse]
     created_at: datetime

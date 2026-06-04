@@ -1,27 +1,38 @@
+import { useEffect } from "react";
 import { Check, Clock, FileCheck, Timer, UserCheck, X } from "lucide-react";
-import { useState } from "react";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
 import { DataTable, type DataTableColumn } from "../../components/DataTable";
 import { StatCard } from "../../components/StatCard";
-import { mockDoctorApprovals } from "../../constants/mockData";
+import { useAdminStore } from "../../store/adminStore";
 import type { DoctorApproval } from "../../types/admin";
 import { formatDateTime } from "../../utils/date";
 
+function isPending(status: DoctorApproval["status"]) {
+  return status === "pending_verification" || status === "pending";
+}
+
 export function AdminDoctorApproval() {
-  const [rows, setRows] = useState(mockDoctorApprovals);
+  const rows = useAdminStore((state) => state.pendingDoctors);
+  const loadPendingDoctors = useAdminStore((state) => state.loadPendingDoctors);
+  const verifyDoctor = useAdminStore((state) => state.verifyDoctor);
+  const error = useAdminStore((state) => state.error);
+
+  useEffect(() => {
+    void loadPendingDoctors().catch(() => undefined);
+  }, [loadPendingDoctors]);
 
   function updateStatus(id: string, status: DoctorApproval["status"]) {
-    setRows((current) => current.map((row) => (row.id === id ? { ...row, status } : row)));
+    void verifyDoctor(id, { action: status === "rejected" ? "rejected" : "approved", note: "" }).catch(() => undefined);
   }
 
   const columns: DataTableColumn<DoctorApproval>[] = [
     { key: "name", header: "Bác sĩ", render: (row) => <span className="font-medium text-secondary">{row.fullName}</span> },
     { key: "specialty", header: "Chuyên khoa", render: (row) => row.specialty },
-    { key: "hospital", header: "Bệnh viện", render: (row) => row.hospital },
+    { key: "email", header: "Email", render: (row) => row.email },
     { key: "license", header: "Giấy phép", render: (row) => row.licenseNumber },
-    { key: "submitted", header: "Gửi lúc", render: (row) => formatDateTime(row.submittedAt) },
+    { key: "registered", header: "Đăng ký", render: (row) => formatDateTime(row.registeredAt) },
     {
       key: "status",
       header: "Trạng thái",
@@ -49,17 +60,18 @@ export function AdminDoctorApproval() {
 
   return (
     <AppShell
-      description="Duyệt hồ sơ bác sĩ bằng local state, chưa gọi admin endpoint."
+      description="Duyệt hồ sơ bác sĩ qua admin store."
       role="admin"
       title="Phê duyệt bác sĩ"
     >
       <div className="space-y-6">
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard icon={Clock} label="Chờ duyệt" tone="admin" value={`${rows.filter((row) => row.status === "pending").length}`} />
+          <StatCard icon={Clock} label="Chờ duyệt" tone="admin" value={`${rows.filter((row) => isPending(row.status)).length}`} />
           <StatCard icon={UserCheck} label="Đã duyệt" tone="success" value={`${rows.filter((row) => row.status === "approved").length}`} />
           <StatCard icon={FileCheck} label="Từ chối" tone="danger" value={`${rows.filter((row) => row.status === "rejected").length}`} />
-          <StatCard icon={Timer} label="Thời gian xử lý" tone="warning" unit="giờ" value="4.2" />
+          <StatCard icon={Timer} label="Tổng hồ sơ" tone="warning" value={`${rows.length}`} />
         </section>
+        {error ? <p className="text-sm text-emergency">{error}</p> : null}
         <DataTable columns={columns} getRowKey={(row) => row.id} rows={rows} />
       </div>
     </AppShell>

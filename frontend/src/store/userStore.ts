@@ -1,45 +1,154 @@
 import { create } from "zustand";
+import { userApi } from "../api/userApi";
 import {
-  mockAccessHistory,
-  mockDoctors,
-  mockProfile,
-} from "../constants/mockData";
-import type { DoctorPublicProfile, PrivacySettings, UserProfile } from "../types/user";
+  mapAccessHistoryItemDto,
+  mapDoctorPublicProfileDto,
+  mapPrivacySettingsToDto,
+  mapUserProfileDto,
+  mapUserProfileFormToDto,
+} from "../mappers/userMapper";
+import type {
+  AccessHistoryItem,
+  DoctorPublicProfile,
+  PrivacySettings,
+  UserProfile,
+  UserProfileForm,
+} from "../types/users";
+import { apiWrapperMissing, getErrorMessage } from "./storeUtils";
 
 type UserStore = {
-  profile: UserProfile;
-  accessHistory: typeof mockAccessHistory;
+  profile: UserProfile | null;
+  profileForm: UserProfileForm | null;
+  accessHistory: AccessHistoryItem[];
   doctorSearchResults: DoctorPublicProfile[];
-  updateProfileLocal: (payload: Partial<UserProfile>) => void;
-  updatePrivacyLocal: (payload: Partial<PrivacySettings>) => void;
-  searchDoctorsLocal: (query: string) => void;
+  isLoadingProfile: boolean;
+  isSavingProfile: boolean;
+  isSavingPrivacy: boolean;
+  isLoadingAccessHistory: boolean;
+  isSearchingDoctors: boolean;
+  isExporting: boolean;
+  error: string | null;
+  loadMe: () => Promise<UserProfile>;
+  updateProfile: (form: UserProfileForm) => Promise<UserProfile>;
+  updatePrivacy: (payload: Partial<PrivacySettings>) => Promise<PrivacySettings>;
+  loadAccessHistory: () => Promise<AccessHistoryItem[]>;
+  searchDoctors: (filters: { name?: string; specialty?: string }) => Promise<DoctorPublicProfile[]>;
+  exportData: (format: "json" | "pdf", scope?: string) => Promise<Blob>;
+  setProfileForm: (form: UserProfileForm | null) => void;
+  resetProfileForm: () => void;
+  clearError: () => void;
 };
 
+function profileToForm(profile: UserProfile): UserProfileForm {
+  return {
+    fullName: profile.fullName,
+    gender: profile.gender ?? "",
+    dateOfBirth: profile.dateOfBirth ?? "",
+    bloodType: profile.bloodType ?? "",
+    allergies: profile.allergies ?? "",
+    emergencyContact: profile.emergencyContact ?? "",
+  };
+}
+
 export const useUserStore = create<UserStore>((set, get) => ({
-  profile: mockProfile,
-  accessHistory: mockAccessHistory,
-  doctorSearchResults: mockDoctors,
-  updateProfileLocal: (payload) =>
-    set((state) => ({ profile: { ...state.profile, ...payload } })),
-  updatePrivacyLocal: (payload) =>
-    set((state) => ({
-      profile: {
-        ...state.profile,
-        privacySettings: { ...state.profile.privacySettings, ...payload },
-      },
-    })),
-  searchDoctorsLocal: (query) => {
-    const normalized = query.trim().toLowerCase();
-    set({
-      doctorSearchResults: normalized
-        ? mockDoctors.filter(
-            (doctor) =>
-              doctor.fullName.toLowerCase().includes(normalized) ||
-              doctor.specialty.toLowerCase().includes(normalized) ||
-              doctor.hospital.toLowerCase().includes(normalized),
-          )
-        : mockDoctors,
-    });
-    return get().doctorSearchResults;
+  profile: null,
+  profileForm: null,
+  accessHistory: [],
+  doctorSearchResults: [],
+  isLoadingProfile: false,
+  isSavingProfile: false,
+  isSavingPrivacy: false,
+  isLoadingAccessHistory: false,
+  isSearchingDoctors: false,
+  isExporting: false,
+  error: null,
+  loadMe: async () => {
+    set({ isLoadingProfile: true, error: null });
+    try {
+      const profile = mapUserProfileDto(await userApi.getProfile());
+      set({
+        profile,
+        profileForm: profileToForm(profile),
+        isLoadingProfile: false,
+      });
+      return profile;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load profile.");
+      set({ isLoadingProfile: false, error: message });
+      throw error;
+    }
   },
+  updateProfile: async (form) => {
+    set({ isSavingProfile: true, error: null });
+    try {
+      const profile = mapUserProfileDto(
+        await userApi.updateProfile(mapUserProfileFormToDto(form)),
+      );
+      set({
+        profile,
+        profileForm: profileToForm(profile),
+        isSavingProfile: false,
+      });
+      return profile;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to update profile.");
+      set({ isSavingProfile: false, error: message });
+      throw error;
+    }
+  },
+  updatePrivacy: async (payload) => {
+    const currentProfile = get().profile;
+    const mergedPrivacy = {
+      showBloodType: currentProfile?.privacySettings.showBloodType ?? false,
+      showAllergies: currentProfile?.privacySettings.showAllergies ?? false,
+      showEmergencyContact: currentProfile?.privacySettings.showEmergencyContact ?? false,
+      ...payload,
+    };
+
+    set({ isSavingPrivacy: true, error: null });
+    try {
+      await userApi.updatePrivacySettings(mapPrivacySettingsToDto(payload));
+      set((state) => ({
+        profile: state.profile
+          ? { ...state.profile, privacySettings: mergedPrivacy }
+          : state.profile,
+        isSavingPrivacy: false,
+      }));
+      return mergedPrivacy;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to update privacy settings.");
+      set({ isSavingPrivacy: false, error: message });
+      throw error;
+    }
+  },
+  loadAccessHistory: async () => {
+    const error = apiWrapperMissing("loadAccessHistory()");
+    set({ isLoadingAccessHistory: false, error: error.message });
+    throw error;
+  },
+  searchDoctors: async () => {
+    const error = apiWrapperMissing("searchDoctors(filters)");
+    set({ isSearchingDoctors: false, error: error.message });
+    throw error;
+  },
+  exportData: async (format) => {
+    set({ isExporting: true, error: null });
+    try {
+      const blob = await userApi.exportData(format);
+      set({ isExporting: false });
+      return blob;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to export user data.");
+      set({ isExporting: false, error: message });
+      throw error;
+    }
+  },
+  setProfileForm: (form) => set({ profileForm: form }),
+  resetProfileForm: () => {
+    const profile = get().profile;
+    set({ profileForm: profile ? profileToForm(profile) : null });
+  },
+  clearError: () => set({ error: null }),
 }));
+
+export { mapAccessHistoryItemDto, mapDoctorPublicProfileDto };

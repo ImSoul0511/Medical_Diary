@@ -281,6 +281,7 @@ class UsersService:
             history = []
             for row in rows:
                 history.append(AccessHistoryItem(
+                    id=row.actor_id,
                     doctor_name=row.doctor_name,
                     action=row.action,
                     data_type=row.data_type,

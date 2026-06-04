@@ -23,7 +23,7 @@ type TopbarProps = {
 };
 
 export function Topbar({ role, title, description }: TopbarProps) {
-  const { unreadCount, items, markAsReadLocal, clearAllLocal } = useNotifications();
+  const { unreadCount, items, markAsRead, markAllLocalRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const setMobileSidebarOpen = useUiStore((state) => state.setMobileSidebarOpen);
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -76,7 +76,7 @@ export function Topbar({ role, title, description }: TopbarProps) {
             <div className="absolute right-0 mt-2 w-80 rounded-card border border-border bg-card p-3 shadow-lg">
               <div className="mb-2 flex items-center justify-between">
                 <strong className="text-sm">Thông báo</strong>
-                <button className="text-xs text-mutedForeground" onClick={() => { clearAllLocal(); }} type="button">Xóa tất cả</button>
+                <button className="text-xs text-mutedForeground" onClick={() => { markAllLocalRead(); }} type="button">Đánh dấu tất cả</button>
               </div>
               <ul className="max-h-64 overflow-auto">
                 {items.length === 0 ? <li className="text-sm text-mutedForeground">Không có thông báo</li> : null}
@@ -84,8 +84,10 @@ export function Topbar({ role, title, description }: TopbarProps) {
                   <li key={it.id} className="mb-2 flex items-start gap-2">
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <p className={`text-sm ${it.unread ? 'font-semibold' : 'text-mutedForeground'}`}>{it.title}</p>
-                        <button className="text-xs text-mutedForeground" onClick={() => { markAsReadLocal(it.id); }} type="button">Đánh dấu đã đọc</button>
+                        <p className={`text-sm ${!it.isRead ? "font-semibold" : "text-mutedForeground"}`}>{it.title}</p>
+                        {!it.isRead ? (
+                          <button className="text-xs text-mutedForeground" onClick={() => { void markAsRead(it.id); }} type="button">Đánh dấu đã đọc</button>
+                        ) : null}
                       </div>
                       <p className="text-xs text-mutedForeground">{it.message}</p>
                     </div>

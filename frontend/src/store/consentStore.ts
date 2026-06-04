@@ -1,57 +1,109 @@
 import { create } from "zustand";
-import { mockAccessRequests, mockPermissions } from "../constants/mockData";
-import type { ConsentScope } from "../types/consent";
+import { consentApi } from "../api/consentApi";
+import {
+  mapAccessRequestDto,
+  mapActivePermissionFromHistory,
+  mapConsentHistoryItemDto,
+  mapConsentReviewFormToDto,
+} from "../mappers/consentMapper";
+import type {
+  AccessRequest,
+  ActivePermission,
+  ConsentHistoryItem,
+  ConsentReviewForm,
+  ConsentScope,
+} from "../types/consent";
+import { apiWrapperMissing, getErrorMessage } from "./storeUtils";
 
 type ConsentStore = {
-  pendingRequests: typeof mockAccessRequests;
-  activePermissions: typeof mockPermissions;
+  pendingRequests: AccessRequest[];
+  activePermissions: ActivePermission[];
+  history: ConsentHistoryItem[];
   selectedScopes: ConsentScope[];
-  isLoading?: boolean;
-  error?: string | null;
+  isLoadingRequests: boolean;
+  isLoadingHistory: boolean;
+  reviewingRequestId: string | null;
+  revokingDoctorId: string | null;
+  error: string | null;
+  loadAccessRequests: () => Promise<AccessRequest[]>;
+  loadHistory: () => Promise<ConsentHistoryItem[]>;
+  reviewAccessRequest: (requestId: string, form: ConsentReviewForm) => Promise<void>;
+  approveRequest: (requestId: string, scopes: ConsentScope[], expiresInDays?: string) => Promise<void>;
+  rejectRequest: (requestId: string) => Promise<void>;
+  revokeDoctorPermission: (doctorId: string) => Promise<void>;
   setSelectedScopes: (scopes: ConsentScope[]) => void;
-  approveRequestLocal: (requestId: string, scopes: ConsentScope[]) => void;
-  rejectRequestLocal: (requestId: string) => void;
-  revokeDoctorLocal: (doctorId: string) => void;
+  clearError: () => void;
 };
 
 export const useConsentStore = create<ConsentStore>((set) => ({
-  pendingRequests: mockAccessRequests,
-  activePermissions: mockPermissions,
-  selectedScopes: ["diaries", "heart_rate"],
-  isLoading: false,
+  pendingRequests: [],
+  activePermissions: [],
+  history: [],
+  selectedScopes: [],
+  isLoadingRequests: false,
+  isLoadingHistory: false,
+  reviewingRequestId: null,
+  revokingDoctorId: null,
   error: null,
-  setSelectedScopes: (scopes) => set({ selectedScopes: scopes }),
-  approveRequestLocal: (requestId, scopes) => {
-    set({ isLoading: true });
-    set((state) => {
-      const request = state.pendingRequests.find((item) => item.id === requestId);
-      return {
-        pendingRequests: state.pendingRequests.filter((item) => item.id !== requestId),
-        activePermissions: request
-          ? [
-              {
-                id: `permission-${requestId}`,
-                doctorId: request.doctorId,
-                doctorName: request.doctorName,
-                specialty: request.specialty,
-                approvedScopes: scopes,
-                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              },
-              ...state.activePermissions,
-            ]
-          : state.activePermissions,
-        isLoading: false,
-      };
-    });
+  loadAccessRequests: async () => {
+    set({ isLoadingRequests: true, error: null });
+    try {
+      const pendingRequests = (await consentApi.getAccessRequests()).map(mapAccessRequestDto);
+      set({ pendingRequests, isLoadingRequests: false });
+      return pendingRequests;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load access requests.");
+      set({ isLoadingRequests: false, error: message });
+      throw error;
+    }
   },
-  rejectRequestLocal: (requestId) =>
-    set((state) => ({
-      pendingRequests: state.pendingRequests.filter((item) => item.id !== requestId),
-    })),
-  revokeDoctorLocal: (doctorId) =>
-    set((state) => ({
-      activePermissions: state.activePermissions.filter(
-        (permission) => permission.doctorId !== doctorId,
-      ),
-    })),
+  loadHistory: async () => {
+    set({ isLoadingHistory: true, error: null });
+    try {
+      const history = (await consentApi.getConsentHistory()).map(mapConsentHistoryItemDto);
+      set({
+        history,
+        activePermissions: history.map(mapActivePermissionFromHistory),
+        isLoadingHistory: false,
+      });
+      return history;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load consent history.");
+      set({ isLoadingHistory: false, error: message });
+      throw error;
+    }
+  },
+  reviewAccessRequest: async (requestId, form) => {
+    mapConsentReviewFormToDto(form);
+    const error = apiWrapperMissing(`reviewAccessRequest(${requestId})`);
+    set({ reviewingRequestId: null, error: error.message });
+    throw error;
+  },
+  approveRequest: async (requestId, scopes, expiresInDays = "30") => {
+    mapConsentReviewFormToDto({
+      action: "approved",
+      approvedScopes: scopes,
+      expiresInDays,
+    });
+    const error = apiWrapperMissing(`approveRequest(${requestId})`);
+    set({ reviewingRequestId: null, error: error.message });
+    throw error;
+  },
+  rejectRequest: async (requestId) => {
+    mapConsentReviewFormToDto({
+      action: "rejected",
+      approvedScopes: [],
+      expiresInDays: "",
+    });
+    const error = apiWrapperMissing(`rejectRequest(${requestId})`);
+    set({ reviewingRequestId: null, error: error.message });
+    throw error;
+  },
+  revokeDoctorPermission: async (doctorId) => {
+    const error = apiWrapperMissing(`revokeDoctorPermission(${doctorId})`);
+    set({ revokingDoctorId: null, error: error.message });
+    throw error;
+  },
+  setSelectedScopes: (scopes) => set({ selectedScopes: scopes }),
+  clearError: () => set({ error: null }),
 }));

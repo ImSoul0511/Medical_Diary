@@ -1,28 +1,52 @@
 import { create } from "zustand";
-import { mockNotifications } from "../constants/mockData";
-
-type NotificationItem = (typeof mockNotifications)[number];
+import type { Notification } from "../types/notification";
+import { apiWrapperMissing } from "./storeUtils";
 
 type NotificationStore = {
-  items: NotificationItem[];
+  items: Notification[];
   unreadCount: number;
-  markAsReadLocal: (id: string) => void;
-  clearAllLocal: () => void;
+  isLoading: boolean;
+  markingReadId: string | null;
+  error: string | null;
+  loadNotifications: () => Promise<Notification[]>;
+  markAsRead: (id: string) => Promise<void>;
+  receiveNotification: (notification: Notification) => void;
+  markAllLocalRead: () => void;
+  clear: () => void;
 };
 
 export const useNotificationStore = create<NotificationStore>((set) => ({
-  items: mockNotifications,
-  unreadCount: mockNotifications.filter((item) => item.unread).length,
-  markAsReadLocal: (id) =>
-    set((state) => {
-      const items = state.items.map((item) =>
-        item.id === id ? { ...item, unread: false } : item,
-      );
-      return { items, unreadCount: items.filter((item) => item.unread).length };
-    }),
-  clearAllLocal: () =>
+  items: [],
+  unreadCount: 0,
+  isLoading: false,
+  markingReadId: null,
+  error: null,
+  loadNotifications: async () => {
+    const error = apiWrapperMissing("loadNotifications()");
+    set({ isLoading: false, error: error.message });
+    throw error;
+  },
+  markAsRead: async (id) => {
+    const error = apiWrapperMissing(`markAsRead(${id})`);
+    set({ markingReadId: null, error: error.message });
+    throw error;
+  },
+  receiveNotification: (notification) =>
     set((state) => ({
-      items: state.items.map((item) => ({ ...item, unread: false })),
+      items: [notification, ...state.items],
+      unreadCount: notification.isRead ? state.unreadCount : state.unreadCount + 1,
+    })),
+  markAllLocalRead: () =>
+    set((state) => ({
+      items: state.items.map((item) => ({ ...item, isRead: true })),
       unreadCount: 0,
     })),
+  clear: () =>
+    set({
+      items: [],
+      unreadCount: 0,
+      isLoading: false,
+      markingReadId: null,
+      error: null,
+    }),
 }));

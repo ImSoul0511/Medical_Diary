@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Check, Shield, X } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
@@ -11,10 +12,18 @@ export function ConsentManagement() {
   const {
     pendingRequests,
     activePermissions,
-    approveRequestLocal,
-    rejectRequestLocal,
-    revokeDoctorLocal,
+    loadAccessRequests,
+    loadHistory,
+    approveRequest,
+    rejectRequest,
+    revokeDoctorPermission,
+    error,
   } = useConsent();
+
+  useEffect(() => {
+    void loadAccessRequests().catch(() => undefined);
+    void loadHistory().catch(() => undefined);
+  }, [loadAccessRequests, loadHistory]);
 
   return (
     <AppShell
@@ -29,14 +38,17 @@ export function ConsentManagement() {
             <h2 className="text-lg font-semibold text-secondary">Yêu cầu chờ duyệt</h2>
             <Badge tone="emergency">{pendingRequests.length}</Badge>
           </div>
+          {error ? <p className="text-sm text-emergency">{error}</p> : null}
+          {pendingRequests.length === 0 ? (
+            <Card>
+              <p className="text-sm text-mutedForeground">Chưa có yêu cầu cấp quyền.</p>
+            </Card>
+          ) : null}
           {pendingRequests.map((request) => (
             <Card key={request.id}>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <h3 className="font-semibold text-secondary">{request.doctorName}</h3>
-                  <p className="text-sm text-mutedForeground">
-                    {request.specialty} - {request.hospital}
-                  </p>
                   <p className="mt-2 text-sm text-secondary">{request.reason}</p>
                   <p className="mt-2 text-xs text-mutedForeground">
                     Gửi lúc {formatDateTime(request.requestedAt)}
@@ -52,7 +64,9 @@ export function ConsentManagement() {
                 <div className="flex gap-2">
                   <Button
                     leftIcon={<Check className="h-4 w-4" />}
-                    onClick={() => approveRequestLocal(request.id, request.requestedScopes)}
+                    onClick={() => {
+                      void approveRequest(request.id, request.requestedScopes).catch(() => undefined);
+                    }}
                     size="sm"
                     variant="success"
                   >
@@ -60,7 +74,9 @@ export function ConsentManagement() {
                   </Button>
                   <Button
                     leftIcon={<X className="h-4 w-4" />}
-                    onClick={() => rejectRequestLocal(request.id)}
+                    onClick={() => {
+                      void rejectRequest(request.id).catch(() => undefined);
+                    }}
                     size="sm"
                     variant="outline"
                   >
@@ -74,18 +90,24 @@ export function ConsentManagement() {
 
         <section className="space-y-4">
           <h2 className="text-lg font-semibold text-secondary">Đang có quyền</h2>
+          {activePermissions.length === 0 ? (
+            <Card>
+              <p className="text-sm text-mutedForeground">Chưa có bác sĩ nào được cấp quyền.</p>
+            </Card>
+          ) : null}
           {activePermissions.map((permission) => (
             <Card key={permission.id}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-secondary">{permission.doctorName}</h3>
-                  <p className="text-sm text-mutedForeground">{permission.specialty}</p>
                   <p className="mt-1 text-xs text-mutedForeground">
-                    Hết hạn {formatDateTime(permission.expiresAt)}
+                    {permission.expiresAt ? `Hết hạn ${formatDateTime(permission.expiresAt)}` : "Không thời hạn"}
                   </p>
                 </div>
                 <Button
-                  onClick={() => revokeDoctorLocal(permission.doctorId)}
+                  onClick={() => {
+                    void revokeDoctorPermission(permission.doctorId).catch(() => undefined);
+                  }}
                   size="sm"
                   variant="danger"
                 >

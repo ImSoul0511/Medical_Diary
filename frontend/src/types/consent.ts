@@ -9,23 +9,40 @@ export type ConsentScope =
   | "step_count"
   | "respiratory_rate";
 
+export type AccessRequestStatus = "pending" | "approved" | "rejected" | string;
+
 export type AccessRequest = {
   id: string;
   doctorId: string;
   doctorName: string;
-  specialty: string;
-  hospital: string;
+  doctorSpecialty: string | null;
+  doctorHospital: string | null;
   reason: string;
   requestedScopes: ConsentScope[];
   requestedAt: string;
-  status: "pending" | "approved" | "rejected";
-};
+  status: AccessRequestStatus;
+}
 
 export type ActivePermission = {
   id: string;
   doctorId: string;
   doctorName: string;
-  specialty: string;
   approvedScopes: ConsentScope[];
+  grantedAt: string;
   expiresAt: string;
 };
+
+export type ConsentHistoryItem = {
+  doctorId: string;
+  doctorName: string;
+  scopes: ConsentScope[];
+  grantedAt: string;
+  expiresAt: string;
+}
+
+export type ConsentReviewForm = {
+  action: "approved" | "rejected";
+  approvedScopes: ConsentScope[];
+  expiresInDays: string;
+}
+

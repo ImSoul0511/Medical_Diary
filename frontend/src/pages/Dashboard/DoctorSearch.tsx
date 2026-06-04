@@ -7,22 +7,37 @@ import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { FormInput } from "../../components/FormInput";
 import { ROUTES } from "../../constants/routes";
+import { useDoctorStore } from "../../store/doctorStore";
 import { useUiStore } from "../../store/uiStore";
-import { mockProfile } from "../../constants/mockData";
 
 export function DoctorSearch() {
   const showToast = useUiStore((state) => state.showToast);
-  const [query, setQuery] = useState("0987 654 321");
-  const [hasSearched, setHasSearched] = useState(true);
+  const results = useDoctorStore((state) => state.patientSearchResults);
+  const searchPatients = useDoctorStore((state) => state.searchPatients);
+  const requestAccess = useDoctorStore((state) => state.requestAccess);
+  const error = useDoctorStore((state) => state.error);
+  const [query, setQuery] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setHasSearched(true);
+    void searchPatients(query).catch(() => undefined);
+  }
+
+  function handleRequestAccess(patientId: string) {
+    void requestAccess({
+      patientId,
+      requestedScopes: ["blood_type", "allergies", "emergency_contact", "medical_records"],
+      reason: "Cần xem thông tin y tế để hỗ trợ khám và điều trị.",
+    })
+      .then(() => showToast("Đã gửi yêu cầu cấp quyền."))
+      .catch(() => undefined);
   }
 
   return (
     <AppShell
-      description="Tìm bệnh nhân và tạo yêu cầu cấp quyền mock."
+      description="Tìm bệnh nhân và tạo yêu cầu cấp quyền."
       role="doctor"
       title="Tìm kiếm bệnh nhân"
     >
@@ -34,13 +49,13 @@ export function DoctorSearch() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-secondary">Tra cứu bệnh nhân</h2>
-              <p className="text-sm text-mutedForeground">Theo SĐT, CCCD hoặc mã bệnh nhân.</p>
+              <p className="text-sm text-mutedForeground">Theo số điện thoại bệnh nhân.</p>
             </div>
           </div>
           <form className="space-y-4" onSubmit={handleSearch}>
             <FormInput
               icon={<Search className="h-4 w-4" />}
-              label="Thông tin tìm kiếm"
+              label="Số điện thoại"
               onChange={(event) => setQuery(event.target.value)}
               value={query}
             />
@@ -48,51 +63,47 @@ export function DoctorSearch() {
               Tìm bệnh nhân
             </Button>
           </form>
+          {error ? <p className="mt-3 text-sm text-emergency">{error}</p> : null}
         </Card>
 
-        <section>
-          {hasSearched ? (
+        <section className="space-y-3">
+          {hasSearched && results.length === 0 ? (
             <Card padding="lg">
+              <p className="text-sm text-mutedForeground">Không có kết quả phù hợp.</p>
+            </Card>
+          ) : null}
+          {results.map((patient) => (
+            <Card key={patient.id} padding="lg">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <Badge tone="info">Kết quả mock</Badge>
-                  <h2 className="mt-3 text-xl font-semibold text-secondary">{mockProfile.fullName}</h2>
-                  <p className="mt-1 text-sm text-mutedForeground">
-                    {mockProfile.phoneNumber} - {mockProfile.address}
-                  </p>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-card bg-infoBg p-3">
-                      <p className="text-xs text-blue-700">Nhóm máu</p>
-                      <p className="font-semibold text-blue-900">{mockProfile.bloodType}</p>
-                    </div>
-                    <div className="rounded-card bg-dangerBg p-3">
-                      <p className="text-xs text-red-700">Dị ứng public</p>
-                      <p className="font-semibold text-red-900">Cần consent</p>
-                    </div>
-                    <div className="rounded-card bg-warningBg p-3">
-                      <p className="text-xs text-orange-700">Trạng thái</p>
-                      <p className="font-semibold text-orange-900">Chưa cấp quyền</p>
-                    </div>
-                  </div>
+                  <Badge tone="info">Kết quả</Badge>
+                  <h2 className="mt-3 text-xl font-semibold text-secondary">{patient.fullName}</h2>
+                  <p className="mt-1 text-sm text-mutedForeground">Giới tính: {patient.gender}</p>
                 </div>
                 <div className="flex flex-col gap-2">
                   <Button
                     leftIcon={<ShieldPlus className="h-4 w-4" />}
-                    onClick={() => showToast("Đã tạo yêu cầu cấp quyền mock.")}
+                    onClick={() => handleRequestAccess(patient.id)}
                     variant="success"
                   >
                     Xin quyền truy cập
                   </Button>
                   <Link
                     className="inline-flex h-10 items-center justify-center rounded-input border border-border px-4 text-sm font-medium text-secondary hover:bg-muted"
-                    to={ROUTES.doctorPatient}
+                    to={`/bac-si/benh-nhan/${patient.id}`}
                   >
                     Xem chi tiết
                   </Link>
                 </div>
               </div>
             </Card>
+          ))}
+          {!hasSearched ? (
+            <Card padding="lg">
+              <p className="text-sm text-mutedForeground">Nhập số điện thoại để bắt đầu tìm kiếm.</p>
+            </Card>
           ) : null}
+          <Link className="sr-only" to={ROUTES.doctorPatient}>Chi tiết bệnh nhân</Link>
         </section>
       </div>
     </AppShell>
