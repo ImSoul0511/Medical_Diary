@@ -3,15 +3,18 @@
  * Provides clean access to all API endpoints
  */
 
-export * from './types';
 export { apiClient } from './apiClient';
-export { authApi } from './authApi';
-export { userApi } from './userApi';
-export { diaryApi } from './diaryApi';
-export { healthMetricsApi } from './healthMetricsApi';
-export { prescriptionApi } from './prescriptionApi';
-export { consentApi } from './consentApi';
-export { medicalRecordApi } from './medicalRecordApi';
+export { authApi } from './auth/authApi';
+export { userApi } from './users/userApi';
+export { diaryApi } from './diaries/diaryApi';
+export { healthMetricsApi } from './health_metrics/healthMetricsApi';
+export { prescriptionApi } from './prescriptions/prescriptionsApi';
+export { consentApi } from './consent/consentApi';
+export { medicalRecordApi } from './medical_records/medicalRecordApi';
+export { emergencyApi } from './emergency/emergencyApi';
+export { doctorsApi } from './doctors/doctorsApi';
+export { adminApi } from './admin/adminApi';
+export { notificationsApi } from './notifications/notificationsApi';
 
 /**
  * Usage Example:
