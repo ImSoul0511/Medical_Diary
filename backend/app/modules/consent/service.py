@@ -108,7 +108,10 @@ class ConsentService:
             )
             self.db.add(permission)
         else:
-            permission.scope = sorted(approved_scope)
+            # Merge: giữ lại scope cũ + thêm scope mới (tránh mất quyền đã cấp trước đó)
+            existing_scope = set(permission.scope or [])
+            merged_scope = existing_scope | approved_scope
+            permission.scope = sorted(merged_scope)
             permission.revoked_at = None
             permission.expires_at = expires_at
 
