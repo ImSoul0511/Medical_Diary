@@ -50,6 +50,7 @@ class PrivacyUpdateRequest(BaseModel):
     }
 
 class AccessHistoryItem(BaseModel):
+    id: UUID
     doctor_name: str
     action: str           # "SELECT" | "INSERT" | "UPDATE" | "DELETE"
     data_type: str        # "medical_records" | "prescriptions" | "diaries"

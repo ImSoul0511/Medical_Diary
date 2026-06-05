@@ -69,6 +69,7 @@ class PrescriptionsService:
             responses.append(PrescriptionResponse(
                 id=rx.id,
                 patient_id=rx.patient_id,
+                
                 doctor_id=rx.doctor_id,
                 notes=rx.notes,
                 items=[

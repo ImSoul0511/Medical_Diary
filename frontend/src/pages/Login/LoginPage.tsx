@@ -1,3 +1,9 @@
+/**
+ * Tệp: frontend/src/pages/Login/LoginPage.tsx
+ * Mục đích: Trang đăng nhập của SPA.
+ * Hành vi: Gọi `useAuthStore.login` và điều hướng theo role backend trả về.
+ */
+
 import { FormEvent, useState } from "react";
 import { Activity, HeartPulse, Lock, Mail, ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -17,12 +23,12 @@ export function LoginPage() {
   const navigate = useNavigate();
   const selectedRole = useAuthStore((state) => state.selectedRole);
   const setSelectedRole = useAuthStore((state) => state.setSelectedRole);
-  const loginMock = useAuthStore((state) => state.loginMock);
-  const [email, setEmail] = useState("patient@example.com");
-  const [password, setPassword] = useState("12345678");
+  const login = useAuthStore((state) => state.login);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!isEmail(email)) {
       setError("Email chưa đúng định dạng.");
@@ -33,8 +39,12 @@ export function LoginPage() {
       return;
     }
     setError("");
-    loginMock(selectedRole, email);
-    navigate(roleHomePath[selectedRole]);
+    try {
+      const user = await login(selectedRole, email, password);
+      navigate(roleHomePath[user.role]);
+    } catch (err) {
+      setError("Đăng nhập thất bại. Vui lòng thử lại.");
+    }
   }
 
   return (
@@ -52,14 +62,13 @@ export function LoginPage() {
 
         <div className="max-w-xl">
           <p className="mb-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
-            UI prototype - mock local state
+            Kết nối FastAPI
           </p>
           <h1 className="text-3xl font-semibold leading-tight">
             Theo dõi sức khỏe, quyền riêng tư và hồ sơ y tế trong một giao diện gọn.
           </h1>
           <p className="mt-4 text-sm leading-6 text-white/80">
-            Bản triển khai này chỉ dựng UI theo `ui_implementation.md`, dùng Zustand và
-            mock data. API sẽ được bạn nối thủ công theo tài liệu riêng.
+            Bản triển khai này dùng backend API làm nguồn sự thật và giữ token truy cập trong RAM.
           </p>
         </div>
 

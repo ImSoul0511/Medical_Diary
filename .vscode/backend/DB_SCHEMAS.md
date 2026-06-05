@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Thiết kế Cơ sở dữ liệu (Database Schemas) - Medical Diary
 
 Tài liệu này đặc tả cấu trúc các bảng trong PostgreSQL (Supabase), các mối quan hệ, ràng buộc và chính sách bảo mật dữ liệu.

@@ -1,3 +1,9 @@
+/**
+ * Tệp: frontend/src/main.tsx
+ * Mục đích: Entrypoint của ứng dụng. Mount React app vào DOM.
+ * Ghi chú: Import các style toàn cục và bootstrap `App`.
+ */
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./app/App";

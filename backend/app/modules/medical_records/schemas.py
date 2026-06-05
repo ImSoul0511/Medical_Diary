@@ -27,6 +27,10 @@ class MedicalRecordResponse(BaseModel):
     id: UUID
     patient_id: UUID
     doctor_id: UUID
+    patient_name: Optional[str] = None
+    doctor_name: Optional[str] = None
+    doctor_specialty: Optional[str] = None
+    doctor_hospital: Optional[str] = None
     diagnosis: str
     notes: Optional[str] = None
     attachments: Optional[list[str]] = None  # list of URLs

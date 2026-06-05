@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, Request 
+from fastapi import APIRouter, Depends, UploadFile, File, Form, Request, Response, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from supabase import Client 
 
 from app.core.database import get_db
 from app.shared.dependencies import get_current_user, get_supabase_client
-from app.shared.schemas import ErrorResponse, MessageResponse, error_responses as _error_responses
+from app.shared.schemas import MessageResponse, error_responses as _error_responses
 from app.modules.auth.schemas import (
     LoginRequest, 
     LoginResponse, 
+    RefreshResponse,
     RegisterRequest, 
     RegisterDoctorRequest,
     RegisterDoctorResponse,
@@ -28,14 +29,58 @@ def _get_service(
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
+REFRESH_COOKIE_NAME = "md_refresh_token"
+REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
+REFRESH_COOKIE_PATH = "/auth"
+
+def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
+    response.set_cookie(
+        key=REFRESH_COOKIE_NAME,
+        value=refresh_token,
+        max_age=REFRESH_COOKIE_MAX_AGE,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        path=REFRESH_COOKIE_PATH,
+    )
+
+def _clear_refresh_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=REFRESH_COOKIE_NAME,
+        path=REFRESH_COOKIE_PATH,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+    )
+
 @router.post("/login", response_model=LoginResponse, responses={401: _error_responses[401]})
-@limiter.limit("5/minute")
+@limiter.limit("100/minute")
 async def login(
     request: Request,
+    response: Response,
     data: LoginRequest,
     service: AuthService = Depends(_get_service)
 ) -> LoginResponse:
-    return await service.login(data)
+    result = await service.login(data)
+    _set_refresh_cookie(response, result.refresh_token)
+    return result.response
+
+@router.post("/refresh", response_model=RefreshResponse, responses={401: _error_responses[401]})
+async def refresh(
+    request: Request,
+    response: Response,
+    service: AuthService = Depends(_get_service)
+) -> RefreshResponse:
+    refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Missing refresh cookie")
+
+    result = await service.refresh_session(refresh_token)
+    _set_refresh_cookie(response, result.refresh_token)
+    return RefreshResponse(
+        access_token=result.response.access_token,
+        token_type=result.response.token_type,
+    )
 
 @router.post("/register", response_model=MessageResponse, responses={400: _error_responses[400]})
 @limiter.limit("3/minute")
@@ -118,10 +163,14 @@ async def register_doctor(
 
 @router.post("/logout", response_model=MessageResponse, responses={400: _error_responses[400]})
 async def logout(
-    current_user: dict = Depends(get_current_user),
+    response: Response,
     service: AuthService = Depends(_get_service)
 ) -> MessageResponse:
-    return await service.log_out()
+    _clear_refresh_cookie(response)
+    try:
+        return await service.log_out()
+    except HTTPException:
+        return MessageResponse(message="Logged out successfully.")
 
 @router.post("/revoke-all", response_model=MessageResponse, responses={400: _error_responses[400]})
 async def revoke_all(

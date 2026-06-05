@@ -1,5 +1,4 @@
 REF_DOCS/
-.venv/
 Medical Diary Design System/
 frontend_images/
 
@@ -12,3 +11,36 @@ frontend_images/
 *.key
 *.p12
 *.pfx
+
+# Python & virtualenvs
+venv/
+backend/.venv/
+**/.venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build / output
+dist/
+build/
+
+# Logs and local files
+*.log
+.DS_Store
+
+# Editor folders
+.vscode/
+.idea/
+
+.cursorrules
+.antigravity/
+axios_refresh_changes_report.md
+fix.md 
+response.md
+.claude/backend/API.md
+.claude/backend/API_FLOW.md
+.claude/backend/SCHEMAS.md
+.claude/backend/DB_SCHEMAS.md

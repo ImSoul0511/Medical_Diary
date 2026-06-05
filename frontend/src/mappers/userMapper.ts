@@ -1,0 +1,85 @@
+import type {
+  AccessHistoryItem,
+  DoctorPublicProfile,
+  PrivacySettings,
+  UserProfile,
+  UserProfileForm,
+} from "../types/users";
+import { asNullableString, asRecord, asString, compactPayload, emptyToNull } from "./common";
+
+export type UserProfileDto = {
+  id?: string;
+  full_name?: string;
+  gender?: string | null;
+  date_of_birth?: string | null;
+  blood_type?: string | null;
+  allergies?: string | null;
+  emergency_contact?: string | null;
+  privacy_settings?: {
+    show_blood_type?: boolean;
+    show_allergies?: boolean;
+    show_emergency_contact?: boolean;
+  };
+};
+
+export function mapUserProfileDto(dto: unknown): UserProfile {
+  const source = asRecord(dto);
+  const privacy = asRecord(source.privacy_settings);
+
+  return {
+    id: asString(source.id),
+    fullName: asString(source.full_name),
+    gender: source.gender === "male" || source.gender === "female" ? source.gender : null,
+    dateOfBirth: asNullableString(source.date_of_birth),
+    bloodType: asNullableString(source.blood_type),
+    allergies: asNullableString(source.allergies),
+    emergencyContact: asNullableString(source.emergency_contact),
+    privacySettings: {
+      showBloodType: privacy.show_blood_type === true,
+      showAllergies: privacy.show_allergies === true,
+      showEmergencyContact: privacy.show_emergency_contact === true,
+    },
+  };
+}
+
+export function mapUserProfileFormToDto(form: UserProfileForm) {
+  return compactPayload({
+    full_name: emptyToNull(form.fullName),
+    gender: form.gender || null,
+    date_of_birth: emptyToNull(form.dateOfBirth),
+    blood_type: emptyToNull(form.bloodType),
+    allergies: emptyToNull(form.allergies),
+    emergency_contact: emptyToNull(form.emergencyContact),
+  });
+}
+
+export function mapPrivacySettingsToDto(settings: Partial<PrivacySettings>) {
+  return compactPayload({
+    show_blood_type: settings.showBloodType,
+    show_allergies: settings.showAllergies,
+    show_emergency_contact: settings.showEmergencyContact,
+  });
+}
+
+export function mapAccessHistoryItemDto(dto: unknown): AccessHistoryItem {
+  const source = asRecord(dto);
+
+  return {
+    id: asString(source.id),
+    doctorName: asString(source.doctor_name),
+    action: asString(source.action),
+    dataType: asString(source.data_type),
+    accessedAt: asString(source.accessed_at),
+  };
+}
+
+export function mapDoctorPublicProfileDto(dto: unknown): DoctorPublicProfile {
+  const source = asRecord(dto);
+
+  return {
+    id: asString(source.id),
+    fullName: asString(source.full_name),
+    specialty: asString(source.specialty),
+    hospital: asString(source.hospital),
+  };
+}

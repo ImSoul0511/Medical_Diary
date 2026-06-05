@@ -1,0 +1,42 @@
+export type Gender = "male" | "female";
+
+export type PrivacySettings = {
+  showBloodType: boolean;
+  showAllergies: boolean;
+  showEmergencyContact: boolean;
+};
+
+export type UserProfile = {
+  id: string;
+  fullName: string;
+  gender: Gender | null;
+  dateOfBirth: string | null; // Remove null later
+  bloodType: string | null;
+  allergies: string | null;
+  emergencyContact: string | null;
+  privacySettings: PrivacySettings;
+};
+
+export type UserProfileForm = {
+  fullName: string; 
+  gender: Gender | "";
+  dateOfBirth: string | "";
+  bloodType: string | "";
+  allergies: string | "";
+  emergencyContact: string | "";
+}
+export type AccessHistoryItem = {
+  id: string;
+  doctorName: string;
+  action: "SELECT" | "INSERT" | "UPDATE" | "DELETE" | string;
+  dataType: string;
+  accessedAt: string;
+};
+
+export type DoctorPublicProfile = {
+  id: string;
+  fullName: string;
+  specialty: string;
+  hospital: string;
+};
+

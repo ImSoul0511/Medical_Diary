@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
@@ -6,40 +6,48 @@ import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { EmptyState } from "../../components/EmptyState";
 import { Modal } from "../../components/Modal";
-import { useMedicalStore } from "../../store/medicalStore";
+import { useDiaryStore } from "../../store/diaryStore";
 import { formatDateTime } from "../../utils/date";
 
 const symptomOptions = ["Đau đầu", "Mệt mỏi", "Khó thở", "Đau ngực", "Chóng mặt"];
 
 export function DiaryPage() {
-  const diaries = useMedicalStore((state) => state.diaries);
-  const addDiaryLocal = useMedicalStore((state) => state.addDiaryLocal);
-  const deleteDiaryLocal = useMedicalStore((state) => state.deleteDiaryLocal);
+  const diaries = useDiaryStore((state) => state.items);
+  const loadMine = useDiaryStore((state) => state.loadMine);
+  const createDiary = useDiaryStore((state) => state.createDiary);
+  const deleteDiary = useDiaryStore((state) => state.deleteDiary);
+  const error = useDiaryStore((state) => state.error);
   const [content, setContent] = useState("");
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(["Đau đầu"]);
   const [severity, setSeverity] = useState(3);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
+  useEffect(() => {
+    void loadMine().catch(() => undefined);
+  }, [loadMine]);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!content.trim()) return;
-    addDiaryLocal(
+    void createDiary({
       content,
-      selectedSymptoms.map((name) => ({ name, severity })),
-    );
-    setContent("");
+      symptoms: selectedSymptoms.map((name) => ({ name, severity })),
+    })
+      .then(() => setContent(""))
+      .catch(() => undefined);
   }
 
   return (
     <AppShell
-      description="Ghi lại triệu chứng và cảm nhận hằng ngày bằng local state."
+      description="Ghi lại triệu chứng và cảm nhận hằng ngày."
       role="user"
       title="Nhật ký triệu chứng"
     >
       <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <Card padding="lg">
           <h2 className="text-lg font-semibold text-secondary">Thêm nhật ký</h2>
-          <p className="mt-1 text-sm text-mutedForeground">Nội dung chỉ lưu trong Zustand store.</p>
+          <p className="mt-1 text-sm text-mutedForeground">Nội dung được gửi qua diary store và API wrapper.</p>
+          {error ? <p className="mt-3 text-sm text-emergency">{error}</p> : null}
           <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium text-secondary">Ghi chú</span>
@@ -139,10 +147,10 @@ export function DiaryPage() {
       <Modal
         confirmLabel="Xóa nhật ký"
         confirmVariant="danger"
-        description="Thao tác này chỉ xóa bản ghi trong local state."
+        description="Thao tác này sẽ xóa bản ghi qua diary store."
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => {
-          if (deleteTarget) deleteDiaryLocal(deleteTarget);
+          if (deleteTarget) void deleteDiary(deleteTarget).catch(() => undefined);
           setDeleteTarget(null);
         }}
         open={Boolean(deleteTarget)}

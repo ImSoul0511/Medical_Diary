@@ -1,3 +1,10 @@
+/**
+ * Tệp: frontend/src/components/Sidebar.tsx
+ * Mục đích: Thành phần điều hướng bên (Sidebar) hiển thị link, thông tin user và nút đăng xuất.
+ * Xuất khẩu: `Sidebar` - được `AppShell` sử dụng để cung cấp điều hướng chính.
+ * Ghi chú: Đọc trạng thái auth và gọi logout thật khi user đăng xuất.
+ */
+
 import { Heart, LogOut, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
@@ -7,6 +14,8 @@ import {
 } from "../constants/routes";
 import { roleLabels } from "../constants/roles";
 import { useAuthStore } from "../store/authStore";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../constants/routes";
 import { useUiStore } from "../store/uiStore";
 import type { Role } from "../types/auth";
 import { cn } from "../utils/cn";
@@ -18,12 +27,18 @@ type SidebarProps = {
 };
 
 export function Sidebar({ role }: SidebarProps) {
-  const mockUser = useAuthStore((state) => state.mockUser);
-  const logoutMock = useAuthStore((state) => state.logoutMock);
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
   const setMobileSidebarOpen = useUiStore((state) => state.setMobileSidebarOpen);
   const currentRoleTheme = role === "admin" ? "admin" : role === "doctor" ? "doctor" : "patient";
   const navigation =
     role === "admin" ? adminNavigation : role === "doctor" ? doctorNavigation : patientNavigation;
+
+  async function handleLogout() {
+    await logout();
+    navigate(ROUTES.login);
+  }
 
   return (
     <aside
@@ -95,14 +110,18 @@ export function Sidebar({ role }: SidebarProps) {
               currentRoleTheme === "doctor" && "bg-accent",
             )}
           >
-            {mockUser?.initials ?? "MD"}
+            {currentUser?.initials ?? "MD"}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold">{mockUser?.fullName ?? "Khách"}</p>
-            <p className="truncate text-[11px] text-slate-400">{mockUser?.subtitle ?? "UI mock"}</p>
+            <p className="truncate text-xs font-semibold">{currentUser?.fullName ?? "Khách"}</p>
+            <p className="truncate text-[11px] text-slate-400">{currentUser?.subtitle ?? roleLabels[role]}</p>
           </div>
         </div>
-        <Button className="w-full justify-start text-slate-300" onClick={logoutMock} variant="ghost">
+        <Button
+          className="w-full justify-start text-slate-300"
+          onClick={() => void handleLogout()}
+          variant="ghost"
+        >
           <LogOut className="h-4 w-4" />
           Đăng xuất
         </Button>
