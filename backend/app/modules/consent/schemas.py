@@ -15,6 +15,7 @@ VALID_CONSENT_SCOPES = {
     "heart_rate",
     "step_count",
     "respiratory_rate",
+    "manual_health_records",
 }
 
 

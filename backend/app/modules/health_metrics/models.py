@@ -3,6 +3,7 @@ SQLAlchemy Models — Module: Health Metrics
 
 Bảng:
 - health_metrics: Dữ liệu đo lường tự động từ app/smartwatch (Private View — Vitals)
+- manual_health_records: Chỉ số sức khỏe nhập tay (BP, Glucose, SpO2, ...)
 """
 
 from sqlalchemy import (
@@ -12,9 +13,11 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    String,
+    Text,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 from app.core.database import Base
 
@@ -54,4 +57,43 @@ class HealthMetric(Base):
 
     __table_args__ = (
         Index("ix_health_metrics_user_recorded", "user_id", "recorded_at"),
+    )
+
+
+class ManualHealthRecord(Base):
+    """Bảng manual_health_records — Chỉ số sức khỏe nhập tay (BP, Glucose, SpO2, ...)."""
+
+    __tablename__ = "manual_health_records"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=False
+    )
+    metric_type = Column(
+        String(30),
+        CheckConstraint(
+            "metric_type IN ('blood_pressure', 'blood_glucose', 'spo2', 'body_temperature', 'weight')",
+            name="ck_mhr_metric_type",
+        ),
+        nullable=False,
+    )
+    metrics = Column(
+        JSONB, nullable=False,
+        comment="Dữ liệu đo lường, cấu trúc tùy theo metric_type",
+    )
+    device_name = Column(
+        String(100), nullable=True,
+        comment="Tên thiết bị đo. VD: Máy đo huyết áp Omron HEM-7156",
+    )
+    notes = Column(Text, nullable=True, comment="Ghi chú tùy chọn của bệnh nhân")
+    recorded_at = Column(
+        DateTime(timezone=True), nullable=False,
+        comment="Thời điểm đo thực tế",
+    )
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
+    deleted_at = Column(DateTime(timezone=True), nullable=True, comment="Soft Delete")
+
+    __table_args__ = (
+        Index("ix_manual_health_records_user_type", "user_id", "metric_type"),
+        Index("ix_manual_health_records_user_recorded", "user_id", "recorded_at"),
     )
