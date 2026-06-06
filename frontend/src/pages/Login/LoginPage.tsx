@@ -75,7 +75,7 @@ export function LoginPage() {
         <div className="grid grid-cols-3 gap-3 text-sm">
           {[
             ["Consent", "Cấp quyền theo scope"],
-            ["Vitals", "Biểu đồ sức khỏe"],
+            ["Chỉ số sức khỏe", "Biểu đồ sức khỏe"],
             ["Emergency", "QR public view"],
           ].map(([title, description]) => (
             <div className="rounded-card border border-white/15 bg-white/10 p-4" key={title}>

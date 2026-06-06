@@ -16,6 +16,7 @@ type MedicalRecordStore = {
   loadPatientRecords: (patientId: string) => Promise<MedicalRecord[]>;
   createRecord: (form: MedicalRecordForm) => Promise<MedicalRecord>;
   clearPatientRecords: () => void;
+  clear: () => void;
 };
 
 export const useMedicalRecordStore = create<MedicalRecordStore>((set) => ({
@@ -77,6 +78,16 @@ export const useMedicalRecordStore = create<MedicalRecordStore>((set) => ({
       patientRecords: [],
       selectedPatientId: null,
       isLoadingPatient: false,
+      error: null,
+    }),
+  clear: () =>
+    set({
+      myRecords: [],
+      patientRecords: [],
+      selectedPatientId: null,
+      isLoadingMine: false,
+      isLoadingPatient: false,
+      isCreating: false,
       error: null,
     }),
 }));

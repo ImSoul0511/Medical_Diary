@@ -76,7 +76,12 @@ class ConsentService:
             return MessageResponse(message="Access request rejected successfully")
 
         requested_scope = set(consent_request.requested_scope or [])
-        approved_scope = set(data.approved_scope or consent_request.requested_scope or [])
+        scope_source = (
+            consent_request.requested_scope
+            if data.approved_scope is None
+            else data.approved_scope
+        )
+        approved_scope = set(scope_source or [])
 
         if not approved_scope:
             raise HTTPException(status_code=400, detail="Approved scope cannot be empty")

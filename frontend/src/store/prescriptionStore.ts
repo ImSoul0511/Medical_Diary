@@ -42,6 +42,7 @@ type PrescriptionStore = {
   updateItemDraft: (index: number, patch: Partial<PrescriptionItemDraft>) => void;
   removeItemDraft: (index: number) => void;
   resetBuilder: () => void;
+  clear: () => void;
 };
 
 const emptyBuilderDraft: PrescriptionDraft = {
@@ -208,6 +209,22 @@ export const usePrescriptionStore = create<PrescriptionStore>((set) => ({
     set({
       builderDraft: emptyBuilderDraft,
       itemDrafts: [],
+      error: null,
+    }),
+  clear: () =>
+    set({
+      prescriptions: [],
+      logsByPrescriptionId: {},
+      todayLogs: [],
+      selectedPrescriptionId: null,
+      builderDraft: emptyBuilderDraft,
+      itemDrafts: [],
+      isLoadingPrescriptions: false,
+      isLoadingLogs: false,
+      isCreatingPrescription: false,
+      isAddingItem: false,
+      updatingLogId: null,
+      deletingPrescriptionId: null,
       error: null,
     }),
 }));

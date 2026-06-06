@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.modules.consent.schemas import VALID_CONSENT_SCOPES
+from app.modules.consent.schemas import ConsentScope, VALID_CONSENT_SCOPES
 
 
 class PatientPublicResponse(BaseModel):
@@ -30,7 +30,7 @@ class RequestAccessRequest(BaseModel):
     """Body cho POST /doctors/request-access — Bác sĩ gửi yêu cầu truy cập."""
 
     patient_id: UUID
-    requested_scope: list[str] = Field(
+    requested_scope: list[ConsentScope] = Field(
         ...,
         min_length=1,
         description="Danh sách scope yêu cầu truy cập. Các giá trị hợp lệ: blood_type, allergies, emergency_contact, medical_records, prescriptions, diaries, heart_rate, step_count, respiratory_rate",
@@ -64,7 +64,7 @@ class RequestAccessRequest(BaseModel):
 
     @field_validator("requested_scope")
     @classmethod
-    def validate_scope(cls, value: list[str]) -> list[str]:
+    def validate_scope(cls, value: list[ConsentScope]) -> list[ConsentScope]:
         invalid = set(value) - VALID_CONSENT_SCOPES
         if invalid:
             raise ValueError(f"Invalid consent scopes: {sorted(invalid)}")

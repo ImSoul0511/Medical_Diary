@@ -15,6 +15,7 @@ type UiStore = {
   setError: (error: string | null) => void;
   showToast: (message: string) => void;
   clearToast: () => void;
+  clear: () => void;
 };
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -31,4 +32,13 @@ export const useUiStore = create<UiStore>((set) => ({
   setError: (error) => set({ lastError: error }),
   showToast: (message) => set({ toastMessage: message }),
   clearToast: () => set({ toastMessage: null }),
+  clear: () =>
+    set({
+      sidebarCollapsed: false,
+      mobileSidebarOpen: false,
+      currentRoleTheme: "patient",
+      globalLoading: false,
+      lastError: null,
+      toastMessage: null,
+    }),
 }));

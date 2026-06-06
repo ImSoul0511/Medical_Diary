@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Activity, FileText, HeartPulse, NotebookText, Pill } from "lucide-react";
+import { Activity, HeartPulse, NotebookText, Pill } from "lucide-react";
 import {
   CartesianGrid,
   Line,
@@ -19,7 +19,6 @@ import { useDiaryStore } from "../../store/diaryStore";
 import { useDoctorStore } from "../../store/doctorStore";
 import { useHealthMetricsStore } from "../../store/healthMetricsStore";
 import { useMedicalRecordStore } from "../../store/medicalRecordStore";
-import { usePrescriptionStore } from "../../store/prescriptionStore";
 import type { DiaryEntry } from "../../types/diary";
 import type { MedicalRecord } from "../../types/medicalRecord";
 import { formatDate, formatDateTime } from "../../utils/date";
@@ -35,12 +34,17 @@ export function DoctorPatientDetail() {
   const loadPatientDiaries = useDiaryStore((state) => state.loadPatientDiaries);
   const medicalRecords = useMedicalRecordStore((state) => state.patientRecords);
   const loadPatientRecords = useMedicalRecordStore((state) => state.loadPatientRecords);
-  const prescriptions = usePrescriptionStore((state) => state.prescriptions);
-  const loadPrescriptions = usePrescriptionStore((state) => state.loadPrescriptions);
   const chartData = healthMetrics.map((metric) => ({
     day: formatDate(metric.recordedAt, "dd/MM"),
     heartRate: metric.heartRate,
+    stepCount: metric.stepCount,
+    respiratoryRate: metric.respiratoryRate,
   }));
+  const latestHeartRate = healthMetrics.find((metric) => metric.heartRate != null)?.heartRate;
+  const latestStepCount = healthMetrics.find((metric) => metric.stepCount != null)?.stepCount;
+  const latestRespiratoryRate = healthMetrics.find(
+    (metric) => metric.respiratoryRate != null,
+  )?.respiratoryRate;
 
   useEffect(() => {
     if (!patientId) return;
@@ -48,8 +52,7 @@ export function DoctorPatientDetail() {
     void loadPatientMetrics(patientId).catch(() => undefined);
     void loadPatientDiaries(patientId).catch(() => undefined);
     void loadPatientRecords(patientId).catch(() => undefined);
-    void loadPrescriptions().catch(() => undefined);
-  }, [loadPatientDetail, loadPatientDiaries, loadPatientMetrics, loadPatientRecords, loadPrescriptions, patientId]);
+  }, [loadPatientDetail, loadPatientDiaries, loadPatientMetrics, loadPatientRecords, patientId]);
 
   const diaryColumns: DataTableColumn<DiaryEntry>[] = [
     { key: "time", header: "Thời gian", render: (row) => formatDateTime(row.createdAt) },
@@ -95,10 +98,10 @@ export function DoctorPatientDetail() {
 
         <section className="grid gap-4 lg:grid-cols-4">
           {[
-            { Icon: HeartPulse, label: "Nhịp tim", value: `${healthMetrics[0]?.heartRate ?? "--"} bpm` },
-            { Icon: Activity, label: "Bước chân", value: `${healthMetrics[0]?.stepCount ?? "--"}` },
+            { Icon: HeartPulse, label: "Nhịp tim", value: `${latestHeartRate ?? "--"} bpm` },
+            { Icon: Activity, label: "Bước chân", value: `${latestStepCount ?? "--"}` },
+            { Icon: HeartPulse, label: "Nhịp thở", value: `${latestRespiratoryRate ?? "--"} lần/phút` },
             { Icon: NotebookText, label: "Nhật ký", value: `${diaries.length} bản ghi` },
-            { Icon: FileText, label: "Hồ sơ", value: `${medicalRecords.length} hồ sơ` },
           ].map(({ Icon, label, value }) => (
             <Card key={label}>
               <Icon className="h-5 w-5 text-accent" />
@@ -109,7 +112,7 @@ export function DoctorPatientDetail() {
         </section>
 
         <Card padding="lg">
-          <h2 className="text-lg font-semibold text-secondary">Vitals</h2>
+          <h2 className="text-lg font-semibold text-secondary">Chỉ số sức khỏe</h2>
           <div className="mt-4 h-64">
             <ResponsiveContainer height="100%" width="100%">
               <LineChart data={chartData}>
@@ -117,7 +120,8 @@ export function DoctorPatientDetail() {
                 <XAxis dataKey="day" fontSize={12} />
                 <YAxis fontSize={12} />
                 <Tooltip />
-                <Line dataKey="heartRate" name="Nhịp tim" stroke="#0D9488" strokeWidth={2} type="monotone" />
+                <Line dataKey="heartRate" name="Nhịp tim" stroke="#DC2626" strokeWidth={2} type="monotone" />
+                <Line dataKey="respiratoryRate" name="Nhịp thở" stroke="#7C3AED" strokeWidth={2} type="monotone" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -136,7 +140,7 @@ export function DoctorPatientDetail() {
         <Card>
           <h2 className="font-semibold text-secondary">Đơn thuốc gần nhất</h2>
           <p className="mt-2 text-sm text-mutedForeground">
-            {prescriptions[0]?.items.map((item) => item.medicationName).join(", ") || prescriptions[0]?.notes || "Chưa có đơn thuốc."}
+            Backend hiện tại chưa có endpoint cho bác sĩ xem đơn thuốc của bệnh nhân.
           </p>
         </Card>
       </div>

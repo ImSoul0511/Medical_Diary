@@ -36,6 +36,7 @@ type UserStore = {
   exportData: (format: "json" | "pdf", scope?: string) => Promise<Blob>;
   setProfileForm: (form: UserProfileForm | null) => void;
   resetProfileForm: () => void;
+  clear: () => void;
   clearError: () => void;
 };
 
@@ -164,6 +165,20 @@ export const useUserStore = create<UserStore>((set, get) => ({
     const profile = get().profile;
     set({ profileForm: profile ? profileToForm(profile) : null });
   },
+  clear: () =>
+    set({
+      profile: null,
+      profileForm: null,
+      accessHistory: [],
+      doctorSearchResults: [],
+      isLoadingProfile: false,
+      isSavingProfile: false,
+      isSavingPrivacy: false,
+      isLoadingAccessHistory: false,
+      isSearchingDoctors: false,
+      isExporting: false,
+      error: null,
+    }),
   clearError: () => set({ error: null }),
 }));
 

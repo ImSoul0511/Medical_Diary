@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { authApi } from "../api/auth/authApi";
 import type { AuthUser, RegisterDoctorForm, RegisterPatientForm, Role } from "../types/auth";
+import { resetAllDomainStores } from "./resetStores";
 
 type AuthStore = {
   selectedRole: Role;
@@ -56,6 +57,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const role = response.user.role as Role;
       const user = toDisplayUser(response.user.id, role, email);
 
+      await resetAllDomainStores();
       set({
         selectedRole: role,
         currentUser: user,
@@ -136,6 +138,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
         });
         return response.access_token;
       } catch (error: any) {
+        await resetAllDomainStores();
         set({
           accessToken: null,
           isAuthenticated: false,
@@ -154,6 +157,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     try {
       await authApi.logout();
     } finally {
+      refreshSessionPromise = null;
+      await resetAllDomainStores();
       set({
         currentUser: null,
         isAuthenticated: false,

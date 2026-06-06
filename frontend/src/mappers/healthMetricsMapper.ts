@@ -1,5 +1,8 @@
 import type { HealthMetric, HealthMetricFilters, HealthMetricForm } from "../types/healthMetrics";
-import type { HealthMetricCreateRequest } from "../api/health_metrics/types";
+import type {
+  HealthMetricCreateRequest,
+  HealthMetricListParams,
+} from "../api/health_metrics/types";
 import { asNullableString, asNumberOrNull, asRecord, asString, compactPayload } from "./common";
 
 function parseOptionalNumber(value: string): number | undefined {
@@ -37,10 +40,10 @@ export function mapHealthMetricFormToDto(form: HealthMetricForm): HealthMetricCr
   return payload;
 }
 
-export function mapHealthMetricFiltersToParams(filters?: HealthMetricFilters) {
+export function mapHealthMetricFiltersToParams(filters?: HealthMetricFilters): HealthMetricListParams {
   return compactPayload({
     patient_id: asNullableString(filters?.patientId),
     start: asNullableString(filters?.start),
     end: asNullableString(filters?.end),
-  });
+  }) as HealthMetricListParams;
 }

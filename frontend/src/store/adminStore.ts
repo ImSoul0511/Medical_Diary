@@ -24,6 +24,7 @@ type AdminStore = {
   verifyDoctor: (doctorId: string, form: DoctorVerifyForm) => Promise<void>;
   loadAuditLogs: (filters?: Partial<AuditLogFilters>) => Promise<AuditLog[]>;
   setAuditFilters: (filters: Partial<AuditLogFilters>) => void;
+  clear: () => void;
   clearError: () => void;
 };
 
@@ -89,5 +90,16 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     set((state) => ({
       auditFilters: { ...state.auditFilters, ...filters },
     })),
+  clear: () =>
+    set({
+      pendingDoctors: [],
+      auditLogs: [],
+      auditFilters: defaultAuditFilters,
+      pagination: { page: 1, limit: 20, total: 0 },
+      isLoadingDoctors: false,
+      isLoadingAuditLogs: false,
+      verifyingDoctorId: null,
+      error: null,
+    }),
   clearError: () => set({ error: null }),
 }));

@@ -4,12 +4,13 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.modules.consent.schemas import HEALTH_METRIC_SCOPES
 from app.modules.health_metrics.models import HealthMetric
 from app.modules.health_metrics.schemas import HealthMetricCreateRequest, HealthMetricResponse
-from app.shared.consent import check_consent
+from app.shared.consent import get_consent_scopes
 
 logger = logging.getLogger("medical_diary")
 
@@ -93,14 +94,14 @@ class HealthMetricsService:
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
     ) -> list[HealthMetricResponse]:
-        """Doctor xem chỉ số bệnh nhân. Cần consent scope 'vitals'."""
-        has_consent = await check_consent(
+        """Doctor xem chi so benh nhan theo health metric scopes duoc cap."""
+        granted_scopes = await get_consent_scopes(
             self.db,
             str(doctor_id),
             str(patient_id),
-            "vitals",
+            HEALTH_METRIC_SCOPES,
         )
-        if not has_consent:
+        if not granted_scopes:
             raise HTTPException(
                 status_code=403,
                 detail="Không có quyền truy cập chỉ số của bệnh nhân này.",
@@ -114,6 +115,15 @@ class HealthMetricsService:
             )
             .order_by(HealthMetric.recorded_at.desc())
         )
+        visible_metric_filters = []
+        if "heart_rate" in granted_scopes:
+            visible_metric_filters.append(HealthMetric.heart_rate.is_not(None))
+        if "step_count" in granted_scopes:
+            visible_metric_filters.append(HealthMetric.step_count.is_not(None))
+        if "respiratory_rate" in granted_scopes:
+            visible_metric_filters.append(HealthMetric.respiratory_rate.is_not(None))
+        stmt = stmt.where(or_(*visible_metric_filters))
+
         if start:
             stmt = stmt.where(HealthMetric.recorded_at >= start)
         if end:
@@ -127,9 +137,11 @@ class HealthMetricsService:
             HealthMetricResponse(
                 id=row.id,
                 user_id=row.user_id,
-                heart_rate=row.heart_rate,
-                step_count=row.step_count,
-                respiratory_rate=row.respiratory_rate,
+                heart_rate=row.heart_rate if "heart_rate" in granted_scopes else None,
+                step_count=row.step_count if "step_count" in granted_scopes else None,
+                respiratory_rate=(
+                    row.respiratory_rate if "respiratory_rate" in granted_scopes else None
+                ),
                 recorded_at=row.recorded_at,
                 created_at=row.created_at,
             )

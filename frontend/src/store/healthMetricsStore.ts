@@ -48,8 +48,7 @@ export const useHealthMetricsStore = create<HealthMetricsStore>((set) => ({
   loadMine: async (filters = {}) => {
     set({ isLoading: true, error: null, filters });
     try {
-      mapHealthMetricFiltersToParams(filters);
-      const data = await healthMetricsApi.list(filters.start, filters.end);
+      const data = await healthMetricsApi.list(mapHealthMetricFiltersToParams(filters));
       const items = data.map(mapHealthMetricDto);
       set({
         items,
@@ -67,7 +66,9 @@ export const useHealthMetricsStore = create<HealthMetricsStore>((set) => ({
   loadPatientMetrics: async (patientId, filters = {}) => {
     set({ isLoading: true, error: null, filters: { ...filters, patientId } });
     try {
-      const data = await healthMetricsApi.list(filters.start, filters.end, patientId);
+      const data = await healthMetricsApi.list(
+        mapHealthMetricFiltersToParams({ ...filters, patientId }),
+      );
       const items = data.map(mapHealthMetricDto);
       set({
         items,

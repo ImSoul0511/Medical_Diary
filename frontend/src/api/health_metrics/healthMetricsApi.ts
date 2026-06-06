@@ -1,5 +1,9 @@
 import { apiClient } from "../apiClient";
-import type { HealthMetricCreateRequest, HealthMetricResponse } from "./types";
+import type {
+  HealthMetricCreateRequest,
+  HealthMetricListParams,
+  HealthMetricResponse,
+} from "./types";
 
 export const healthMetricsApi = {
   create: async (data: HealthMetricCreateRequest): Promise<HealthMetricResponse> => {
@@ -7,13 +11,9 @@ export const healthMetricsApi = {
     return response.data;
   },
 
-  list: async (
-    start?: string,
-    end?: string,
-    patientId?: string,
-  ): Promise<HealthMetricResponse[]> => {
+  list: async (params?: HealthMetricListParams): Promise<HealthMetricResponse[]> => {
     const response = await apiClient.get<HealthMetricResponse[]>("/health-metrics", {
-      params: { patient_id: patientId, start, end },
+      params,
     });
     return response.data;
   },

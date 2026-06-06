@@ -32,6 +32,7 @@ type ConsentStore = {
   rejectRequest: (requestId: string) => Promise<void>;
   revokeDoctorPermission: (doctorId: string) => Promise<void>;
   setSelectedScopes: (scopes: ConsentScope[]) => void;
+  clear: () => void;
   clearError: () => void;
 };
 
@@ -90,6 +91,9 @@ export const useConsentStore = create<ConsentStore>((set) => ({
   approveRequest: async (requestId, scopes, expiresInDays = "30") => {
     set({ reviewingRequestId: requestId, error: null });
     try {
+      if (scopes.length === 0) {
+        throw new Error("Approved scope cannot be empty.");
+      }
       await consentApi.reviewAccessRequest(
         requestId,
         mapConsentReviewFormToDto({
@@ -146,5 +150,17 @@ export const useConsentStore = create<ConsentStore>((set) => ({
     }
   },
   setSelectedScopes: (scopes) => set({ selectedScopes: scopes }),
+  clear: () =>
+    set({
+      pendingRequests: [],
+      activePermissions: [],
+      history: [],
+      selectedScopes: [],
+      isLoadingRequests: false,
+      isLoadingHistory: false,
+      reviewingRequestId: null,
+      revokingDoctorId: null,
+      error: null,
+    }),
   clearError: () => set({ error: null }),
 }));

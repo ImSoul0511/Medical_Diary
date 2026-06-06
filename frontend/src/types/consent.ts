@@ -1,13 +1,26 @@
-export type ConsentScope =
-  | "blood_type"
-  | "allergies"
-  | "emergency_contact"
-  | "medical_records"
-  | "prescriptions"
-  | "diaries"
-  | "heart_rate"
-  | "step_count"
-  | "respiratory_rate";
+export const CONSENT_SCOPES = [
+  "blood_type",
+  "allergies",
+  "emergency_contact",
+  "medical_records",
+  "prescriptions",
+  "diaries",
+  "heart_rate",
+  "step_count",
+  "respiratory_rate",
+] as const;
+
+export type ConsentScope = (typeof CONSENT_SCOPES)[number];
+
+export const HEALTH_METRIC_CONSENT_SCOPES = [
+  "heart_rate",
+  "step_count",
+  "respiratory_rate",
+] as const satisfies readonly ConsentScope[];
+
+export function isConsentScope(value: unknown): value is ConsentScope {
+  return typeof value === "string" && CONSENT_SCOPES.includes(value as ConsentScope);
+}
 
 export type AccessRequestStatus = "pending" | "approved" | "rejected" | string;
 
@@ -29,7 +42,7 @@ export type ActivePermission = {
   doctorName: string;
   approvedScopes: ConsentScope[];
   grantedAt: string;
-  expiresAt: string;
+  expiresAt: string | null;
 };
 
 export type ConsentHistoryItem = {
@@ -37,7 +50,7 @@ export type ConsentHistoryItem = {
   doctorName: string;
   scopes: ConsentScope[];
   grantedAt: string;
-  expiresAt: string;
+  expiresAt: string | null;
 }
 
 export type ConsentReviewForm = {

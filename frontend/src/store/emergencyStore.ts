@@ -36,6 +36,7 @@ type EmergencyStore = {
   loadPublicProfile: (token: string) => Promise<EmergencyProfile>;
   clearPublicProfile: () => void;
   clearCreatedToken: () => void;
+  clear: () => void;
 };
 
 export const useEmergencyStore = create<EmergencyStore>((set) => ({
@@ -133,4 +134,18 @@ export const useEmergencyStore = create<EmergencyStore>((set) => ({
   },
   clearPublicProfile: () => set({ publicProfile: null, isLoadingPublicProfile: false }),
   clearCreatedToken: () => set({ createdToken: null }),
+  clear: () =>
+    set({
+      tokens: [],
+      accessHistory: [],
+      publicProfile: null,
+      createdToken: null,
+      isLoadingTokens: false,
+      isLoadingHistory: false,
+      isLoadingPublicProfile: false,
+      isCreating: false,
+      updatingTokenId: null,
+      revokingTokenId: null,
+      error: null,
+    }),
 }));

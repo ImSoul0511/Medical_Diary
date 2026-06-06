@@ -9,6 +9,7 @@ import { FormInput } from "../../components/FormInput";
 import { ROUTES } from "../../constants/routes";
 import { useDoctorStore } from "../../store/doctorStore";
 import { useUiStore } from "../../store/uiStore";
+import { HEALTH_METRIC_CONSENT_SCOPES } from "../../types/consent";
 
 export function DoctorSearch() {
   const showToast = useUiStore((state) => state.showToast);
@@ -28,7 +29,15 @@ export function DoctorSearch() {
   function handleRequestAccess(patientId: string) {
     void requestAccess({
       patientId,
-      requestedScopes: ["blood_type", "allergies", "emergency_contact", "medical_records"],
+      requestedScopes: [
+        "blood_type",
+        "allergies",
+        "emergency_contact",
+        "medical_records",
+        "prescriptions",
+        "diaries",
+        ...HEALTH_METRIC_CONSENT_SCOPES,
+      ],
       reason: "Cần xem thông tin y tế để hỗ trợ khám và điều trị.",
     })
       .then(() => showToast("Đã gửi yêu cầu cấp quyền."))

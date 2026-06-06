@@ -31,6 +31,7 @@ type DoctorStore = {
   clearSearch: () => void;
   clearSelectedPatient: () => void;
   clearRequestResult: () => void;
+  clear: () => void;
 };
 
 export const useDoctorStore = create<DoctorStore>((set) => ({
@@ -88,4 +89,16 @@ export const useDoctorStore = create<DoctorStore>((set) => ({
   clearSelectedPatient: () =>
     set({ selectedPatient: null, selectedPatientId: null, isLoadingPatient: false }),
   clearRequestResult: () => set({ requestAccessResult: null }),
+  clear: () =>
+    set({
+      patientSearchResults: [],
+      selectedPatient: null,
+      selectedPatientId: null,
+      requestAccessResult: null,
+      requestAccessDraft: null,
+      isSearching: false,
+      isLoadingPatient: false,
+      isRequestingAccess: false,
+      error: null,
+    }),
 }));

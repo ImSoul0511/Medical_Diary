@@ -1,15 +1,16 @@
-import type {
-  AccessRequest,
-  ActivePermission,
-  ConsentHistoryItem,
-  ConsentReviewForm,
-  ConsentScope,
+import {
+  isConsentScope,
+  type AccessRequest,
+  type ActivePermission,
+  type ConsentHistoryItem,
+  type ConsentReviewForm,
+  type ConsentScope,
 } from "../types/consent";
 import type { AccessRequestActionRequest } from "../api/consent/types";
-import { asArray, asNullableString, asRecord, asString, compactPayload } from "./common";
+import { asArray, asNullableString, asRecord, asString } from "./common";
 
 function mapScopes(value: unknown): ConsentScope[] {
-  return asArray<string>(value) as ConsentScope[];
+  return asArray<unknown>(value).filter(isConsentScope);
 }
 
 export function mapAccessRequestDto(dto: unknown): AccessRequest {
@@ -36,7 +37,7 @@ export function mapConsentHistoryItemDto(dto: unknown): ConsentHistoryItem {
     doctorName: asString(source.doctor_name),
     scopes: mapScopes(source.scope ?? source.scopes),
     grantedAt: asString(source.granted_at),
-    expiresAt: asString(source.expires_at),
+    expiresAt: asNullableString(source.expires_at),
   };
 }
 

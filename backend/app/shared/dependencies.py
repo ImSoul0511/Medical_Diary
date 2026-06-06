@@ -39,7 +39,7 @@ def get_current_user(
         
         raise HTTPException(
             status_code=401,
-            detail=f"Không có quyền truy cập. Token không hợp lệ hoặc RLS Context bị trống. (Claims: {claims_json})",
+            detail=f"Không có quyền truy cập. Token không hợp lệ hoặc RLS Context bị trống",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

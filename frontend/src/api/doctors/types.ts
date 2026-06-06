@@ -1,3 +1,5 @@
+import type { ConsentScope } from "../../types/consent";
+
 export interface PatientPublicResponse {
   id: string;
   full_name: string;
@@ -16,7 +18,7 @@ export interface PatientProfileResponse {
 export interface RequestAccessRequest {
   patient_id: string;
   reason: string;
-  requested_scope: string[];
+  requested_scope: ConsentScope[];
 }
 
 export interface RequestAccessResponse {

@@ -39,7 +39,7 @@ async def create_metric(
     response_model=List[HealthMetricResponse],
     responses={401: _error_responses[401], 403: _error_responses[403]},
     summary="Xem lịch sử chỉ số đo lường",
-    description="User xem của mình (không truyền patient_id). Doctor xem của bệnh nhân (truyền patient_id, cần consent scope 'vitals').",
+    description="User xem của mình (không truyền patient_id). Doctor xem của bệnh nhân (truyền patient_id, cần consent scope heart_rate, step_count hoặc respiratory_rate).",
 )
 async def list_metrics(
     patient_id: Optional[UUID] = Query(None, description="Doctor only — ID bệnh nhân cần xem"),

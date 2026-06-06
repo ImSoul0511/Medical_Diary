@@ -1,8 +1,14 @@
 export interface HealthMetricCreateRequest {
-  heart_rate?: number;
-  step_count?: number;
-  respiratory_rate?: number;
+  heart_rate?: number | null;
+  step_count?: number | null;
+  respiratory_rate?: number | null;
   recorded_at: string;
+}
+
+export interface HealthMetricListParams {
+  patient_id?: string | null;
+  start?: string | null;
+  end?: string | null;
 }
 
 export interface HealthMetricResponse {
