@@ -21,9 +21,10 @@ import { Badge } from "./Badge";
 type TopbarProps = {
   role: Role;
   title: string;
+  description?: string;
 };
 
-export function Topbar({ role, title }: TopbarProps) {
+export function Topbar({ role, title, description }: TopbarProps) {
   const { unreadCount, items, markAsRead, markAllLocalRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
@@ -53,6 +54,9 @@ export function Topbar({ role, title }: TopbarProps) {
         </button>
         <div className="min-w-0">
           <h1 className="truncate text-base font-semibold text-secondary lg:text-lg">{title}</h1>
+          {description ? (
+            <p className="hidden truncate text-xs text-mutedForeground sm:block">{description}</p>
+          ) : null}
         </div>
       </div>
 

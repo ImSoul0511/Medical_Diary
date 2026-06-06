@@ -48,6 +48,8 @@ function profileToForm(profile: UserProfile): UserProfileForm {
     bloodType: profile.bloodType ?? "",
     allergies: profile.allergies ?? "",
     emergencyContact: profile.emergencyContact ?? "",
+    phoneNumber: profile.phoneNumber ?? "",
+    cccd: profile.cccd ?? "",
   };
 }
 

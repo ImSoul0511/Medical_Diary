@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from supabase import Client 
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.shared.dependencies import get_current_user, get_supabase_client
 from app.shared.schemas import MessageResponse, error_responses as _error_responses
 from app.modules.auth.schemas import (
@@ -39,9 +40,10 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
         value=refresh_token,
         max_age=REFRESH_COOKIE_MAX_AGE,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.cookie_samesite,
         path=REFRESH_COOKIE_PATH,
+        domain=settings.cookie_domain,
     )
 
 def _clear_refresh_cookie(response: Response) -> None:
@@ -49,8 +51,9 @@ def _clear_refresh_cookie(response: Response) -> None:
         key=REFRESH_COOKIE_NAME,
         path=REFRESH_COOKIE_PATH,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.cookie_samesite,
+        domain=settings.cookie_domain,
     )
 
 @router.post("/login", response_model=LoginResponse, responses={401: _error_responses[401]})

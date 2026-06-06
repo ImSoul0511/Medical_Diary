@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { buildMockQrCells } from "../utils/qr";
 import { cn } from "../utils/cn";
 
@@ -5,10 +7,44 @@ type QRPreviewProps = {
   token: string;
   label?: string;
   compact?: boolean;
+  size?: number;
 };
 
-export function QRPreview({ token, label = "QR cấp cứu", compact = false }: QRPreviewProps) {
+export function QRPreview({
+  token,
+  label = "QR c\u1ea5p c\u1ee9u",
+  compact = false,
+  size,
+}: QRPreviewProps) {
   const isMock = ["privacy-settings", "patient-dashboard", "demo-token"].includes(token);
+  const dimension = size ?? (compact ? 112 : 160);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isMock) {
+      setQrDataUrl(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setQrDataUrl(null);
+
+    void QRCode.toDataURL(`${window.location.origin}/cap-cuu/${token}`, {
+      errorCorrectionLevel: "M",
+      margin: 2,
+      width: dimension,
+    })
+      .then((dataUrl) => {
+        if (!cancelled) setQrDataUrl(dataUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dimension, isMock, token]);
 
   return (
     <div
@@ -17,7 +53,7 @@ export function QRPreview({ token, label = "QR cấp cứu", compact = false }: 
         compact && "p-3",
       )}
     >
-      {isMock ? (
+      {isMock || !qrDataUrl ? (
         <div
           aria-label={label}
           className={cn(
@@ -25,6 +61,7 @@ export function QRPreview({ token, label = "QR cấp cứu", compact = false }: 
             compact ? "h-28 w-28" : "h-40 w-40",
           )}
           role="img"
+          style={{ height: dimension, width: dimension }}
         >
           {buildMockQrCells(token).map((active, index) => (
             <span
@@ -35,12 +72,13 @@ export function QRPreview({ token, label = "QR cấp cứu", compact = false }: 
         </div>
       ) : (
         <img
-          src={`https://api.qrserver.com/v1/create-qr-code/?size=${compact ? 112 : 160}&data=${encodeURIComponent(window.location.origin + "/cap-cuu/" + token)}`}
           alt={label}
           className={cn(
-            "rounded-input border border-border p-2 bg-white object-contain",
+            "rounded-input border border-border bg-white p-2 object-contain",
             compact ? "h-28 w-28" : "h-40 w-40",
           )}
+          src={qrDataUrl}
+          style={{ height: dimension, width: dimension }}
         />
       )}
       <span className="mt-2 text-xs font-medium text-mutedForeground">{label}</span>

@@ -13,6 +13,7 @@ import { useUiStore } from "../../store/uiStore";
 import { useUserStore } from "../../store/userStore";
 import type { MedicalRecord } from "../../types/medicalRecord";
 import type { Prescription } from "../../types/prescriptions";
+import type { Gender } from "../../types/users";
 import { formatDate } from "../../utils/date";
 
 const bloodTypeOptions = [
@@ -39,7 +40,7 @@ export function ProfilePage() {
   const showToast = useUiStore((state) => state.showToast);
 
   const [fullName, setFullName] = useState("");
-  const [gender, setGender] = useState("male");
+  const [gender, setGender] = useState<Gender | "">("male");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [bloodType, setBloodType] = useState("");
   const [allergies, setAllergies] = useState("");
@@ -124,7 +125,7 @@ export function ProfilePage() {
                   <select
                     className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                     value={gender}
-                    onChange={(event) => setGender(event.target.value)}
+                    onChange={(event) => setGender(event.target.value as Gender)}
                   >
                     <option value="male">male</option>
                     <option value="female">female</option>

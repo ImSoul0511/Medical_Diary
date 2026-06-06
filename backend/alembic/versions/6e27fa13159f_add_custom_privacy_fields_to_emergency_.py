@@ -19,9 +19,30 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('emergency_tokens', sa.Column('show_blood_type', sa.Boolean(), nullable=False, server_default=sa.text('true')))
-    op.add_column('emergency_tokens', sa.Column('show_allergies', sa.Boolean(), nullable=False, server_default=sa.text('true')))
-    op.add_column('emergency_tokens', sa.Column('show_emergency_contact', sa.Boolean(), nullable=False, server_default=sa.text('true')))
+    op.add_column('emergency_tokens', sa.Column('show_blood_type', sa.Boolean(), nullable=True))
+    op.add_column('emergency_tokens', sa.Column('show_allergies', sa.Boolean(), nullable=True))
+    op.add_column('emergency_tokens', sa.Column('show_emergency_contact', sa.Boolean(), nullable=True))
+
+    op.execute("""
+        UPDATE emergency_tokens AS et
+        SET
+            show_blood_type = COALESCE((p.privacy_settings ->> 'show_blood_type')::boolean, false),
+            show_allergies = COALESCE((p.privacy_settings ->> 'show_allergies')::boolean, false),
+            show_emergency_contact = COALESCE((p.privacy_settings ->> 'show_emergency_contact')::boolean, false)
+        FROM profiles AS p
+        WHERE p.id = et.user_id
+    """)
+    op.execute("""
+        UPDATE emergency_tokens
+        SET
+            show_blood_type = COALESCE(show_blood_type, false),
+            show_allergies = COALESCE(show_allergies, false),
+            show_emergency_contact = COALESCE(show_emergency_contact, false)
+    """)
+
+    op.alter_column('emergency_tokens', 'show_blood_type', nullable=False, server_default=sa.text('true'))
+    op.alter_column('emergency_tokens', 'show_allergies', nullable=False, server_default=sa.text('true'))
+    op.alter_column('emergency_tokens', 'show_emergency_contact', nullable=False, server_default=sa.text('true'))
 
 
 def downgrade() -> None:

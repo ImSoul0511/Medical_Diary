@@ -59,7 +59,11 @@ class UsersService:
 
     async def update_profile(self, user_id: str, data: UserProfileUpdateRequest) -> UserProfileResponse:
         try:
-            update_data = data.model_dump(exclude_none=True)
+            update_data = data.model_dump(exclude_unset=True)
+            for required_field in ("full_name", "gender"):
+                if required_field in update_data and update_data[required_field] is None:
+                    update_data.pop(required_field)
+
             if not update_data:
                 return await self.get_profile(user_id)
 

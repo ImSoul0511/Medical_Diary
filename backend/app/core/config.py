@@ -18,6 +18,13 @@ class Settings(BaseSettings):
     # Admin Configuration
     ADMIN_IP_ALLOWLIST: str = "127.0.0.1"
 
+    # Browser / deployment configuration
+    CORS_ORIGINS: str = ""
+    CORS_ORIGIN_REGEX: Optional[str] = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
+    COOKIE_SECURE: bool = False
+    COOKIE_SAMESITE: str = "lax"
+    COOKIE_DOMAIN: Optional[str] = None
+
     # Sentry
     SENTRY_DSN: Optional[str] = None
 
@@ -33,5 +40,32 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @property
+    def cors_origin_list(self) -> List[str]:
+        return [
+            origin.strip().rstrip("/")
+            for origin in self.CORS_ORIGINS.split(",")
+            if origin.strip()
+        ]
+
+    @property
+    def cors_origin_regex(self) -> Optional[str]:
+        if not self.CORS_ORIGIN_REGEX:
+            return None
+        value = self.CORS_ORIGIN_REGEX.strip()
+        return value or None
+
+    @property
+    def cookie_samesite(self) -> str:
+        value = self.COOKIE_SAMESITE.strip().lower()
+        return value if value in {"lax", "strict", "none"} else "lax"
+
+    @property
+    def cookie_domain(self) -> Optional[str]:
+        if not self.COOKIE_DOMAIN:
+            return None
+        value = self.COOKIE_DOMAIN.strip()
+        return value or None
 
 settings = Settings()

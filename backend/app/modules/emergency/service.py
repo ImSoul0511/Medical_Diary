@@ -60,6 +60,13 @@ class EmergencyService:
             show_emergency_contact=token.show_emergency_contact,
         )
 
+    def _profile_allows_public_field(self, profile: Profile, key: str) -> bool:
+        """Global profile privacy is the upper bound for any per-token visibility."""
+        privacy_settings = profile.privacy_settings
+        if not isinstance(privacy_settings, dict):
+            return False
+        return privacy_settings.get(key) is True
+
     async def _get_owned_token(self, token_id: UUID, user_id: UUID) -> EmergencyToken:
         """Lấy token thuộc về user. Raise 404 nếu không tìm thấy hoặc đã bị revoke."""
         stmt = select(EmergencyToken).where(
@@ -210,10 +217,23 @@ class EmergencyService:
                 detail="Token đã hết hạn. Vui lòng yêu cầu bệnh nhân tạo token mới.",
             )
 
-        # 3. Đọc token-specific privacy settings để lọc field trả về
-        blood_type = profile.blood_type if token.show_blood_type else None
-        allergies = profile.allergies if token.show_allergies else None
-        emergency_contact = profile.emergency_contact if token.show_emergency_contact else None
+        # 3. Token-specific settings can only narrow the user's global privacy settings.
+        blood_type = (
+            profile.blood_type
+            if token.show_blood_type and self._profile_allows_public_field(profile, "show_blood_type")
+            else None
+        )
+        allergies = (
+            profile.allergies
+            if token.show_allergies and self._profile_allows_public_field(profile, "show_allergies")
+            else None
+        )
+        emergency_contact = (
+            profile.emergency_contact
+            if token.show_emergency_contact
+            and self._profile_allows_public_field(profile, "show_emergency_contact")
+            else None
+        )
 
         # 4. Ghi access log (không cần flush riêng — sẽ flush cùng commit)
         access_log = EmergencyAccessLog(
