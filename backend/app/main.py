@@ -34,6 +34,7 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+logger = logging.getLogger("medical_diary")
 
 app = FastAPI(
     title="Medical Diary API",
@@ -53,6 +54,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+logger.info(
+    "CORS configured | origins=%s | regex=%s",
+    settings.cors_origin_list,
+    settings.cors_origin_regex,
 )
 
 # 2. RLS Middleware (Quan trọng: Phải đứng sau CORS)
