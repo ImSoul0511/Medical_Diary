@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent } from "react";
 import { Search, ShieldPlus, UserSearch } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../../components/AppShell";
@@ -16,14 +16,22 @@ export function DoctorSearch() {
   const results = useDoctorStore((state) => state.patientSearchResults);
   const searchPatients = useDoctorStore((state) => state.searchPatients);
   const requestAccess = useDoctorStore((state) => state.requestAccess);
+  const isSearching = useDoctorStore((state) => state.isSearching);
   const error = useDoctorStore((state) => state.error);
-  const [query, setQuery] = useState("");
-  const [hasSearched, setHasSearched] = useState(false);
+  const searchQuery = useDoctorStore((state) => state.searchQuery);
+  const setSearchQuery = useDoctorStore((state) => state.setSearchQuery);
+  const searchValidationError = useDoctorStore((state) => state.searchValidationError);
+  const setSearchValidationError = useDoctorStore((state) => state.setSearchValidationError);
+  const hasSearched = useDoctorStore((state) => state.hasSearched);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setHasSearched(true);
-    void searchPatients(query).catch(() => undefined);
+    if (searchQuery.trim().length < 8) {
+      setSearchValidationError("Số điện thoại phải có ít nhất 8 chữ số.");
+      return;
+    }
+    setSearchValidationError("");
+    void searchPatients(searchQuery).catch(() => undefined);
   }
 
   function handleRequestAccess(patientId: string) {
@@ -37,6 +45,7 @@ export function DoctorSearch() {
         "prescriptions",
         "diaries",
         ...HEALTH_METRIC_CONSENT_SCOPES,
+        "manual_health_records",
       ],
       reason: "Cần xem thông tin y tế để hỗ trợ khám và điều trị.",
     })
@@ -45,11 +54,7 @@ export function DoctorSearch() {
   }
 
   return (
-    <AppShell
-      description="Tìm bệnh nhân và tạo yêu cầu cấp quyền."
-      role="doctor"
-      title="Tìm kiếm bệnh nhân"
-    >
+    <AppShell role="doctor" title="Tìm kiếm bệnh nhân">
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <Card padding="lg">
           <div className="mb-5 flex items-center gap-3">
@@ -65,23 +70,29 @@ export function DoctorSearch() {
             <FormInput
               icon={<Search className="h-4 w-4" />}
               label="Số điện thoại"
-              onChange={(event) => setQuery(event.target.value)}
-              value={query}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              value={searchQuery}
             />
-            <Button className="w-full" type="submit" variant="success">
-              Tìm bệnh nhân
+            <Button className="w-full" disabled={isSearching} type="submit" variant="success">
+              {isSearching ? "Đang tìm..." : "Tìm bệnh nhân"}
             </Button>
           </form>
-          {error ? <p className="mt-3 text-sm text-emergency">{error}</p> : null}
+          {searchValidationError ? <p className="mt-3 text-sm text-emergency">{searchValidationError}</p> : null}
+          {error && !searchValidationError ? <p className="mt-3 text-sm text-emergency">{error}</p> : null}
         </Card>
 
         <section className="space-y-3">
-          {hasSearched && results.length === 0 ? (
+          {isSearching ? (
+            <Card padding="lg">
+              <p className="text-sm text-mutedForeground animate-pulse">Đang tìm kiếm...</p>
+            </Card>
+          ) : hasSearched && results.length === 0 ? (
             <Card padding="lg">
               <p className="text-sm text-mutedForeground">Không có kết quả phù hợp.</p>
             </Card>
           ) : null}
-          {results.map((patient) => (
+
+          {!isSearching && results.map((patient) => (
             <Card key={patient.id} padding="lg">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
@@ -107,7 +118,8 @@ export function DoctorSearch() {
               </div>
             </Card>
           ))}
-          {!hasSearched ? (
+
+          {!hasSearched && !isSearching ? (
             <Card padding="lg">
               <p className="text-sm text-mutedForeground">Nhập số điện thoại để bắt đầu tìm kiếm.</p>
             </Card>

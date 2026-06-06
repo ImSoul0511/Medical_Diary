@@ -55,7 +55,7 @@ export const patientNavigation: NavigationItem[] = [
   { icon: Activity, label: "Nhật ký triệu chứng", path: ROUTES.diary },
   { icon: HeartPulse, label: "Chỉ số sức khỏe", path: ROUTES.healthMetrics },
   { icon: FileText, label: "Hồ sơ bệnh án", path: ROUTES.profile },
-  { icon: Shield, label: "Quản lý cấp quyền", path: ROUTES.consent, badge: 2 },
+  { icon: Shield, label: "Quản lý cấp quyền", path: ROUTES.consent },
   { icon: Settings, label: "Cài đặt riêng tư", path: ROUTES.privacy },
 ];
 
@@ -70,7 +70,6 @@ export const adminNavigation: NavigationItem[] = [
     icon: UserCheck,
     label: "Phê duyệt bác sĩ",
     path: ROUTES.adminDoctorApproval,
-    badge: 4,
   },
   { icon: ClipboardList, label: "Nhật ký kiểm toán", path: ROUTES.adminAuditLogs },
 ];

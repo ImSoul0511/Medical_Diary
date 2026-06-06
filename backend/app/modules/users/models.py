@@ -48,7 +48,15 @@ class Profile(Base):
         server_default=text("'male'") # Default value required for non-nullable column with existing rows
     )
     date_of_birth = Column(Date, nullable=True)
-    blood_type = Column(String(5), nullable=True, comment="VD: O+, AB-")
+    blood_type = Column(
+        String(5),
+        CheckConstraint(
+            "blood_type IN ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-')",
+            name="ck_profiles_blood_type"
+        ),
+        nullable=True,
+        comment="VD: O+, AB-"
+    )
     allergies = Column(Text, nullable=True, comment="VD: Penicillin, Aspirin")
     emergency_contact = Column(String(20), nullable=True, comment="SĐT người thân")
     privacy_settings = Column(

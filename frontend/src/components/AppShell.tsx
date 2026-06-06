@@ -59,8 +59,8 @@ export function AppShell({ role, title, description, children }: AppShellProps) 
   if (!isAuthenticated) return null;
 
   return (
-    <div className={cn("flex min-h-screen bg-background", isAdmin && "bg-adminBackground")}>
-      <div className="hidden lg:block">
+    <div className={cn("flex h-screen overflow-hidden bg-background", isAdmin && "bg-adminBackground")}>
+      <div className="hidden h-full lg:block">
         <Sidebar role={role} />
       </div>
       {mobileSidebarOpen ? (

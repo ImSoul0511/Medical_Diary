@@ -8,9 +8,15 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.consent.schemas import HEALTH_METRIC_SCOPES
-from app.modules.health_metrics.models import HealthMetric
-from app.modules.health_metrics.schemas import HealthMetricCreateRequest, HealthMetricResponse
-from app.shared.consent import get_consent_scopes
+from app.modules.health_metrics.models import HealthMetric, ManualHealthRecord
+from app.modules.health_metrics.schemas import (
+    HealthMetricCreateRequest,
+    HealthMetricResponse,
+    ManualHealthRecordCreateRequest,
+    ManualHealthRecordResponse,
+    MetricType,
+)
+from app.shared.consent import check_consent, get_consent_scopes
 
 logger = logging.getLogger("medical_diary")
 
@@ -147,3 +153,119 @@ class HealthMetricsService:
             )
             for row in rows
         ]
+
+    async def _to_manual_response(self, record: ManualHealthRecord) -> ManualHealthRecordResponse:
+        return ManualHealthRecordResponse(
+            id=record.id,
+            user_id=record.user_id,
+            metric_type=record.metric_type,
+            metrics=record.metrics,
+            device_name=record.device_name,
+            notes=record.notes,
+            recorded_at=record.recorded_at,
+            created_at=record.created_at,
+        )
+
+    async def create_manual(
+        self,
+        user_id: UUID,
+        data: ManualHealthRecordCreateRequest,
+    ) -> ManualHealthRecordResponse:
+        record = ManualHealthRecord(
+            user_id=user_id,
+            metric_type=data.metric_type.value,
+            metrics=data.metrics,
+            device_name=data.device_name,
+            notes=data.notes,
+            recorded_at=data.recorded_at,
+        )
+        self.db.add(record)
+        await self.db.flush()
+        await self.db.refresh(record)
+
+        logger.info(
+            f"Manual health record created for user: {user_id} "
+            f"(type={data.metric_type.value})"
+        )
+        return await self._to_manual_response(record)
+
+    async def list_own_manual(
+        self,
+        user_id: UUID,
+        metric_type: Optional[MetricType] = None,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+    ) -> list[ManualHealthRecordResponse]:
+        stmt = (
+            select(ManualHealthRecord)
+            .where(
+                ManualHealthRecord.user_id == user_id,
+                ManualHealthRecord.deleted_at.is_(None),
+            )
+            .order_by(ManualHealthRecord.recorded_at.desc())
+        )
+        if metric_type:
+            stmt = stmt.where(ManualHealthRecord.metric_type == metric_type.value)
+        if start:
+            stmt = stmt.where(ManualHealthRecord.recorded_at >= start)
+        if end:
+            stmt = stmt.where(ManualHealthRecord.recorded_at <= end)
+
+        result = await self.db.execute(stmt)
+        rows = result.scalars().all()
+
+        logger.info(
+            f"Listed {len(rows)} manual health records for user: {user_id} "
+            f"(filter: type={metric_type})"
+        )
+        responses: list[ManualHealthRecordResponse] = []
+        for row in rows:
+            responses.append(await self._to_manual_response(row))
+        return responses
+
+    async def list_manual_by_patient(
+        self,
+        doctor_id: UUID,
+        patient_id: UUID,
+        metric_type: Optional[MetricType] = None,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+    ) -> list[ManualHealthRecordResponse]:
+        has_consent = await check_consent(
+            self.db,
+            str(doctor_id),
+            str(patient_id),
+            "manual_health_records",
+        )
+        if not has_consent:
+            raise HTTPException(
+                status_code=403,
+                detail="Không có quyền truy cập chỉ số nhập tay của bệnh nhân này.",
+            )
+
+        stmt = (
+            select(ManualHealthRecord)
+            .where(
+                ManualHealthRecord.user_id == patient_id,
+                ManualHealthRecord.deleted_at.is_(None),
+            )
+            .order_by(ManualHealthRecord.recorded_at.desc())
+        )
+        if metric_type:
+            stmt = stmt.where(ManualHealthRecord.metric_type == metric_type.value)
+        if start:
+            stmt = stmt.where(ManualHealthRecord.recorded_at >= start)
+        if end:
+            stmt = stmt.where(ManualHealthRecord.recorded_at <= end)
+
+        result = await self.db.execute(stmt)
+        rows = result.scalars().all()
+
+        logger.info(
+            f"Doctor {doctor_id} listed {len(rows)} manual health records "
+            f"for patient {patient_id} (filter: type={metric_type})"
+        )
+        responses: list[ManualHealthRecordResponse] = []
+        for row in rows:
+            responses.append(await self._to_manual_response(row))
+        return responses

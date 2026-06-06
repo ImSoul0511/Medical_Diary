@@ -6,7 +6,7 @@ Bảng:
 - emergency_access_logs: Ghi nhận lịch sử quét QR token
 """
 
-from sqlalchemy import Column, DateTime, ForeignKey, Index, String, text
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String, text, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.core.database import Base
@@ -29,6 +29,9 @@ class EmergencyToken(Base):
     deleted_at = Column(
         DateTime(timezone=True), nullable=True, comment="Soft Delete — vô hiệu hóa token"
     )
+    show_blood_type = Column(Boolean, nullable=False, server_default=text("true"))
+    show_allergies = Column(Boolean, nullable=False, server_default=text("true"))
+    show_emergency_contact = Column(Boolean, nullable=False, server_default=text("true"))
 
     __table_args__ = (
         Index("ix_emergency_tokens_token", "token"),

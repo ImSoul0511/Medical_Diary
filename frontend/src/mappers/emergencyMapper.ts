@@ -27,6 +27,9 @@ export function mapEmergencyTokenDto(dto: unknown): EmergencyToken {
     expiresAt: asNullableString(source.expires_at) ?? "",
     isExpired: asBoolean(source.is_expired),
     createdAt: asString(source.created_at),
+    showBloodType: asBoolean(source.show_blood_type),
+    showAllergies: asBoolean(source.show_allergies),
+    showEmergencyContact: asBoolean(source.show_emergency_contact),
   };
 }
 
@@ -43,6 +46,9 @@ export function mapEmergencyAccessLogDto(dto: unknown): EmergencyAccessLog {
 export function mapEmergencyTokenCreateFormToDto(form: EmergencyTokenCreateForm) {
   return compactPayload({
     ttl_minutes: form.ttlMinutes,
+    show_blood_type: form.showBloodType,
+    show_allergies: form.showAllergies,
+    show_emergency_contact: form.showEmergencyContact,
   });
 }
 

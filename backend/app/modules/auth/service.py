@@ -192,6 +192,8 @@ class AuthService:
                 certificate_url=certificate_url
             )
 
+        except HTTPException:
+            raise
         except Exception as e:
             await self.db.rollback()
             if 'user_id' in locals():
@@ -204,7 +206,12 @@ class AuthService:
                 except Exception as rollback_err:
                     logger.error(f"Failed to rollback Supabase Auth doctor user {user_id}: {rollback_err}")
             logger.error(f"Register doctor failed: {e}")
-            raise HTTPException(status_code=400, detail=f"Đăng ký bác sĩ thất bại: {str(e)}")
+            error_str = str(e)
+            if "doctors_license_number_key" in error_str or "license_number" in error_str:
+                raise HTTPException(status_code=400, detail="Số giấy phép hành nghề này đã được đăng ký. Vui lòng kiểm tra lại.")
+            if "profiles_pkey" in error_str or "duplicate key" in error_str:
+                raise HTTPException(status_code=400, detail="Email này đã được đăng ký. Vui lòng sử dụng email khác.")
+            raise HTTPException(status_code=400, detail="Đăng ký bác sĩ thất bại. Vui lòng kiểm tra lại thông tin.")
 
     async def log_out(self) -> MessageResponse:
         try: 

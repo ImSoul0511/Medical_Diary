@@ -14,6 +14,8 @@ export type UserProfile = {
   bloodType: string | null;
   allergies: string | null;
   emergencyContact: string | null;
+  phoneNumber: string | null;
+  cccd: string | null;
   privacySettings: PrivacySettings;
 };
 
@@ -24,6 +26,8 @@ export type UserProfileForm = {
   bloodType: string | "";
   allergies: string | "";
   emergencyContact: string | "";
+  phoneNumber: string | "";
+  cccd: string | "";
 }
 export type AccessHistoryItem = {
   id: string;

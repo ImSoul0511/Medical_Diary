@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { ArrowLeft, FileUp, HeartPulse, UserRound } from "lucide-react";
+import { AlertTriangle, ArrowLeft, FileUp, HeartPulse, UserRound } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
@@ -63,7 +63,7 @@ export function RegisterPage() {
             <HeartPulse className="h-10 w-10 text-primary" />
             <h1 className="mt-6 text-2xl font-semibold">Đăng ký Medical Diary</h1>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              Bệnh nhân đăng ký qua backend auth. Đăng ký bác sĩ cần wrapper multipart cho `/auth/register-doctor`.
+              Tạo tài khoản bệnh nhân hoặc gửi hồ sơ bác sĩ để chờ xét duyệt.
             </p>
           </Card>
 
@@ -95,7 +95,7 @@ export function RegisterPage() {
                   {mode === "doctor" ? "Hồ sơ bác sĩ đang chờ duyệt" : "Tạo tài khoản thành công"}
                 </h2>
                 <p className="mt-2 text-sm">
-                  Bạn có thể quay về đăng nhập sau khi backend hoàn tất xử lý tài khoản.
+                  Bạn có thể quay về đăng nhập.
                 </p>
                 <Button className="mt-4" onClick={() => navigate(ROUTES.login)}>
                   Về đăng nhập
@@ -114,8 +114,8 @@ export function RegisterPage() {
                     defaultValue={defaultGender}
                     name="gender"
                   >
-                    <option value="male">Nam</option>
-                    <option value="female">Nữ</option>
+                    <option value="male">male</option>
+                    <option value="female">female</option>
                   </select>
                 </label>
                 <FormInput label="Mật khẩu" name="password" required type="password" />
@@ -136,7 +136,12 @@ export function RegisterPage() {
                     </label>
                   </>
                 ) : null}
-                {error ? <p className="text-sm text-emergency sm:col-span-2">{error}</p> : null}
+                {error ? (
+                  <div className="sm:col-span-2 flex items-start gap-2 rounded-card border border-emergency/30 bg-dangerBg p-3 text-sm text-emergency">
+                    <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                ) : null}
                 <div className="sm:col-span-2">
                   <Button className="w-full" disabled={isLoading} leftIcon={<UserRound className="h-4 w-4" />} type="submit">
                     {mode === "doctor" ? "Gửi hồ sơ bác sĩ" : "Tạo tài khoản bệnh nhân"}

@@ -15,6 +15,8 @@ export type UserProfileDto = {
   blood_type?: string | null;
   allergies?: string | null;
   emergency_contact?: string | null;
+  phone_number?: string | null;
+  cccd?: string | null;
   privacy_settings?: {
     show_blood_type?: boolean;
     show_allergies?: boolean;
@@ -34,6 +36,8 @@ export function mapUserProfileDto(dto: unknown): UserProfile {
     bloodType: asNullableString(source.blood_type),
     allergies: asNullableString(source.allergies),
     emergencyContact: asNullableString(source.emergency_contact),
+    phoneNumber: asNullableString(source.phone_number),
+    cccd: asNullableString(source.cccd),
     privacySettings: {
       showBloodType: privacy.show_blood_type === true,
       showAllergies: privacy.show_allergies === true,
@@ -50,6 +54,8 @@ export function mapUserProfileFormToDto(form: UserProfileForm) {
     blood_type: emptyToNull(form.bloodType),
     allergies: emptyToNull(form.allergies),
     emergency_contact: emptyToNull(form.emergencyContact),
+    phone_number: emptyToNull(form.phoneNumber),
+    cccd: emptyToNull(form.cccd),
   });
 }
 

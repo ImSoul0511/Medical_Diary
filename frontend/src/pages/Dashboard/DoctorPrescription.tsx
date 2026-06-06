@@ -65,20 +65,13 @@ export function DoctorPrescription() {
   }
 
   return (
-    <AppShell
-      description="Prescription builder gửi dữ liệu qua prescription store."
-      role="doctor"
-      title="Tạo đơn thuốc"
-    >
+    <AppShell role="doctor" title="Tạo đơn thuốc">
       <form className="space-y-6" onSubmit={handleSubmit}>
         <Card padding="lg">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <Badge tone={patientId ? "info" : "pending"}>{patientId ? "Ready" : "Thiếu patient id"}</Badge>
+              <Badge tone={patientId ? "info" : "pending"}>{patientId ? "Sẵn sàng" : "Thiếu bệnh nhân"}</Badge>
               <h2 className="mt-3 text-lg font-semibold text-secondary">Ghi chú đơn thuốc</h2>
-              <p className="mt-1 text-sm text-mutedForeground">
-                Thuốc sẽ được tạo qua backend khi API wrapper prescription item sẵn sàng.
-              </p>
             </div>
             <Button disabled={isCreating || !patientId} leftIcon={<Save className="h-4 w-4" />} type="submit" variant="success">
               Lưu đơn thuốc

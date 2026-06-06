@@ -26,7 +26,9 @@ class UsersService:
         try:
             query = text("""
                 SELECT id, full_name, gender, date_of_birth, blood_type, allergies,
-                       emergency_contact, privacy_settings
+                       emergency_contact, privacy_settings,
+                       pgp_sym_decrypt(phone_encrypted::bytea, current_setting('app.encryption_key')) AS phone_number,
+                       pgp_sym_decrypt(cccd_encrypted::bytea, current_setting('app.encryption_key')) AS cccd
                 FROM profiles
                 WHERE id = :user_id AND deleted_at IS NULL
             """)
@@ -45,7 +47,9 @@ class UsersService:
                 blood_type=row.blood_type,
                 allergies=row.allergies,
                 emergency_contact=row.emergency_contact,
-                privacy_settings=row.privacy_settings
+                privacy_settings=row.privacy_settings,
+                phone_number=row.phone_number,
+                cccd=row.cccd
             )
         except HTTPException:
             raise
@@ -69,22 +73,28 @@ class UsersService:
             if profile is None:
                 raise HTTPException(status_code=404, detail="Không tìm thấy hồ sơ người dùng.")
 
+            from sqlalchemy import func
+            if "phone_number" in update_data:
+                phone_val = update_data.pop("phone_number")
+                if phone_val:
+                    profile.phone_encrypted = func.pgp_sym_encrypt(phone_val, func.current_setting('app.encryption_key'))
+                else:
+                    profile.phone_encrypted = None
+
+            if "cccd" in update_data:
+                cccd_val = update_data.pop("cccd")
+                if cccd_val:
+                    profile.cccd_encrypted = func.pgp_sym_encrypt(cccd_val, func.current_setting('app.encryption_key'))
+                else:
+                    profile.cccd_encrypted = None
+
             for key, value in update_data.items():
                 setattr(profile, key, value)
 
             await self.db.flush()
 
             logger.info(f"Updated profile for user: {user_id}")
-            return UserProfileResponse(
-                id=profile.id,
-                full_name=profile.full_name,
-                gender=profile.gender,
-                date_of_birth=profile.date_of_birth,
-                blood_type=profile.blood_type,
-                allergies=profile.allergies,
-                emergency_contact=profile.emergency_contact,
-                privacy_settings=profile.privacy_settings,
-            )
+            return await self.get_profile(user_id)
         except HTTPException:
             raise
         except Exception as e:

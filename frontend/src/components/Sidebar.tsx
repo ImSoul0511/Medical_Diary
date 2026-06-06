@@ -5,6 +5,7 @@
  * Ghi chú: Đọc trạng thái auth và gọi logout thật khi user đăng xuất.
  */
 
+import { useEffect } from "react";
 import { Heart, LogOut, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
@@ -14,6 +15,8 @@ import {
 } from "../constants/routes";
 import { roleLabels } from "../constants/roles";
 import { useAuthStore } from "../store/authStore";
+import { useConsentStore } from "../store/consentStore";
+import { useAdminStore } from "../store/adminStore";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../constants/routes";
 import { useUiStore } from "../store/uiStore";
@@ -31,9 +34,29 @@ export function Sidebar({ role }: SidebarProps) {
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const setMobileSidebarOpen = useUiStore((state) => state.setMobileSidebarOpen);
+  
+  const pendingRequests = useConsentStore((state) => state.pendingRequests);
+  const loadAccessRequests = useConsentStore((state) => state.loadAccessRequests);
+  
+  const pendingDoctors = useAdminStore((state) => state.pendingDoctors);
+  const loadPendingDoctors = useAdminStore((state) => state.loadPendingDoctors);
+
   const currentRoleTheme = role === "admin" ? "admin" : role === "doctor" ? "doctor" : "patient";
   const navigation =
     role === "admin" ? adminNavigation : role === "doctor" ? doctorNavigation : patientNavigation;
+
+  useEffect(() => {
+    if (role === "user") {
+      void loadAccessRequests().catch(() => undefined);
+    } else if (role === "admin") {
+      void loadPendingDoctors().catch(() => undefined);
+    }
+  }, [role, loadAccessRequests, loadPendingDoctors]);
+
+  const dynamicBadges: Record<string, number> = {
+    [ROUTES.consent]: pendingRequests.length,
+    [ROUTES.adminDoctorApproval]: pendingDoctors.length,
+  };
 
   async function handleLogout() {
     await logout();
@@ -94,7 +117,7 @@ export function Sidebar({ role }: SidebarProps) {
               >
                 <item.icon className="h-4 w-4 shrink-0" />
                 <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                {item.badge ? <Badge tone="emergency">{item.badge}</Badge> : null}
+                {dynamicBadges[item.path] ? <Badge tone="emergency">{dynamicBadges[item.path]}</Badge> : null}
               </NavLink>
             </li>
           ))}

@@ -55,6 +55,9 @@ class EmergencyService:
             expires_at=token.expires_at,
             is_expired=self._compute_is_expired(token.expires_at),
             created_at=token.created_at,
+            show_blood_type=token.show_blood_type,
+            show_allergies=token.show_allergies,
+            show_emergency_contact=token.show_emergency_contact,
         )
 
     async def _get_owned_token(self, token_id: UUID, user_id: UUID) -> EmergencyToken:
@@ -82,6 +85,20 @@ class EmergencyService:
         ttl_minutes = None → token vĩnh viễn (expires_at = NULL trong DB).
         """
         now = datetime.now(timezone.utc)
+
+        # Kiểm tra số lượng token đang hoạt động (chưa bị xóa, chưa hết hạn)
+        stmt = select(EmergencyToken).where(
+            EmergencyToken.user_id == user_id,
+            EmergencyToken.deleted_at.is_(None),
+        )
+        result = await self.db.execute(stmt)
+        active_tokens = [t for t in result.scalars().all() if not self._compute_is_expired(t.expires_at)]
+        if len(active_tokens) >= 4:
+            raise HTTPException(
+                status_code=400,
+                detail="Bạn đã đạt giới hạn tối đa 4 mã QR đang hoạt động. Vui lòng vô hiệu hóa bớt mã QR cũ trước khi tạo mới."
+            )
+
         expires_at = None
         if data.ttl_minutes is not None:
             expires_at = now + timedelta(minutes=data.ttl_minutes)
@@ -93,6 +110,9 @@ class EmergencyService:
             user_id=user_id,
             token=token_str,
             expires_at=expires_at,
+            show_blood_type=data.show_blood_type,
+            show_allergies=data.show_allergies,
+            show_emergency_contact=data.show_emergency_contact,
         )
         self.db.add(token)
         await self.db.flush()
@@ -190,11 +210,10 @@ class EmergencyService:
                 detail="Token đã hết hạn. Vui lòng yêu cầu bệnh nhân tạo token mới.",
             )
 
-        # 3. Đọc privacy_settings để lọc field trả về
-        privacy: dict = profile.privacy_settings or {}
-        blood_type = profile.blood_type if privacy.get("show_blood_type") else None
-        allergies = profile.allergies if privacy.get("show_allergies") else None
-        emergency_contact = profile.emergency_contact if privacy.get("show_emergency_contact") else None
+        # 3. Đọc token-specific privacy settings để lọc field trả về
+        blood_type = profile.blood_type if token.show_blood_type else None
+        allergies = profile.allergies if token.show_allergies else None
+        emergency_contact = profile.emergency_contact if token.show_emergency_contact else None
 
         # 4. Ghi access log (không cần flush riêng — sẽ flush cùng commit)
         access_log = EmergencyAccessLog(

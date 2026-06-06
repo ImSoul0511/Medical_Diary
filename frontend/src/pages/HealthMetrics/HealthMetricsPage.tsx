@@ -29,9 +29,9 @@ export function HealthMetricsPage() {
   const createMetric = useHealthMetricsStore((state) => state.createMetric);
   const isCreating = useHealthMetricsStore((state) => state.isCreating);
   const error = useHealthMetricsStore((state) => state.error);
-  const [heartRate, setHeartRate] = useState("78");
-  const [stepCount, setStepCount] = useState("7000");
-  const [respiratoryRate, setRespiratoryRate] = useState("16");
+  const [heartRate, setHeartRate] = useState("");
+  const [stepCount, setStepCount] = useState("");
+  const [respiratoryRate, setRespiratoryRate] = useState("");
   const latest = healthMetrics[0];
   const chartData = healthMetrics
     .slice()
@@ -58,11 +58,7 @@ export function HealthMetricsPage() {
   }
 
   return (
-    <AppShell
-      description="Nhập và xem chỉ số sức khỏe từ API."
-      role="user"
-      title="Chỉ số sức khỏe"
-    >
+    <AppShell role="user" title="Chỉ số sức khỏe">
       <div className="space-y-6">
         {error ? (
           <Card tone="warning">
@@ -79,7 +75,6 @@ export function HealthMetricsPage() {
         <section className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
           <Card padding="lg">
             <h2 className="text-lg font-semibold text-secondary">Nhập chỉ số</h2>
-            <p className="mt-1 text-sm text-mutedForeground">Các trường khớp backend hiện tại: nhịp tim, bước chân, nhịp thở.</p>
             <form className="mt-5 grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
               <FormInput label="Nhịp tim" onChange={(event) => setHeartRate(event.target.value)} type="number" value={heartRate} />
               <FormInput label="Bước chân" onChange={(event) => setStepCount(event.target.value)} type="number" value={stepCount} />

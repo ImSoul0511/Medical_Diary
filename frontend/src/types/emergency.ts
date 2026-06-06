@@ -11,10 +11,16 @@ export type EmergencyToken = {
   expiresAt: string;
   isExpired: boolean;
   createdAt: string;
+  showBloodType: boolean;
+  showAllergies: boolean;
+  showEmergencyContact: boolean;
 }
 
 export type EmergencyTokenCreateForm = {
   ttlMinutes: number | null;
+  showBloodType: boolean;
+  showAllergies: boolean;
+  showEmergencyContact: boolean;
 }
 
 export type EmergencyTokenUpdateForm = {

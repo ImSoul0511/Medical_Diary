@@ -26,11 +26,7 @@ export function ConsentManagement() {
   }, [loadAccessRequests, loadHistory]);
 
   return (
-    <AppShell
-      description="Duyệt, từ chối hoặc thu hồi quyền truy cập dữ liệu y tế."
-      role="user"
-      title="Quản lý cấp quyền"
-    >
+    <AppShell role="user" title="Quản lý cấp quyền">
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <section className="space-y-4">
           <div className="flex items-center gap-2">

@@ -18,6 +18,9 @@ class EmergencyTokenCreateRequest(BaseModel):
     """
 
     ttl_minutes: Optional[int] = Field(None, ge=5)
+    show_blood_type: bool = True
+    show_allergies: bool = True
+    show_emergency_contact: bool = True
 
     model_config = {
         "json_schema_extra": {
@@ -43,6 +46,9 @@ class EmergencyTokenItem(BaseModel):
     expires_at: Optional[datetime] = None
     is_expired: bool  # Computed bởi service (không lưu trong DB)
     created_at: datetime
+    show_blood_type: bool
+    show_allergies: bool
+    show_emergency_contact: bool
 
 
 class EmergencyTokenUpdateRequest(BaseModel):

@@ -40,6 +40,7 @@ function toDoctorFormData(data: RegisterDoctorRequest | FormData): FormData {
 export const authApi = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post<LoginResponse>("/auth/login", data, {
+      skipAuthRefresh: true,
       withCredentials: true,
     });
     return response.data;

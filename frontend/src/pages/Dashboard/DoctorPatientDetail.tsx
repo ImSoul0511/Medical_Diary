@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Activity, HeartPulse, NotebookText, Pill } from "lucide-react";
+import { Activity, ArrowLeft, HeartPulse, NotebookText, Pill } from "lucide-react";
 import {
   CartesianGrid,
   Line,
@@ -71,19 +71,25 @@ export function DoctorPatientDetail() {
   ];
 
   return (
-    <AppShell
-      description="Chi tiết bệnh nhân sau khi bác sĩ có consent hợp lệ."
-      role="doctor"
-      title="Chi tiết bệnh nhân"
-    >
+    <AppShell role="doctor" title="Chi tiết bệnh nhân">
       <div className="space-y-6">
+        <Link
+          className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+          to="/bac-si/tim-kiem"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Quay lại tìm kiếm
+        </Link>
+
         <Card padding="lg">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <Badge tone={patient ? "success" : "pending"}>{patient ? "Consent active" : "Đang chờ dữ liệu"}</Badge>
+              <Badge tone={patient ? "success" : "pending"}>{patient ? "Đã cấp quyền" : "Đang chờ dữ liệu"}</Badge>
               <h2 className="mt-3 text-2xl font-semibold text-secondary">{patient?.fullName ?? "Chưa có hồ sơ"}</h2>
               <p className="text-sm text-mutedForeground">
-                {patient ? `Giới tính ${patient.gender} - Nhóm máu ${patient.bloodType ?? "chưa cập nhật"}` : doctorError ?? "Chọn bệnh nhân từ trang tìm kiếm."}
+                {patient
+                  ? `Giới tính ${patient.gender} - Nhóm máu ${patient.bloodType ?? "chưa cập nhật"}`
+                  : doctorError ?? "Chọn bệnh nhân từ trang tìm kiếm."}
               </p>
             </div>
             <Link
@@ -136,13 +142,6 @@ export function DoctorPatientDetail() {
           <h2 className="text-lg font-semibold text-secondary">Hồ sơ bệnh án</h2>
           <DataTable columns={recordColumns} getRowKey={(row) => row.id} rows={medicalRecords} />
         </section>
-
-        <Card>
-          <h2 className="font-semibold text-secondary">Đơn thuốc gần nhất</h2>
-          <p className="mt-2 text-sm text-mutedForeground">
-            Backend hiện tại chưa có endpoint cho bác sĩ xem đơn thuốc của bệnh nhân.
-          </p>
-        </Card>
       </div>
     </AppShell>
   );

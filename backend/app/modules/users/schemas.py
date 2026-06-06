@@ -12,14 +12,18 @@ class UserProfileResponse(BaseModel):
     allergies: Optional[str]
     emergency_contact: Optional[str]
     privacy_settings: dict
+    phone_number: Optional[str] = None
+    cccd: Optional[str] = None
 
 class UserProfileUpdateRequest(BaseModel):
     full_name: Optional[str] = Field(None, min_length=2, max_length=100)
     gender: Optional[Literal['male', 'female']] = None
     date_of_birth: Optional[date] = None
-    blood_type: Optional[str] = Field(None, max_length=5)
+    blood_type: Optional[Literal['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']] = None
     allergies: Optional[str] = Field(None, max_length=2000)
     emergency_contact: Optional[str] = Field(None, max_length=20)
+    phone_number: Optional[str] = Field(None, max_length=20)
+    cccd: Optional[str] = Field(None, max_length=20)
 
     model_config = {
         "json_schema_extra": {

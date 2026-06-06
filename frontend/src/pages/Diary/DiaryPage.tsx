@@ -38,15 +38,10 @@ export function DiaryPage() {
   }
 
   return (
-    <AppShell
-      description="Ghi lại triệu chứng và cảm nhận hằng ngày."
-      role="user"
-      title="Nhật ký triệu chứng"
-    >
+    <AppShell role="user" title="Nhật ký triệu chứng">
       <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <Card padding="lg">
           <h2 className="text-lg font-semibold text-secondary">Thêm nhật ký</h2>
-          <p className="mt-1 text-sm text-mutedForeground">Nội dung được gửi qua diary store và API wrapper.</p>
           {error ? <p className="mt-3 text-sm text-emergency">{error}</p> : null}
           <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
             <label className="block">
@@ -147,7 +142,7 @@ export function DiaryPage() {
       <Modal
         confirmLabel="Xóa nhật ký"
         confirmVariant="danger"
-        description="Thao tác này sẽ xóa bản ghi qua diary store."
+        description="Nhật ký đã xóa sẽ không còn hiển thị."
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => {
           if (deleteTarget) void deleteDiary(deleteTarget).catch(() => undefined);

@@ -37,9 +37,6 @@ export function AdminLoginPage() {
             <ShieldCheck className="h-6 w-6" />
           </div>
           <h1 className="text-2xl font-semibold text-secondary">Đăng nhập quản trị</h1>
-          <p className="mt-2 text-sm text-mutedForeground">
-            Tài khoản admin được xác thực qua backend API.
-          </p>
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <FormInput label="Email quản trị" onChange={(event) => setEmail(event.target.value)} value={email} />

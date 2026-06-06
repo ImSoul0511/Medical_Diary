@@ -8,6 +8,7 @@ export const CONSENT_SCOPES = [
   "heart_rate",
   "step_count",
   "respiratory_rate",
+  "manual_health_records",
 ] as const;
 
 export type ConsentScope = (typeof CONSENT_SCOPES)[number];

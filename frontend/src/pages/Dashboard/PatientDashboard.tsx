@@ -4,7 +4,7 @@ import {
   HeartPulse,
   Pill,
   Shield,
-  Wind,
+  Wind, QrCode,
 } from "lucide-react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -68,11 +68,7 @@ export function PatientDashboard() {
   }));
 
   return (
-    <AppShell
-      description="Tổng quan sức khỏe, thuốc hôm nay và quyền riêng tư."
-      role="user"
-      title="Trang chủ bệnh nhân"
-    >
+    <AppShell role="user" title="Trang chủ bệnh nhân">
       <div className="space-y-6">
         <section className="rounded-card bg-gradient-to-r from-primary to-primaryDark p-6 text-white shadow-card">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -81,11 +77,19 @@ export function PatientDashboard() {
               <h2 className="mt-1 text-2xl font-semibold">
                 {profile?.fullName ?? "Đang tải hồ sơ"}
               </h2>
-              <p className="mt-2 max-w-2xl text-sm text-white/80">
-                Dữ liệu được tải qua store và API wrapper. Khi backend chưa có dữ liệu, trang sẽ hiển thị trạng thái trống.
-              </p>
             </div>
-            <QRPreview compact label="Public QR" token="patient-dashboard" />
+            <Link
+              to={ROUTES.privacy}
+              className="group flex flex-col items-center justify-center rounded-card border border-white/20 bg-white/10 p-3 hover:bg-white/20 transition duration-200"
+              title="Quản lý mã QR cấp cứu"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded bg-white text-primary">
+                <QrCode className="h-8 w-8" />
+              </div>
+              <span className="mt-1.5 text-xs font-semibold text-white/90 group-hover:text-white">
+                Tạo & Quản lý QR
+              </span>
+            </Link>
           </div>
         </section>
 
@@ -103,7 +107,6 @@ export function PatientDashboard() {
                 <h2 className="text-lg font-semibold text-secondary">Xu hướng sức khỏe</h2>
                 <p className="text-sm text-mutedForeground">Nhịp tim và nhịp thở theo thời gian.</p>
               </div>
-              <Badge tone="info">API data</Badge>
             </div>
             <div className="h-64">
               <ResponsiveContainer height="100%" width="100%">
@@ -192,7 +195,7 @@ export function PatientDashboard() {
               </div>
             </div>
             <Link className="mt-3 inline-flex text-sm font-medium text-primary" to={ROUTES.privacy}>
-              Cấu hình public view
+              Cài đặt quyền riêng tư
             </Link>
           </Card>
         </section>

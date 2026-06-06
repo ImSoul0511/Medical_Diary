@@ -15,6 +15,7 @@ ConsentScope = Literal[
     "heart_rate",
     "step_count",
     "respiratory_rate",
+    "manual_health_records",
 ]
 
 VALID_CONSENT_SCOPES = set(get_args(ConsentScope))
@@ -75,7 +76,8 @@ class AccessRequestActionRequest(BaseModel):
                     "diaries",
                     "heart_rate",
                     "step_count",
-                    "respiratory_rate"
+                    "respiratory_rate",
+                    "manual_health_records"
                 ],
                 "expires_in_days": 30
             }

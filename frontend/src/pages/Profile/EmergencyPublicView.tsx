@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { AlertTriangle, ArrowLeft, Phone, ShieldAlert } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Badge } from "../../components/Badge";
 import { Card } from "../../components/Card";
 import { QRPreview } from "../../components/QRPreview";
 import { useEmergencyStore } from "../../store/emergencyStore";
@@ -24,10 +23,9 @@ export function EmergencyPublicView() {
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
               <ShieldAlert className="h-4 w-4" />
-              Public emergency view
+              Thông tin cấp cứu
             </div>
             <h1 className="text-3xl font-semibold">Thông tin cấp cứu</h1>
-            <p className="mt-2 text-sm text-white/80">Token: {token}</p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -38,7 +36,7 @@ export function EmergencyPublicView() {
               <ArrowLeft className="-ml-1 mr-2 h-4 w-4" />
               Quay lại
             </button>
-            <QRPreview compact label="Token" token={token} />
+            <QRPreview compact label="QR cấp cứu" token={token} />
           </div>
         </div>
 
@@ -62,21 +60,17 @@ export function EmergencyPublicView() {
                 <p className="text-xl font-semibold text-red-900">{profile?.allergies ?? "--"}</p>
               </div>
               <div className="rounded-card bg-successBg p-4 sm:col-span-2">
-                <p className="text-xs text-green-700">Liên hệ khẩn cấp</p>
+                <p className="text-xs text-green-700">SĐT người thân</p>
                 <p className="text-xl font-semibold text-green-900">{profile?.emergencyContact ?? "--"}</p>
               </div>
             </div>
           </Card>
 
           <Card className="border-white/20 bg-white/10 text-white" padding="lg">
-            <Badge tone="emergency">Không cần đăng nhập</Badge>
-            <h2 className="mt-4 text-xl font-semibold">Lưu ý cho người hỗ trợ</h2>
-            <p className="mt-3 text-sm leading-6 text-white/80">
-              Trang này chỉ hiển thị dữ liệu public do backend emergency endpoint trả về.
-            </p>
+            <h2 className="text-xl font-semibold">SĐT người thân</h2>
             {profile?.emergencyContact ? (
               <a
-                className="mt-6 inline-flex items-center gap-2 rounded-input bg-white px-4 py-2 text-sm font-semibold text-emergency"
+                className="mt-6 inline-flex items-center gap-2 rounded-input bg-white px-4 py-2 text-sm font-semibold text-emergency hover:bg-slate-100"
                 href={`tel:${profile.emergencyContact}`}
               >
                 <Phone className="h-4 w-4" />
