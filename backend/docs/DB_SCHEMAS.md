@@ -224,6 +224,7 @@ Bảng tra cứu nhanh giữa bảng DB và SQLAlchemy Model tương ứng:
 |---|---|---|
 | `profiles` | `Profile` | `app/modules/users/models.py` |
 | `doctors` | `Doctor` | `app/modules/users/models.py` |
+| `family_members` | `FamilyMember` | `app/modules/users/models.py` |
 | `consent_requests` | `ConsentRequest` | `app/modules/consent/models.py` |
 | `consent_permissions` | `ConsentPermission` | `app/modules/consent/models.py` |
 | `health_metrics` | `HealthMetric` | `app/modules/health_metrics/models.py` |
@@ -236,3 +237,129 @@ Bảng tra cứu nhanh giữa bảng DB và SQLAlchemy Model tương ứng:
 | `emergency_access_logs` | `EmergencyAccessLog` | `app/modules/emergency/models.py` |
 | `data_access_logs` | `DataAccessLog` | `app/modules/admin/models.py` |
 | `notifications` | `Notification` | `app/modules/notifications/models.py` |
+| `allergies` | `Allergy` | `app/modules/allergies/models.py` |
+| `vaccines` | `Vaccine` | `app/modules/vaccines/models.py` |
+
+---
+
+## 6. Module: Family Registration (v2.2)
+
+> **Trạng thái:** Đã xác nhận triển khai.
+
+### Bổ sung cột vào bảng `profiles`
+
+```sql
+ALTER TABLE profiles ADD COLUMN is_dependent   BOOLEAN   DEFAULT false;
+ALTER TABLE profiles ADD COLUMN guardian_id    UUID      REFERENCES profiles(id);
+ALTER TABLE profiles ADD COLUMN birth_cert_encrypted TEXT;
+-- birth_cert_encrypted: Mã giấy khai sinh (tùy chọn, mã hóa pgcrypto)
+```
+
+**Quy tắc:**
+- `is_dependent = true` → profile trẻ em, không có `auth.users` riêng.
+- `guardian_id` → trỏ về profile của bố/mẹ.
+- Trẻ < 15 tuổi mới được đăng ký theo hộ (Guardian tự khai báo `date_of_birth`, không validate tự động).
+- Khi trẻ đủ 18 tuổi: `is_dependent` chuyển thành `false`, `guardian_id` được NULL — account trở thành độc lập.
+
+### Bảng `family_members`
+
+Liên kết quan hệ giữa Guardian và thành viên gia đình.
+
+- **id**: `uuid` (Primary Key, Default: `gen_random_uuid()`)
+- **guardian_id**: `uuid` (Not Null, references `profiles.id`) — Bố/mẹ/người giám hộ
+- **member_id**: `uuid` (Not Null, references `profiles.id`) — Trẻ em / thành viên
+- **relationship**: `varchar(20)` (Check: `'father'`, `'mother'`, `'guardian'`, `'other'`) (Not Null)
+- **is_active**: `boolean` (Default: `true`)
+- **created_at**: `timestamptz` (Default: `now()`)
+- **deleted_at**: `timestamptz` (Nullable — Soft Delete)
+
+**RLS Policy:** Guardian (`auth.uid() = guardian_id`) có quyền SELECT/INSERT/UPDATE trên toàn bộ dữ liệu của `member_id` tương ứng.
+
+**Tìm kiếm bác sĩ:** `GET /doctors/search-patients` phân tách kết quả — Guardian profile và Children profile được trả về riêng biệt (không lẫn lộn).
+
+---
+
+## 7. Module: Allergies (v2.2)
+
+> **Trạng thái:** Đã xác nhận triển khai. Thay thế `profiles.allergies` text thuần bằng bảng có cấu trúc.
+
+### Bảng `allergies`
+
+- **id**: `uuid` (Primary Key, Default: `gen_random_uuid()`)
+- **user_id**: `uuid` (Not Null, references `profiles.id`)
+- **name**: `varchar(200)` (Not Null — Lấy từ danh sách chuẩn ATC Code / ICD-10)
+- **allergy_type**: `varchar(20)` (Check: `'medication'`, `'food'`, `'environment'`, `'other'`) (Not Null)
+- **severity**: `varchar(20)` (Check: `'mild'`, `'moderate'`, `'severe'`, `'unknown'`) (Default: `'unknown'`)
+- **reaction**: `text` (Nullable — Mô tả phản ứng)
+- **diagnosed_date**: `date` (Nullable)
+- **diagnosed_by**: `uuid` (Nullable, references `profiles.id` — Bác sĩ xác nhận)
+- **status**: `varchar(20)` (Check: `'pending'`, `'confirmed'`, `'rejected'`) (Default: `'pending'`)
+- **notes**: `text` (Nullable)
+- **is_active**: `boolean` (Default: `true` — `false` = đã khỏi)
+- **created_at**: `timestamptz` (Default: `now()`)
+- **updated_at**: `timestamptz` (Default: `now()`)
+- **deleted_at**: `timestamptz` (Nullable — Soft Delete)
+
+**Workflow:**
+```
+User nhập → status = 'pending' → Bác sĩ xác nhận → status = 'confirmed'
+                                → Bác sĩ từ chối  → status = 'rejected'
+```
+
+**Lưu ý:** `profiles.allergies` (text cũ) **giữ nguyên** để backward compatible với Emergency QR. Emergency QR sẽ JOIN bảng `allergies` để trả về structured list khi `privacy_settings.show_allergies = true`.
+
+**Indexes:** `allergies(user_id, status)`, `allergies(user_id, is_active)`
+
+---
+
+## 8. Module: Vaccines (v2.2)
+
+> **Trạng thái:** Đã xác nhận triển khai. Bác sĩ là người INSERT sau mỗi lần tiêm, user chỉ xem.
+
+### Bảng `vaccines`
+
+- **id**: `uuid` (Primary Key, Default: `gen_random_uuid()`)
+- **user_id**: `uuid` (Not Null, references `profiles.id`) — Bệnh nhân
+- **vaccine_name**: `varchar(200)` (Not Null — Tên vaccine)
+- **vaccine_code**: `varchar(50)` (Nullable — Mã WHO ICD-11)
+- **dose_number**: `integer` (Not Null, Default: `1` — Mũi số mấy)
+- **total_doses**: `integer` (Nullable — Tổng số mũi cần tiêm)
+- **administered_date**: `date` (Not Null — Ngày tiêm)
+- **next_due_date**: `date` (Nullable — Ngày tiêm nhắc lại)
+- **administered_by**: `varchar(200)` (Nullable — Nơi tiêm / Tên bác sĩ)
+- **batch_number**: `varchar(100)` (Nullable — Số lô vaccine)
+- **manufacturer**: `varchar(200)` (Nullable — Nhà sản xuất)
+- **notes**: `text` (Nullable)
+- **recorded_by**: `uuid` (Not Null, references `profiles.id`) — Bác sĩ nhập liệu
+- **created_at**: `timestamptz` (Default: `now()`)
+- **updated_at**: `timestamptz` (Default: `now()`)
+- **deleted_at**: `timestamptz` (Nullable — Soft Delete)
+
+**Indexes:** `vaccines(user_id, administered_date)`, `vaccines(user_id, next_due_date) WHERE deleted_at IS NULL`
+
+**Tích hợp Notifications:** `pg_cron` quét `next_due_date` → tự động INSERT vào `notifications` với type `vaccine_reminder`.
+
+### Cập nhật `notifications.type`
+
+Thêm giá trị mới vào CHECK constraint:
+```sql
+-- Hiện tại: 'access_request', 'prescription_new', 'prescription_reminder', 'emergency_token_expired'
+-- Thêm: 'vaccine_reminder'
+```
+
+### Cập nhật `profiles.privacy_settings` default
+
+```json
+{
+    "show_blood_type": true,
+    "show_allergies": true,
+    "show_emergency_contact": true,
+    "show_vaccines": false
+}
+```
+
+### Cập nhật `consent_requests.requested_scope`
+
+Thêm 2 giá trị hợp lệ mới:
+- `'allergies_detail'` — Truy cập bảng `allergies` có cấu trúc (khác với `profiles.allergies` text cũ)
+- `'vaccines'` — Truy cập bảng `vaccines`

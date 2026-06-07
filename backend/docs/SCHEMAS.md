@@ -515,7 +515,7 @@ class NotificationResponse(BaseModel):
 | Scope | Mô tả |
 |---|---|
 | `blood_type` | Nhóm máu |
-| `allergies` | Dị ứng |
+| `allergies` | Dị ứng (field text cũ trong `profiles`) |
 | `emergency_contact` | SĐT người thân |
 | `medical_records` | Hồ sơ y tế chính thức |
 | `prescriptions` | Đơn thuốc |
@@ -523,3 +523,161 @@ class NotificationResponse(BaseModel):
 | `heart_rate` | Dữ liệu nhịp tim |
 | `step_count` | Số bước chân |
 | `respiratory_rate` | Nhịp thở |
+| `allergies_detail` | *(v2.2)* Bảng `allergies` có cấu trúc (pending/confirmed/rejected) |
+| `vaccines` | *(v2.2)* Lịch sử tiêm chủng từ bảng `vaccines` |
+
+---
+
+## 12. Module: Family Registration (`app/modules/auth/schemas.py`, `app/modules/users/schemas.py`) — v2.2
+
+### RegisterFamilyMemberRequest
+```python
+class RegisterFamilyMemberRequest(BaseModel):
+    full_name: str = Field(..., min_length=2, max_length=100)
+    date_of_birth: date
+    gender: Literal['NAM', 'Nữ']
+    relationship: Literal['father', 'mother', 'guardian', 'other']
+    birth_certificate_number: Optional[str] = Field(None, max_length=50)
+```
+
+### FamilyMemberResponse
+```python
+class FamilyMemberResponse(BaseModel):
+    member_id: UUID
+    full_name: str
+    date_of_birth: date
+    gender: str
+    relationship: str   # "father" | "mother" | "guardian" | "other"
+```
+
+### FamilyMemberCreateResponse
+```python
+class FamilyMemberCreateResponse(BaseModel):
+    member_id: UUID
+    full_name: str
+    relationship: str
+    message: str
+```
+
+---
+
+## 13. Module: Allergies (`app/modules/allergies/schemas.py`) — v2.2
+
+### AllergyCreateRequest
+```python
+class AllergyCreateRequest(BaseModel):
+    name: str = Field(..., max_length=200)   # Từ danh sách chuẩn ATC/ICD-10
+    allergy_type: Literal['medication', 'food', 'environment', 'other']
+    severity: Literal['mild', 'moderate', 'severe', 'unknown'] = 'unknown'
+    reaction: Optional[str] = Field(None, max_length=1000)
+    diagnosed_date: Optional[date] = None
+    notes: Optional[str] = Field(None, max_length=2000)
+```
+
+### AllergyUpdateRequest
+```python
+class AllergyUpdateRequest(BaseModel):
+    severity: Optional[Literal['mild', 'moderate', 'severe', 'unknown']] = None
+    reaction: Optional[str] = Field(None, max_length=1000)
+    diagnosed_date: Optional[date] = None
+    notes: Optional[str] = Field(None, max_length=2000)
+    is_active: Optional[bool] = None   # false = đã khỏi
+```
+
+### AllergyConfirmRequest
+```python
+class AllergyConfirmRequest(BaseModel):
+    action: Literal['confirmed', 'rejected']
+```
+
+### AllergyResponse
+```python
+class AllergyResponse(BaseModel):
+    id: UUID
+    name: str
+    allergy_type: str       # "medication" | "food" | "environment" | "other"
+    severity: str           # "mild" | "moderate" | "severe" | "unknown"
+    reaction: Optional[str]
+    diagnosed_date: Optional[date]
+    status: str             # "pending" | "confirmed" | "rejected"
+    is_active: bool
+    created_at: datetime
+```
+
+### AllergyReferenceItem
+```python
+class AllergyReferenceItem(BaseModel):
+    code: str      # ATC Code hoặc ICD-10 Code
+    name: str      # Tên thuốc/chất chuẩn
+    category: str  # "medication" | "food" | "environment" | "other"
+```
+
+> **Lưu ý:** `GET /allergies/reference` là endpoint static (đọc từ file JSON hoặc bảng reference tĩnh). Chưa tích hợp API bên ngoài.
+
+---
+
+## 14. Module: Vaccines (`app/modules/vaccines/schemas.py`) — v2.2
+
+### VaccineCreateRequest
+```python
+class VaccineCreateRequest(BaseModel):
+    patient_id: UUID
+    vaccine_name: str = Field(..., max_length=200)
+    vaccine_code: Optional[str] = Field(None, max_length=50)   # WHO ICD-11
+    dose_number: int = Field(default=1, ge=1)
+    total_doses: Optional[int] = Field(None, ge=1)
+    administered_date: date
+    next_due_date: Optional[date] = None
+    administered_by: Optional[str] = Field(None, max_length=200)
+    batch_number: Optional[str] = Field(None, max_length=100)
+    manufacturer: Optional[str] = Field(None, max_length=200)
+    notes: Optional[str] = Field(None, max_length=2000)
+```
+
+### VaccineUpdateRequest
+```python
+class VaccineUpdateRequest(BaseModel):
+    next_due_date: Optional[date] = None
+    notes: Optional[str] = Field(None, max_length=2000)
+    batch_number: Optional[str] = Field(None, max_length=100)
+```
+
+### VaccineResponse
+```python
+class VaccineResponse(BaseModel):
+    id: UUID
+    vaccine_name: str
+    vaccine_code: Optional[str]
+    dose_number: int
+    total_doses: Optional[int]
+    administered_date: date
+    next_due_date: Optional[date]
+    administered_by: Optional[str]
+    manufacturer: Optional[str]
+    notes: Optional[str]
+    recorded_by: UUID   # Doctor ID
+    created_at: datetime
+```
+
+---
+
+## 15. Module: Prescription Stats (`app/modules/prescriptions/schemas.py`) — v2.2
+
+### PrescriptionItemStatsResponse
+```python
+class PrescriptionItemStatsResponse(BaseModel):
+    prescription_item_id: UUID
+    medication_name: str
+    total_doses: int
+    taken: int
+    skipped: int
+    untaken: int
+    adherence_rate: float   # Tính bằng: taken / total_doses * 100
+```
+
+### PrescriptionStatsResponse
+```python
+class PrescriptionStatsResponse(BaseModel):
+    prescription_id: UUID
+    items: list[PrescriptionItemStatsResponse]
+```
