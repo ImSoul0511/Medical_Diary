@@ -21,6 +21,7 @@ scratch/
 *.key
 *.p12
 *.pfx
+mock_data/credentials.json
 
 # IDEs
 .vscode/
