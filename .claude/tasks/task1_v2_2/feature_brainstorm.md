@@ -136,13 +136,13 @@ class RegisterWithCCCDRequest(BaseModel):
 async def register_with_cccd(self, data: RegisterWithCCCDRequest):
     # Tạo email ảo từ CCCD (chỉ dùng nội bộ để thỏa mãn Supabase Auth)
     virtual_email = f"cccd_{data.cccd}@medical-diary.internal"
-    
+
     response = self.supabase.auth.sign_up({
         "email": virtual_email,
         "password": data.password
     })
     user_id = response.user.id
-    
+
     # Lưu profile với cccd_encrypted
     await self.db.execute(text("""
         INSERT INTO profiles (id, full_name, role, gender, date_of_birth,

@@ -98,12 +98,12 @@ class RegisterDoctorResponse(BaseModel):
 ### SessionResponse
 ```python
 class SessionResponse(BaseModel):
-    session_id: UUID 
+    session_id: UUID
     user_id: UUID
-    created_at: datetime 
-    updated_at: datetime 
-    user_agent: str 
-    ip: str 
+    created_at: datetime
+    updated_at: datetime
+    user_agent: str
+    ip: str
 ```
 
 ### HealthResponse

@@ -699,4 +699,3 @@ SELECT cron.schedule(
 - [ ] pg_cron Jobs đã được user xác nhận chạy thành công
 - [ ] Test toàn bộ luồng v2.2 qua Swagger UI (`/docs`)
 - [ ] Commit & push lên `dev` branch
-

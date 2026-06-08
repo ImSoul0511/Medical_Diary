@@ -266,7 +266,7 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
   ```json
   {
     "action": "approved",
-    "approved_scope": ["medical_records", "heart_rate"] 
+    "approved_scope": ["medical_records", "heart_rate"]
   }
   ```
   *Giá trị hợp lệ của `action`: `"approved"` hoặc `"rejected"`.*
@@ -884,4 +884,4 @@ Mọi lỗi (400, 401, 403, 404, 422, 500) đều phải tuân thủ format này
       }
     ]
   }
-  ```
+  ```
