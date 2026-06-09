@@ -10,6 +10,7 @@ from app.modules.auth.schemas import (
     LoginRequest, 
     LoginResponse, 
     RefreshResponse,
+    PasswordResetRequest,
     RegisterRequest, 
     RegisterDoctorRequest,
     RegisterDoctorResponse,
@@ -84,6 +85,15 @@ async def refresh(
         access_token=result.response.access_token,
         token_type=result.response.token_type,
     )
+
+@router.post("/password-reset/request", response_model=MessageResponse, responses={400: _error_responses[400]})
+@limiter.limit("3/minute")
+async def request_password_reset(
+    request: Request,
+    data: PasswordResetRequest,
+    service: AuthService = Depends(_get_service)
+) -> MessageResponse:
+    return await service.request_password_reset(data)
 
 @router.post("/register", response_model=MessageResponse, responses={400: _error_responses[400]})
 @limiter.limit("3/minute")

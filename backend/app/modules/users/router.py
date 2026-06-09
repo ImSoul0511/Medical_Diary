@@ -10,6 +10,7 @@ from app.shared.schemas import ErrorResponse, error_responses as _error_response
 from app.modules.users.schemas import (
     UserProfileResponse,
     UserProfileUpdateRequest,
+    PrivateProfileUpdateRequest,
     PrivacyUpdateRequest,
     AccessHistoryItem,
     DoctorPublicResponse
@@ -35,6 +36,14 @@ async def update_my_profile(
     service: UsersService = Depends(_get_service)
 ) -> UserProfileResponse:
     return await service.update_profile(current_user["sub"], data)
+
+@router.patch("/me/private", response_model=UserProfileResponse, responses={400: _error_responses[400], 401: _error_responses[401]})
+async def update_private_profile(
+    data: PrivateProfileUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+    service: UsersService = Depends(_get_service)
+) -> UserProfileResponse:
+    return await service.update_private_profile(current_user["sub"], data)
 
 @router.patch("/privacy", response_model=dict, responses={400: _error_responses[400], 401: _error_responses[401]})
 async def update_privacy_settings(

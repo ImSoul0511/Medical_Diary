@@ -1,5 +1,6 @@
 export interface UserProfileResponse {
   id: string;
+  email?: string | null;
   full_name: string;
   gender: string;
   date_of_birth?: string | null;
@@ -20,6 +21,15 @@ export interface UserProfileUpdateRequest {
   blood_type?: string | null;
   allergies?: string | null;
   emergency_contact?: string | null;
+}
+
+export interface PrivateProfileUpdateRequest {
+  password: string;
+  full_name?: string | null;
+  gender?: string | null;
+  date_of_birth?: string | null;
+  phone_number?: string | null;
+  cccd?: string | null;
 }
 
 export interface PrivacyUpdateRequest {

@@ -4,11 +4,14 @@ import type {
   PrivacySettings,
   UserProfile,
   UserProfileForm,
+  PrivateProfileForm,
 } from "../types/users";
+import type { PrivateProfileUpdateRequest } from "../api/users/types";
 import { asNullableString, asRecord, asString, compactPayload, emptyToNull } from "./common";
 
 export type UserProfileDto = {
   id?: string;
+  email?: string | null;
   full_name?: string;
   gender?: string | null;
   date_of_birth?: string | null;
@@ -30,6 +33,7 @@ export function mapUserProfileDto(dto: unknown): UserProfile {
 
   return {
     id: asString(source.id),
+    email: asNullableString(source.email),
     fullName: asString(source.full_name),
     gender: source.gender === "male" || source.gender === "female" ? source.gender : null,
     dateOfBirth: asNullableString(source.date_of_birth),
@@ -43,6 +47,19 @@ export function mapUserProfileDto(dto: unknown): UserProfile {
       showAllergies: privacy.show_allergies === true,
       showEmergencyContact: privacy.show_emergency_contact === true,
     },
+  };
+}
+
+export function mapPrivateProfileFormToDto(form: PrivateProfileForm): PrivateProfileUpdateRequest {
+  return {
+    password: form.password,
+    ...compactPayload({
+      full_name: emptyToNull(form.fullName),
+      gender: form.gender || null,
+      date_of_birth: emptyToNull(form.dateOfBirth),
+      phone_number: emptyToNull(form.phoneNumber),
+      cccd: emptyToNull(form.cccd),
+    }),
   };
 }
 

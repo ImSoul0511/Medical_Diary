@@ -9,6 +9,7 @@ from sqlalchemy import text
 from app.modules.auth.schemas import (
     LoginRequest,
     LoginResponse,
+    PasswordResetRequest,
     RegisterRequest,
     RegisterDoctorRequest,
     RegisterDoctorResponse,
@@ -97,6 +98,17 @@ class AuthService:
         except Exception as e:
             logger.warning(f"Refresh session failed: {e}")
             raise HTTPException(status_code=401, detail="Session expired")
+
+    async def request_password_reset(self, data: PasswordResetRequest) -> MessageResponse:
+        try:
+            self.supabase.auth.reset_password_for_email(data.email)
+            logger.info(f"Password reset email requested for: {data.email}")
+            return MessageResponse(
+                message="Nếu email tồn tại, hệ thống đã gửi hướng dẫn đặt lại mật khẩu."
+            )
+        except Exception as e:
+            logger.error(f"Password reset request failed for {data.email}: {e}")
+            raise HTTPException(status_code=400, detail="Không thể gửi email đặt lại mật khẩu.")
 
     async def register(self, data: RegisterRequest) -> MessageResponse:
         try: 

@@ -24,9 +24,11 @@ export function LoginPage() {
   const selectedRole = useAuthStore((state) => state.selectedRole);
   const setSelectedRole = useAuthStore((state) => state.setSelectedRole);
   const login = useAuthStore((state) => state.login);
+  const requestPasswordReset = useAuthStore((state) => state.requestPasswordReset);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,6 +46,21 @@ export function LoginPage() {
       navigate(roleHomePath[user.role]);
     } catch (err) {
       setError("Đăng nhập thất bại. Vui lòng thử lại.");
+    }
+  }
+
+  async function handlePasswordReset() {
+    if (!isEmail(email)) {
+      setError("Nhập email hợp lệ trước khi đặt lại mật khẩu.");
+      return;
+    }
+    setError("");
+    setResetMessage("");
+    try {
+      await requestPasswordReset(email);
+      setResetMessage("Nếu email tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi.");
+    } catch {
+      setError("Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại.");
     }
   }
 
@@ -108,7 +125,13 @@ export function LoginPage() {
               type="password"
               value={password}
             />
+            <div className="-mt-2 flex justify-end">
+              <button className="text-sm font-medium text-primary hover:underline" onClick={() => void handlePasswordReset()} type="button">
+                Quên mật khẩu?
+              </button>
+            </div>
             {error ? <p className="text-sm text-emergency">{error}</p> : null}
+            {resetMessage ? <p className="text-sm text-success">{resetMessage}</p> : null}
             <Button className="w-full" type="submit">
               Đăng nhập
             </Button>

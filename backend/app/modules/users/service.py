@@ -11,6 +11,7 @@ from app.modules.users.models import Profile
 from app.modules.users.schemas import (
     UserProfileResponse,
     UserProfileUpdateRequest,
+    PrivateProfileUpdateRequest,
     PrivacyUpdateRequest,
     AccessHistoryItem,
     DoctorPublicResponse
@@ -25,12 +26,13 @@ class UsersService:
     async def get_profile(self, user_id: str) -> UserProfileResponse:
         try:
             query = text("""
-                SELECT id, full_name, gender, date_of_birth, blood_type, allergies,
-                       emergency_contact, privacy_settings,
-                       pgp_sym_decrypt(phone_encrypted::bytea, current_setting('app.encryption_key')) AS phone_number,
-                       pgp_sym_decrypt(cccd_encrypted::bytea, current_setting('app.encryption_key')) AS cccd
-                FROM profiles
-                WHERE id = :user_id AND deleted_at IS NULL
+                SELECT p.id, au.email, p.full_name, p.gender, p.date_of_birth, p.blood_type, p.allergies,
+                       p.emergency_contact, p.privacy_settings,
+                       pgp_sym_decrypt(p.phone_encrypted::bytea, current_setting('app.encryption_key')) AS phone_number,
+                       pgp_sym_decrypt(p.cccd_encrypted::bytea, current_setting('app.encryption_key')) AS cccd
+                FROM profiles p
+                LEFT JOIN auth.users au ON au.id = p.id
+                WHERE p.id = :user_id AND p.deleted_at IS NULL
             """)
             result = await self.db.execute(query, {"user_id": user_id})
             row = result.fetchone()
@@ -41,6 +43,7 @@ class UsersService:
             logger.info(f"Retrieved profile for user: {user_id}")
             return UserProfileResponse(
                 id=row.id,
+                email=row.email,
                 full_name=row.full_name,
                 gender=row.gender,
                 date_of_birth=row.date_of_birth,
@@ -106,6 +109,26 @@ class UsersService:
             logger.error(f"Failed to update profile for {user_id}: {e}")
             raise HTTPException(status_code=400, detail="Không thể cập nhật hồ sơ.")
 
+    async def _verify_password(self, user_id: str, password: str) -> None:
+        result = await self.db.execute(
+            text("SELECT verify_user_password(:user_id, :password)"),
+            {"user_id": user_id, "password": password},
+        )
+        if result.scalar() is not True:
+            raise HTTPException(status_code=401, detail="Mật khẩu không chính xác.")
+
+    async def update_private_profile(self, user_id: str, data: PrivateProfileUpdateRequest) -> UserProfileResponse:
+        await self._verify_password(user_id, data.password)
+        payload = UserProfileUpdateRequest(
+            full_name=data.full_name,
+            gender=data.gender,
+            date_of_birth=data.date_of_birth,
+            phone_number=data.phone_number,
+            cccd=data.cccd,
+        )
+        logger.info(f"Private profile update verified for user: {user_id}")
+        return await self.update_profile(user_id, payload)
+
     async def update_privacy(self, user_id: str, data: PrivacyUpdateRequest) -> dict:
         try:
             update_data = data.model_dump(exclude_none=True)
@@ -142,15 +165,27 @@ class UsersService:
 
     async def export_data(self, user_id: str, format: str, scope: str) -> StreamingResponse:
         try:
-            # Phase 3A: Chỉ hỗ trợ scope=profile
-            if scope != "profile":
+            exportable_fields = {
+                "full_name",
+                "gender",
+                "date_of_birth",
+                "blood_type",
+                "allergies",
+            }
+            default_fields = ["full_name", "gender", "date_of_birth", "blood_type", "allergies"]
+            selected_fields = default_fields if scope == "profile" else [
+                field.strip() for field in scope.split(",") if field.strip() in exportable_fields
+            ]
+
+            if not selected_fields:
                 raise HTTPException(status_code=400, detail=f"Scope '{scope}' chưa được hỗ trợ.")
 
             profile = await self.get_profile(user_id)
             profile_dict = profile.model_dump(mode="json")
+            export_dict = {field: profile_dict.get(field) for field in selected_fields}
 
             if format == "json":
-                json_data = json.dumps(profile_dict, ensure_ascii=False, indent=2)
+                json_data = json.dumps(export_dict, ensure_ascii=False, indent=2)
                 file_stream = io.BytesIO(json_data.encode("utf-8"))
                 
                 logger.info(f"Exported data for user: {user_id} in JSON format")
@@ -229,11 +264,7 @@ class UsersService:
                 elements.append(Spacer(1, 30))
                 # Chuan bi data table
                 table_data = []
-                for key, value in profile_dict.items():
-                    # Bo qua cac truong khong can in ra file PDF
-                    if key in ["privacy_settings", "id"]:
-                        continue
-                    
+                for key, value in export_dict.items():
                     # Map ten tieng Viet
                     key_mapping = {
                         "full_name": "Họ và tên (Full Name)",
@@ -241,7 +272,6 @@ class UsersService:
                         "date_of_birth": "Ngày sinh (Date of Birth)",
                         "blood_type": "Nhóm máu (Blood Type)",
                         "allergies": "Dị ứng (Allergies)",
-                        "emergency_contact": "Liên hệ khẩn cấp (Emergency)"
                     }
                     display_key = key_mapping.get(key, key.replace('_', ' ').title())
                     display_val = str(value) if value is not None else "Trống (N/A)"

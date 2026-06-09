@@ -11,7 +11,7 @@ from app.modules.consent.schemas import (
     AccessRequestItem,
     ConsentHistoryItem,
 )
-from app.modules.users.models import Profile
+from app.modules.users.models import Doctor, Profile
 from app.shared.schemas import MessageResponse
 
 
@@ -24,8 +24,9 @@ class ConsentService:
         patient_id: UUID,
     ) -> list[AccessRequestItem]:
         stmt = (
-            select(ConsentRequest, Profile.full_name)
+            select(ConsentRequest, Profile.full_name, Doctor.specialty, Doctor.hospital)
             .join(Profile, Profile.id == ConsentRequest.doctor_id)
+            .join(Doctor, Doctor.id == ConsentRequest.doctor_id, isouter=True)
             .where(
                 ConsentRequest.patient_id == patient_id,
                 ConsentRequest.status == "pending",
@@ -40,12 +41,14 @@ class ConsentService:
                 request_id=request.id,
                 doctor_id=request.doctor_id,
                 doctor_name=doctor_name,
+                doctor_specialty=specialty,
+                doctor_hospital=hospital,
                 requested_scope=list(request.requested_scope or []),
                 reason=request.reason,
                 status=request.status,
                 requested_at=request.created_at,
             )
-            for request, doctor_name in result.all()
+            for request, doctor_name, specialty, hospital in result.all()
         ]
 
     async def review_request(
@@ -151,8 +154,9 @@ class ConsentService:
     ) -> list[ConsentHistoryItem]:
         now = datetime.now(timezone.utc)
         stmt = (
-            select(ConsentPermission, Profile.full_name)
+            select(ConsentPermission, Profile.full_name, Doctor.specialty, Doctor.hospital)
             .join(Profile, Profile.id == ConsentPermission.doctor_id)
+            .join(Doctor, Doctor.id == ConsentPermission.doctor_id, isouter=True)
             .where(
                 ConsentPermission.patient_id == patient_id,
                 ConsentPermission.status == "active",
@@ -168,9 +172,11 @@ class ConsentService:
             ConsentHistoryItem(
                 doctor_id=permission.doctor_id,
                 doctor_name=doctor_name,
+                doctor_specialty=specialty,
+                doctor_hospital=hospital,
                 scope=list(permission.scope or []),
                 granted_at=permission.granted_at,
                 expires_at=permission.expires_at,
             )
-            for permission, doctor_name in result.all()
+            for permission, doctor_name, specialty, hospital in result.all()
         ]

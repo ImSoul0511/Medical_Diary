@@ -26,3 +26,13 @@ export interface RequestAccessResponse {
   status: string;
   created_at: string;
 }
+
+export interface ManagedPatientResponse {
+  patient_id: string;
+  full_name: string;
+  gender: string;
+  scope: ConsentScope[];
+  granted_at: string;
+  expires_at?: string | null;
+  access_status: "active" | "expired" | string;
+}

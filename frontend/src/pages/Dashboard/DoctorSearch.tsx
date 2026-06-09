@@ -1,5 +1,5 @@
 import { FormEvent } from "react";
-import { Search, ShieldPlus, UserSearch } from "lucide-react";
+import { Eye, Search, ShieldPlus, UserSearch } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
@@ -10,6 +10,7 @@ import { ROUTES } from "../../constants/routes";
 import { useDoctorStore } from "../../store/doctorStore";
 import { useUiStore } from "../../store/uiStore";
 import { HEALTH_METRIC_CONSENT_SCOPES } from "../../types/consent";
+import { formatGender } from "../../utils/gender";
 
 export function DoctorSearch() {
   const showToast = useUiStore((state) => state.showToast);
@@ -69,8 +70,9 @@ export function DoctorSearch() {
           <form className="space-y-4" onSubmit={handleSearch}>
             <FormInput
               icon={<Search className="h-4 w-4" />}
+              inputMode="numeric"
               label="Số điện thoại"
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => setSearchQuery(event.target.value.replace(/\D/g, ""))}
               value={searchQuery}
             />
             <Button className="w-full" disabled={isSearching} type="submit" variant="success">
@@ -84,7 +86,7 @@ export function DoctorSearch() {
         <section className="space-y-3">
           {isSearching ? (
             <Card padding="lg">
-              <p className="text-sm text-mutedForeground animate-pulse">Đang tìm kiếm...</p>
+              <p className="animate-pulse text-sm text-mutedForeground">Đang tìm kiếm...</p>
             </Card>
           ) : hasSearched && results.length === 0 ? (
             <Card padding="lg">
@@ -92,39 +94,39 @@ export function DoctorSearch() {
             </Card>
           ) : null}
 
-          {!isSearching && results.map((patient) => (
-            <Card key={patient.id} padding="lg">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                  <Badge tone="info">Kết quả</Badge>
-                  <h2 className="mt-3 text-xl font-semibold text-secondary">{patient.fullName}</h2>
-                  <p className="mt-1 text-sm text-mutedForeground">Giới tính: {patient.gender}</p>
+          {!isSearching &&
+            results.map((patient) => (
+              <Card key={patient.id} padding="lg">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <Badge tone="info">Kết quả</Badge>
+                    <h2 className="mt-3 text-xl font-semibold text-secondary">{patient.fullName}</h2>
+                    <p className="mt-1 text-sm text-mutedForeground">Giới tính: {formatGender(patient.gender)}</p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Button leftIcon={<ShieldPlus className="h-4 w-4" />} onClick={() => handleRequestAccess(patient.id)} variant="success">
+                      Xin quyền truy cập
+                    </Button>
+                    <Link
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-input border border-border px-4 text-sm font-medium text-secondary hover:bg-muted"
+                      to={`/bac-si/benh-nhan/${patient.id}`}
+                    >
+                      <Eye className="h-4 w-4" />
+                      Xem công khai
+                    </Link>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    leftIcon={<ShieldPlus className="h-4 w-4" />}
-                    onClick={() => handleRequestAccess(patient.id)}
-                    variant="success"
-                  >
-                    Xin quyền truy cập
-                  </Button>
-                  <Link
-                    className="inline-flex h-10 items-center justify-center rounded-input border border-border px-4 text-sm font-medium text-secondary hover:bg-muted"
-                    to={`/bac-si/benh-nhan/${patient.id}`}
-                  >
-                    Xem chi tiết
-                  </Link>
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))}
 
           {!hasSearched && !isSearching ? (
             <Card padding="lg">
               <p className="text-sm text-mutedForeground">Nhập số điện thoại để bắt đầu tìm kiếm.</p>
             </Card>
           ) : null}
-          <Link className="sr-only" to={ROUTES.doctorPatient}>Chi tiết bệnh nhân</Link>
+          <Link className="sr-only" to={ROUTES.doctorPatient}>
+            Chi tiết bệnh nhân
+          </Link>
         </section>
       </div>
     </AppShell>

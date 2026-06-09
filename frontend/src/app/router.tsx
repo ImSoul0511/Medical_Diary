@@ -10,6 +10,7 @@ import { ROUTES } from "../constants/routes";
 import { AdminAuditLogs } from "../pages/Dashboard/AdminAuditLogs";
 import { AdminDoctorApproval } from "../pages/Dashboard/AdminDoctorApproval";
 import { DoctorPatientDetail } from "../pages/Dashboard/DoctorPatientDetail";
+import { DoctorPatientManagement } from "../pages/Dashboard/DoctorPatientManagement";
 import { DoctorPrescription } from "../pages/Dashboard/DoctorPrescription";
 import { DoctorSearch } from "../pages/Dashboard/DoctorSearch";
 import { PatientDashboard } from "../pages/Dashboard/PatientDashboard";
@@ -21,6 +22,7 @@ import { RegisterPage } from "../pages/Login/RegisterPage";
 import { ConsentManagement } from "../pages/Profile/ConsentManagement";
 import { EmergencyPublicView } from "../pages/Profile/EmergencyPublicView";
 import { PrivacySettings } from "../pages/Profile/PrivacySettings";
+import { PrivateSettingsPage } from "../pages/Profile/PrivateSettingsPage";
 import { ProfilePage } from "../pages/Profile/ProfilePage";
 
 export function AppRouter() {
@@ -34,9 +36,11 @@ export function AppRouter() {
       <Route element={<HealthMetricsPage />} path={ROUTES.healthMetrics} />
       <Route element={<ProfilePage />} path={ROUTES.profile} />
       <Route element={<ConsentManagement />} path={ROUTES.consent} />
+      <Route element={<PrivateSettingsPage />} path={ROUTES.privateSettings} />
       <Route element={<PrivacySettings />} path={ROUTES.privacy} />
       <Route element={<EmergencyPublicView />} path="/cap-cuu/:token" />
       <Route element={<DoctorSearch />} path={ROUTES.doctorSearch} />
+      <Route element={<DoctorPatientManagement />} path={ROUTES.doctorPatientManagement} />
       <Route element={<DoctorPatientDetail />} path="/bac-si/benh-nhan/:patientId" />
       <Route element={<DoctorPrescription />} path="/bac-si/tao-don-thuoc/:patientId" />
       <Route element={<AdminDoctorApproval />} path={ROUTES.adminDoctorApproval} />

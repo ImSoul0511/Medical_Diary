@@ -4,26 +4,42 @@ import {
   mapHealthMetricDto,
   mapHealthMetricFiltersToParams,
   mapHealthMetricFormToDto,
+  mapManualHealthMetricFiltersToParams,
+  mapManualHealthRecordDto,
+  mapManualRecordFormToDto,
 } from "../mappers/healthMetricsMapper";
 import type {
   HealthMetric,
   HealthMetricChartPoint,
   HealthMetricFilters,
   HealthMetricForm,
+  ManualHealthRecord,
+  ManualHealthRecordFilters,
+  ManualHealthRecordForm,
 } from "../types/healthMetrics";
 import { getErrorMessage } from "./storeUtils";
 
 type HealthMetricsStore = {
   items: HealthMetric[];
+  manualItems: ManualHealthRecord[];
   latest: HealthMetric | null;
   filters: HealthMetricFilters;
+  manualFilters: ManualHealthRecordFilters;
   chartData: HealthMetricChartPoint[];
   isLoading: boolean;
+  isLoadingManual: boolean;
   isCreating: boolean;
+  isCreatingManual: boolean;
   error: string | null;
   loadMine: (filters?: HealthMetricFilters) => Promise<HealthMetric[]>;
   loadPatientMetrics: (patientId: string, filters?: HealthMetricFilters) => Promise<HealthMetric[]>;
   createMetric: (form: HealthMetricForm) => Promise<HealthMetric>;
+  loadManualMetrics: (filters?: ManualHealthRecordFilters) => Promise<ManualHealthRecord[]>;
+  loadPatientManualMetrics: (
+    patientId: string,
+    filters?: ManualHealthRecordFilters,
+  ) => Promise<ManualHealthRecord[]>;
+  createManualMetric: (form: ManualHealthRecordForm) => Promise<ManualHealthRecord>;
   setFilters: (filters: HealthMetricFilters) => void;
   clear: () => void;
 };
@@ -39,11 +55,15 @@ function toChartData(items: HealthMetric[]): HealthMetricChartPoint[] {
 
 export const useHealthMetricsStore = create<HealthMetricsStore>((set) => ({
   items: [],
+  manualItems: [],
   latest: null,
   filters: {},
+  manualFilters: {},
   chartData: [],
   isLoading: false,
+  isLoadingManual: false,
   isCreating: false,
+  isCreatingManual: false,
   error: null,
   loadMine: async (filters = {}) => {
     set({ isLoading: true, error: null, filters });
@@ -105,13 +125,61 @@ export const useHealthMetricsStore = create<HealthMetricsStore>((set) => ({
       throw error;
     }
   },
+  loadManualMetrics: async (filters = {}) => {
+    set({ isLoadingManual: true, error: null, manualFilters: filters });
+    try {
+      const manualItems = (
+        await healthMetricsApi.listManual(mapManualHealthMetricFiltersToParams(filters))
+      ).map(mapManualHealthRecordDto);
+      set({ manualItems, isLoadingManual: false });
+      return manualItems;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load manual health records.");
+      set({ isLoadingManual: false, error: message });
+      throw error;
+    }
+  },
+  loadPatientManualMetrics: async (patientId, filters = {}) => {
+    const nextFilters = { ...filters, patientId };
+    set({ isLoadingManual: true, error: null, manualFilters: nextFilters });
+    try {
+      const manualItems = (
+        await healthMetricsApi.listManual(mapManualHealthMetricFiltersToParams(nextFilters))
+      ).map(mapManualHealthRecordDto);
+      set({ manualItems, isLoadingManual: false });
+      return manualItems;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load patient manual health records.");
+      set({ isLoadingManual: false, error: message });
+      throw error;
+    }
+  },
+  createManualMetric: async (form) => {
+    set({ isCreatingManual: true, error: null });
+    try {
+      const created = mapManualHealthRecordDto(
+        await healthMetricsApi.createManual(mapManualRecordFormToDto(form)),
+      );
+      set((state) => ({
+        manualItems: [created, ...state.manualItems],
+        isCreatingManual: false,
+      }));
+      return created;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to create manual health record.");
+      set({ isCreatingManual: false, error: message });
+      throw error;
+    }
+  },
   setFilters: (filters) => set({ filters }),
   clear: () =>
     set({
       items: [],
+      manualItems: [],
       latest: null,
       chartData: [],
       filters: {},
+      manualFilters: {},
       error: null,
     }),
 }));

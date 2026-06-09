@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Check, Shield, X } from "lucide-react";
+import { Building2, Check, Shield, Stethoscope, X } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
@@ -42,9 +42,19 @@ export function ConsentManagement() {
           ) : null}
           {pendingRequests.map((request) => (
             <Card key={request.id}>
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div>
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+                <div className="min-w-0">
                   <h3 className="font-semibold text-secondary">{request.doctorName}</h3>
+                  <div className="mt-2 grid gap-2 text-xs text-mutedForeground sm:grid-cols-2">
+                    <span className="inline-flex min-w-0 items-center gap-1.5">
+                      <Stethoscope className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{request.doctorSpecialty ?? "Chưa có chuyên khoa"}</span>
+                    </span>
+                    <span className="inline-flex min-w-0 items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{request.doctorHospital ?? "Chưa có bệnh viện"}</span>
+                    </span>
+                  </div>
                   <p className="mt-2 text-sm text-secondary">{request.reason}</p>
                   <p className="mt-2 text-xs text-mutedForeground">
                     Gửi lúc {formatDateTime(request.requestedAt)}
@@ -57,7 +67,7 @@ export function ConsentManagement() {
                     ))}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
                   <Button
                     leftIcon={<Check className="h-4 w-4" />}
                     onClick={() => {
@@ -93,9 +103,19 @@ export function ConsentManagement() {
           ) : null}
           {activePermissions.map((permission) => (
             <Card key={permission.id}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <h3 className="font-semibold text-secondary">{permission.doctorName}</h3>
+                  <div className="mt-2 grid gap-2 text-xs text-mutedForeground sm:grid-cols-2">
+                    <span className="inline-flex min-w-0 items-center gap-1.5">
+                      <Stethoscope className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{permission.doctorSpecialty ?? "Chưa có chuyên khoa"}</span>
+                    </span>
+                    <span className="inline-flex min-w-0 items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{permission.doctorHospital ?? "Chưa có bệnh viện"}</span>
+                    </span>
+                  </div>
                   <p className="mt-1 text-xs text-mutedForeground">
                     {permission.expiresAt ? `Hết hạn ${formatDateTime(permission.expiresAt)}` : "Không thời hạn"}
                   </p>

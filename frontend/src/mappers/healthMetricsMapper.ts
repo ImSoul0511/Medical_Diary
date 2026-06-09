@@ -1,7 +1,17 @@
-import type { HealthMetric, HealthMetricFilters, HealthMetricForm } from "../types/healthMetrics";
+import type {
+  HealthMetric,
+  HealthMetricFilters,
+  HealthMetricForm,
+  ManualHealthRecord,
+  ManualHealthRecordFilters,
+  ManualHealthRecordForm,
+  MetricType,
+} from "../types/healthMetrics";
 import type {
   HealthMetricCreateRequest,
   HealthMetricListParams,
+  ManualHealthRecordCreateRequest,
+  ManualHealthRecordListParams,
 } from "../api/health_metrics/types";
 import { asNullableString, asNumberOrNull, asRecord, asString, compactPayload } from "./common";
 
@@ -46,4 +56,96 @@ export function mapHealthMetricFiltersToParams(filters?: HealthMetricFilters): H
     start: asNullableString(filters?.start),
     end: asNullableString(filters?.end),
   }) as HealthMetricListParams;
+}
+
+function asMetricType(value: unknown): MetricType {
+  if (
+    value === "blood_pressure" ||
+    value === "blood_glucose" ||
+    value === "spo2" ||
+    value === "body_temperature" ||
+    value === "weight"
+  ) {
+    return value;
+  }
+  return "blood_pressure";
+}
+
+function parseNumber(value: string | undefined): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function parseOptionalPayloadNumber(value: string | undefined): number | null {
+  if (!value?.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function mapManualHealthRecordDto(dto: unknown): ManualHealthRecord {
+  const source = asRecord(dto);
+
+  return {
+    id: asString(source.id),
+    userId: asString(source.user_id),
+    metricType: asMetricType(source.metric_type),
+    metrics: asRecord(source.metrics),
+    deviceName: asNullableString(source.device_name),
+    notes: asNullableString(source.notes),
+    recordedAt: asString(source.recorded_at),
+    createdAt: asString(source.created_at),
+  };
+}
+
+export function mapManualRecordFormToDto(
+  form: ManualHealthRecordForm,
+): ManualHealthRecordCreateRequest {
+  let metrics: Record<string, unknown>;
+
+  switch (form.metricType) {
+    case "blood_pressure":
+      metrics = compactPayload({
+        systolic: parseNumber(form.systolic),
+        diastolic: parseNumber(form.diastolic),
+        pulse: parseOptionalPayloadNumber(form.pulse),
+      });
+      break;
+    case "blood_glucose":
+      metrics = {
+        value: parseNumber(form.value),
+        meal_context: form.mealContext ?? "random",
+      };
+      break;
+    case "spo2":
+    case "body_temperature":
+      metrics = { value: parseNumber(form.value) };
+      break;
+    case "weight":
+      metrics = compactPayload({
+        value: parseNumber(form.value),
+        height: parseOptionalPayloadNumber(form.height),
+      });
+      break;
+    default:
+      metrics = {};
+  }
+
+  return {
+    metric_type: form.metricType,
+    metrics,
+    device_name: form.deviceName?.trim() || null,
+    notes: form.notes?.trim() || null,
+    recorded_at: form.recordedAt,
+  };
+}
+
+export function mapManualHealthMetricFiltersToParams(
+  filters?: ManualHealthRecordFilters,
+): ManualHealthRecordListParams {
+  return compactPayload({
+    patient_id: asNullableString(filters?.patientId),
+    metric_type: filters?.metricType || null,
+    start: asNullableString(filters?.start),
+    end: asNullableString(filters?.end),
+  }) as ManualHealthRecordListParams;
 }

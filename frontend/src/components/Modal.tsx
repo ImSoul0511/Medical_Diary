@@ -10,6 +10,7 @@ type ModalProps = {
   confirmLabel?: string;
   cancelLabel?: string;
   confirmVariant?: "primary" | "danger" | "success";
+  confirmDisabled?: boolean;
   onConfirm?: () => void;
   onClose: () => void;
 };
@@ -22,6 +23,7 @@ export function Modal({
   confirmLabel = "Xác nhận",
   cancelLabel = "Hủy",
   confirmVariant = "primary",
+  confirmDisabled = false,
   onConfirm,
   onClose,
 }: ModalProps) {
@@ -52,7 +54,7 @@ export function Modal({
             {cancelLabel}
           </Button>
           {onConfirm ? (
-            <Button onClick={onConfirm} variant={confirmVariant}>
+            <Button disabled={confirmDisabled} onClick={onConfirm} variant={confirmVariant}>
               {confirmLabel}
             </Button>
           ) : null}

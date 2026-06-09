@@ -7,6 +7,11 @@ const srcRoot = join(scriptDir, "../src");
 
 const allowedAxiosClient = "api/apiClient.ts";
 const allowedApiBaseUrlFiles = new Set(["api/apiClient.ts", "vite-env.d.ts"]);
+const allowedSupabaseFiles = new Set([
+  "realtime/supabaseRealtime.ts",
+  "realtime/notificationsRealtime.ts",
+]);
+const allowedSupabaseEnvFiles = new Set(["realtime/supabaseRealtime.ts", "vite-env.d.ts"]);
 const allowedWithCredentialsFiles = new Set(["api/auth/authApi.ts"]);
 
 const bannedTokens = [
@@ -45,6 +50,7 @@ for (const file of files(srcRoot)) {
   const source = readFileSync(file, "utf8");
 
   for (const token of bannedTokens) {
+    if (token === "@supabase/supabase-js" && allowedSupabaseFiles.has(rel)) continue;
     if (source.includes(token)) offenders.push(`${rel}: banned token ${token}`);
   }
 
@@ -64,6 +70,13 @@ for (const file of files(srcRoot)) {
 
   if (source.includes("VITE_API_BASE_URL") && !allowedApiBaseUrlFiles.has(rel)) {
     offenders.push(`${rel}: VITE_API_BASE_URL is only allowed in the central API client`);
+  }
+
+  if (
+    (source.includes("VITE_SUPABASE_URL") || source.includes("VITE_SUPABASE_ANON_KEY")) &&
+    !allowedSupabaseEnvFiles.has(rel)
+  ) {
+    offenders.push(`${rel}: Supabase env vars are only allowed in the realtime client`);
   }
 
   if (source.includes("withCredentials") && !allowedWithCredentialsFiles.has(rel)) {

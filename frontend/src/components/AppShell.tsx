@@ -10,7 +10,9 @@ import { useEffect } from "react";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { useAuthStore } from "../store/authStore";
+import { useNotificationStore } from "../store/notificationStore";
 import { useUiStore } from "../store/uiStore";
+import { subscribeToNotificationInserts } from "../realtime/notificationsRealtime";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../constants/routes";
 import type { Role } from "../types/auth";
@@ -26,7 +28,10 @@ type AppShellProps = {
 export function AppShell({ role, title, description, children }: AppShellProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isHydrated = useAuthStore((state) => state.isHydrated);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const currentUser = useAuthStore((state) => state.currentUser);
   const refreshSession = useAuthStore((state) => state.refreshSession);
+  const receiveNotification = useNotificationStore((state) => state.receiveNotification);
   const mobileSidebarOpen = useUiStore((state) => state.mobileSidebarOpen);
   const setMobileSidebarOpen = useUiStore((state) => state.setMobileSidebarOpen);
   const setRoleTheme = useUiStore((state) => state.setRoleTheme);
@@ -53,6 +58,16 @@ export function AppShell({ role, title, description, children }: AppShellProps) 
     const timeout = window.setTimeout(clearToast, 2600);
     return () => window.clearTimeout(timeout);
   }, [clearToast, toastMessage]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser?.id || !accessToken) return undefined;
+    return subscribeToNotificationInserts(currentUser.id, accessToken, (notification) => {
+      receiveNotification(notification);
+      if (!notification.isRead) {
+        useUiStore.getState().showToast(notification.title || "Bạn có thông báo mới.");
+      }
+    });
+  }, [accessToken, currentUser?.id, isAuthenticated, receiveNotification]);
 
   const isAdmin = role === "admin";
 

@@ -5,6 +5,7 @@ from typing import List, Optional, Literal
 
 class UserProfileResponse(BaseModel):
     id: UUID
+    email: Optional[str] = None
     full_name: str
     gender: str
     date_of_birth: Optional[date]
@@ -23,7 +24,7 @@ class UserProfileUpdateRequest(BaseModel):
     allergies: Optional[str] = Field(None, max_length=2000)
     emergency_contact: Optional[str] = Field(None, max_length=20)
     phone_number: Optional[str] = Field(None, max_length=20)
-    cccd: Optional[str] = Field(None, max_length=20)
+    cccd: Optional[str] = Field(None, min_length=12, max_length=12, pattern=r"^\d{12}$")
 
     model_config = {
         "json_schema_extra": {
@@ -37,6 +38,14 @@ class UserProfileUpdateRequest(BaseModel):
             }
         }
     }
+
+class PrivateProfileUpdateRequest(BaseModel):
+    password: str = Field(..., min_length=8)
+    full_name: Optional[str] = Field(None, min_length=2, max_length=100)
+    gender: Optional[Literal['male', 'female']] = None
+    date_of_birth: Optional[date] = None
+    phone_number: Optional[str] = Field(None, max_length=20)
+    cccd: Optional[str] = Field(None, min_length=12, max_length=12, pattern=r"^\d{12}$")
 
 class PrivacyUpdateRequest(BaseModel):
     show_blood_type: Optional[bool] = None

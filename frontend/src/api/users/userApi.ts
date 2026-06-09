@@ -4,6 +4,7 @@ import type {
   DoctorPublicResponse,
   DoctorSearchRequest,
   PrivacyUpdateRequest,
+  PrivateProfileUpdateRequest,
   UserProfileResponse,
   UserProfileUpdateRequest,
 } from "./types";
@@ -16,6 +17,11 @@ export const userApi = {
 
   updateProfile: async (data: UserProfileUpdateRequest): Promise<UserProfileResponse> => {
     const response = await apiClient.patch<UserProfileResponse>("/users/me", data);
+    return response.data;
+  },
+
+  updatePrivateProfile: async (data: PrivateProfileUpdateRequest): Promise<UserProfileResponse> => {
+    const response = await apiClient.patch<UserProfileResponse>("/users/me/private", data);
     return response.data;
   },
 

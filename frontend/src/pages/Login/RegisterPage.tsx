@@ -114,8 +114,8 @@ export function RegisterPage() {
                     defaultValue={defaultGender}
                     name="gender"
                   >
-                    <option value="male">male</option>
-                    <option value="female">female</option>
+                    <option value="male">Nam</option>
+                    <option value="female">Nữ</option>
                   </select>
                 </label>
                 <FormInput label="Mật khẩu" name="password" required type="password" />

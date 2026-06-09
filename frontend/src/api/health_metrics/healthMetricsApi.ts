@@ -3,6 +3,9 @@ import type {
   HealthMetricCreateRequest,
   HealthMetricListParams,
   HealthMetricResponse,
+  ManualHealthRecordCreateRequest,
+  ManualHealthRecordListParams,
+  ManualHealthRecordResponse,
 } from "./types";
 
 export const healthMetricsApi = {
@@ -15,6 +18,26 @@ export const healthMetricsApi = {
     const response = await apiClient.get<HealthMetricResponse[]>("/health-metrics", {
       params,
     });
+    return response.data;
+  },
+
+  createManual: async (
+    data: ManualHealthRecordCreateRequest,
+  ): Promise<ManualHealthRecordResponse> => {
+    const response = await apiClient.post<ManualHealthRecordResponse>(
+      "/health-metrics/manual",
+      data,
+    );
+    return response.data;
+  },
+
+  listManual: async (
+    params?: ManualHealthRecordListParams,
+  ): Promise<ManualHealthRecordResponse[]> => {
+    const response = await apiClient.get<ManualHealthRecordResponse[]>(
+      "/health-metrics/manual",
+      { params },
+    );
     return response.data;
   },
 };

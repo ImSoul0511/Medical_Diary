@@ -38,6 +38,8 @@ PROFILE_SCOPES: tuple[ConsentScope, ...] = (
 class ConsentHistoryItem(BaseModel):
     doctor_id: UUID
     doctor_name: str
+    doctor_specialty: Optional[str] = None
+    doctor_hospital: Optional[str] = None
     scope: list[ConsentScope]
     granted_at: datetime
     expires_at: Optional[datetime] = None
@@ -47,6 +49,8 @@ class AccessRequestItem(BaseModel):
     request_id: UUID
     doctor_id: UUID
     doctor_name: str
+    doctor_specialty: Optional[str] = None
+    doctor_hospital: Optional[str] = None
     requested_scope: list[ConsentScope]
     reason: str
     status: str

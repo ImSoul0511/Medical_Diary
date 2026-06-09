@@ -1,6 +1,7 @@
 import type {
   PatientProfile,
   PatientSearchResult,
+  ManagedPatient,
   RequestAccessForm,
   RequestAccessResult,
 } from "../types/doctor";
@@ -27,6 +28,20 @@ export function mapPatientProfileDto(dto: unknown): PatientProfile {
     bloodType: asNullableString(source.blood_type),
     allergies: asNullableString(source.allergies),
     emergencyContact: asNullableString(source.emergency_contact),
+  };
+}
+
+export function mapManagedPatientDto(dto: unknown): ManagedPatient {
+  const source = asRecord(dto);
+
+  return {
+    patientId: asString(source.patient_id),
+    fullName: asString(source.full_name),
+    gender: asString(source.gender),
+    scopes: Array.isArray(source.scope) ? source.scope.filter((item): item is ManagedPatient["scopes"][number] => typeof item === "string") : [],
+    grantedAt: asString(source.granted_at),
+    expiresAt: asNullableString(source.expires_at),
+    accessStatus: asString(source.access_status, "active"),
   };
 }
 

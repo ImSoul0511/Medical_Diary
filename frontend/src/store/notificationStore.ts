@@ -60,10 +60,16 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
     }
   },
   receiveNotification: (notification) =>
-    set((state) => ({
-      items: [notification, ...state.items],
-      unreadCount: notification.isRead ? state.unreadCount : state.unreadCount + 1,
-    })),
+    set((state) => {
+      const exists = state.items.some((item) => item.id === notification.id);
+      const items = exists
+        ? state.items.map((item) => (item.id === notification.id ? notification : item))
+        : [notification, ...state.items];
+      return {
+        items,
+        unreadCount: items.filter((item) => !item.isRead).length,
+      };
+    }),
   markAllLocalRead: () =>
     set((state) => ({
       items: state.items.map((item) => ({ ...item, isRead: true })),

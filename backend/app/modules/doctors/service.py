@@ -10,6 +10,7 @@ from app.shared.email import send_email_sync
 from app.modules.consent.models import ConsentPermission, ConsentRequest
 from app.modules.notifications.models import Notification
 from app.modules.doctors.schemas import (
+    ManagedPatientResponse,
     PatientProfileResponse,
     PatientPublicResponse,
     RequestAccessRequest,
@@ -112,6 +113,39 @@ class DoctorService:
         )
 
     # ── 3. Gửi yêu cầu truy cập ────────────────────────────────────────
+    async def list_managed_patients(self, doctor_id: UUID) -> list[ManagedPatientResponse]:
+        now = datetime.now(timezone.utc)
+        stmt = (
+            select(ConsentPermission, Profile.full_name, Profile.gender)
+            .join(Profile, Profile.id == ConsentPermission.patient_id)
+            .where(
+                ConsentPermission.doctor_id == doctor_id,
+                ConsentPermission.status == "active",
+                Profile.deleted_at.is_(None),
+            )
+            .order_by(ConsentPermission.granted_at.desc())
+        )
+        result = await self.db.execute(stmt)
+        rows = result.all()
+
+        logger.info(f"Doctor {doctor_id} listed managed patients: {len(rows)}")
+        return [
+            ManagedPatientResponse(
+                patient_id=permission.patient_id,
+                full_name=full_name,
+                gender=gender,
+                scope=list(permission.scope or []),
+                granted_at=permission.granted_at,
+                expires_at=permission.expires_at,
+                access_status=(
+                    "expired"
+                    if permission.expires_at is not None and permission.expires_at <= now
+                    else "active"
+                ),
+            )
+            for permission, full_name, gender in rows
+        ]
+
     async def request_access(
         self, doctor_id: UUID, data: RequestAccessRequest, background_tasks: BackgroundTasks
     ) -> RequestAccessResponse:

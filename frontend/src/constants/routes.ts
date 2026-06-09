@@ -1,13 +1,6 @@
-/**
- * Tệp: frontend/src/constants/routes.ts
- * Mục đích: Định nghĩa tập trung các route và navigation dùng khắp frontend.
- * Xuất khẩu: `ROUTES`, `roleHomePath`, và các mảng navigation cho từng vai trò.
- */
-
 import {
   Activity,
   ClipboardList,
-  FileCheck,
   FileText,
   HeartPulse,
   Home,
@@ -28,9 +21,11 @@ export const ROUTES = {
   healthMetrics: "/chi-so-suc-khoe",
   profile: "/ho-so-benh-an",
   consent: "/quan-ly-cap-quyen",
-  privacy: "/cai-dat-quyen-rieng-tu",
+  privateSettings: "/cai-dat-rieng-tu",
+  privacy: "/quan-ly-truy-cap-cong-khai",
   emergency: "/cap-cuu/demo-token",
   doctorSearch: "/bac-si/tim-kiem",
+  doctorPatientManagement: "/bac-si/quan-ly-benh-nhan",
   doctorPatient: "/bac-si/benh-nhan/demo-patient",
   doctorPrescription: "/bac-si/tao-don-thuoc/demo-patient",
   adminDoctorApproval: "/quan-tri/phe-duyet-bac-si",
@@ -56,20 +51,17 @@ export const patientNavigation: NavigationItem[] = [
   { icon: HeartPulse, label: "Chỉ số sức khỏe", path: ROUTES.healthMetrics },
   { icon: FileText, label: "Hồ sơ bệnh án", path: ROUTES.profile },
   { icon: Shield, label: "Quản lý cấp quyền", path: ROUTES.consent },
-  { icon: Settings, label: "Cài đặt riêng tư", path: ROUTES.privacy },
+  { icon: Settings, label: "Cài đặt riêng tư", path: ROUTES.privateSettings },
+  { icon: Settings, label: "Quản lý truy cập công khai", path: ROUTES.privacy },
 ];
 
 export const doctorNavigation: NavigationItem[] = [
+  { icon: Settings, label: "Cài đặt riêng tư", path: ROUTES.privateSettings },
   { icon: Search, label: "Tìm kiếm bệnh nhân", path: ROUTES.doctorSearch },
-  { icon: Users, label: "Chi tiết bệnh nhân", path: ROUTES.doctorPatient },
-  { icon: FileCheck, label: "Tạo đơn thuốc", path: ROUTES.doctorPrescription },
+  { icon: Users, label: "Quản lý bệnh nhân", path: ROUTES.doctorPatientManagement },
 ];
 
 export const adminNavigation: NavigationItem[] = [
-  {
-    icon: UserCheck,
-    label: "Phê duyệt bác sĩ",
-    path: ROUTES.adminDoctorApproval,
-  },
+  { icon: UserCheck, label: "Phê duyệt bác sĩ", path: ROUTES.adminDoctorApproval },
   { icon: ClipboardList, label: "Nhật ký kiểm toán", path: ROUTES.adminAuditLogs },
 ];

@@ -16,7 +16,7 @@ export type AuthUser = {
 
 export type AuthSession = {
   sessionId: string;
-  userID: string;
+  userId: string;
   createdAt: string; 
   updatedAt: string; 
   userAgent: string; 

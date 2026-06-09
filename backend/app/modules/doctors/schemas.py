@@ -77,3 +77,13 @@ class RequestAccessResponse(BaseModel):
     request_id: UUID
     status: str
     created_at: datetime
+
+
+class ManagedPatientResponse(BaseModel):
+    patient_id: UUID
+    full_name: str
+    gender: str
+    scope: list[ConsentScope]
+    granted_at: datetime
+    expires_at: Optional[datetime] = None
+    access_status: str

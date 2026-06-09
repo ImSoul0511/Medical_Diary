@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Download, FileText, Pill, Save, UserRound } from "lucide-react";
+import { Download, FileText, Pill, Save } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
@@ -13,7 +13,6 @@ import { useUiStore } from "../../store/uiStore";
 import { useUserStore } from "../../store/userStore";
 import type { MedicalRecord } from "../../types/medicalRecord";
 import type { Prescription } from "../../types/prescriptions";
-import type { Gender } from "../../types/users";
 import { formatDate } from "../../utils/date";
 
 const bloodTypeOptions = [
@@ -28,6 +27,14 @@ const bloodTypeOptions = [
   { value: "O-", label: "O-" },
 ];
 
+const exportFields = [
+  { key: "full_name", label: "Họ và tên" },
+  { key: "gender", label: "Giới tính" },
+  { key: "date_of_birth", label: "Ngày sinh" },
+  { key: "blood_type", label: "Nhóm máu" },
+  { key: "allergies", label: "Dị ứng" },
+] as const;
+
 export function ProfilePage() {
   const profile = useUserStore((state) => state.profile);
   const loadMe = useUserStore((state) => state.loadMe);
@@ -39,14 +46,15 @@ export function ProfilePage() {
   const loadPrescriptions = usePrescriptionStore((state) => state.loadPrescriptions);
   const showToast = useUiStore((state) => state.showToast);
 
-  const [fullName, setFullName] = useState("");
-  const [gender, setGender] = useState<Gender | "">("male");
-  const [dateOfBirth, setDateOfBirth] = useState("");
   const [bloodType, setBloodType] = useState("");
   const [allergies, setAllergies] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [cccd, setCccd] = useState("");
+  const [selectedExportFields, setSelectedExportFields] = useState<string[]>([
+    "full_name",
+    "date_of_birth",
+    "blood_type",
+    "allergies",
+  ]);
 
   useEffect(() => {
     void loadMe().catch(() => undefined);
@@ -56,30 +64,49 @@ export function ProfilePage() {
 
   useEffect(() => {
     if (!profile) return;
-    setFullName(profile.fullName);
-    setGender(profile.gender ?? "male");
-    setDateOfBirth(profile.dateOfBirth ?? "");
     setBloodType(profile.bloodType ?? "");
     setAllergies(profile.allergies ?? "");
     setEmergencyContact(profile.emergencyContact ?? "");
-    setPhoneNumber(profile.phoneNumber ?? "");
-    setCccd(profile.cccd ?? "");
   }, [profile]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!profile) return;
     void updateProfile({
-      fullName,
-      gender,
-      dateOfBirth,
+      fullName: profile.fullName,
+      gender: profile.gender ?? "male",
+      dateOfBirth: profile.dateOfBirth ?? "",
+      phoneNumber: profile.phoneNumber ?? "",
+      cccd: profile.cccd ?? "",
       bloodType,
       allergies,
       emergencyContact,
-      phoneNumber,
-      cccd,
     })
-      .then(() => showToast("Đã lưu hồ sơ."))
+      .then(() => showToast("Đã lưu hồ sơ y tế."))
       .catch(() => undefined);
+  }
+
+  function toggleExportField(field: string) {
+    setSelectedExportFields((current) =>
+      current.includes(field) ? current.filter((item) => item !== field) : [...current, field],
+    );
+  }
+
+  function handleExport() {
+    const scope = selectedExportFields.length > 0 ? selectedExportFields.join(",") : "blood_type,allergies";
+    void exportData("pdf", scope)
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `medical_export_${profile?.id ?? "data"}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        showToast("Đã tải xuống file PDF thành công.");
+      })
+      .catch(() => showToast("Lỗi khi tải xuống dữ liệu."));
   }
 
   const recordColumns: DataTableColumn<MedicalRecord>[] = [
@@ -107,79 +134,43 @@ export function ProfilePage() {
   return (
     <AppShell role="user" title="Hồ sơ bệnh án">
       <div className="space-y-6">
-        <section className="flex flex-col gap-6">
+        <section className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
           <Card padding="lg">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="rounded-card bg-infoBg p-3 text-primary">
-                <UserRound className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-secondary">Thông tin cá nhân</h2>
-              </div>
-            </div>
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FormInput label="Họ và tên" onChange={(event) => setFullName(event.target.value)} value={fullName} />
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-secondary">Giới tính</span>
-                  <select
-                    className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    value={gender}
-                    onChange={(event) => setGender(event.target.value as Gender)}
-                  >
-                    <option value="male">male</option>
-                    <option value="female">female</option>
-                  </select>
-                </label>
-                <FormInput label="Ngày sinh" onChange={(event) => setDateOfBirth(event.target.value)} value={dateOfBirth} type="date" />
-                <FormSelect label="Nhóm máu" options={bloodTypeOptions} value={bloodType} onChange={setBloodType} />
-                <FormInput label="Dị ứng" onChange={(event) => setAllergies(event.target.value)} value={allergies} />
-                <FormInput label="SĐT người thân" onChange={(event) => setEmergencyContact(event.target.value)} value={emergencyContact} />
-                <FormInput label="Số điện thoại" onChange={(event) => setPhoneNumber(event.target.value)} value={phoneNumber} />
-                <FormInput label="CCCD" onChange={(event) => setCccd(event.target.value)} value={cccd} />
-              </div>
+            <h2 className="text-lg font-semibold text-secondary">Thông tin y tế có thể cập nhật</h2>
+            <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
+              <FormSelect label="Nhóm máu" options={bloodTypeOptions} value={bloodType} onChange={setBloodType} />
+              <FormInput label="Dị ứng" onChange={(event) => setAllergies(event.target.value)} value={allergies} />
+              <FormInput label="SĐT người thân" onChange={(event) => setEmergencyContact(event.target.value.replace(/\D/g, ""))} value={emergencyContact} />
               <Button leftIcon={<Save className="h-4 w-4" />} type="submit">
-                Lưu hồ sơ
+                Lưu thông tin y tế
               </Button>
             </form>
           </Card>
 
           <Card padding="lg">
-            <div className="mb-5 flex items-center justify-between">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-secondary">Tổng quan hồ sơ</h2>
+                <p className="text-sm text-mutedForeground">Chọn trường muốn xuất PDF. SĐT người thân không nằm trong khu vực xuất này.</p>
               </div>
-              <Button
-                leftIcon={<Download className="h-4 w-4" />}
-                onClick={() => {
-                  void exportData("pdf")
-                    .then((blob) => {
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = `medical_export_${profile?.id ?? "data"}.pdf`;
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                      window.URL.revokeObjectURL(url);
-                      showToast("Đã tải xuống file PDF thành công.");
-                    })
-                    .catch(() => showToast("Lỗi khi tải xuống dữ liệu."));
-                }}
-                variant="outline"
-              >
-                Export
+              <Button leftIcon={<Download className="h-4 w-4" />} onClick={handleExport} variant="outline">
+                Export PDF
               </Button>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-card bg-muted p-4">
-                <p className="text-xs text-mutedForeground">Giới tính</p>
-                <p className="mt-1 font-semibold text-secondary">{profile?.gender ?? "Chưa cập nhật"}</p>
-              </div>
-              <div className="rounded-card bg-muted p-4">
-                <p className="text-xs text-mutedForeground">Ngày sinh</p>
-                <p className="mt-1 font-semibold text-secondary">{profile?.dateOfBirth ? formatDate(profile.dateOfBirth) : "Chưa cập nhật"}</p>
-              </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {exportFields.map((field) => (
+                <label className="flex items-center gap-3 rounded-card border border-border p-3" key={field.key}>
+                  <input
+                    checked={selectedExportFields.includes(field.key)}
+                    className="h-4 w-4 accent-primary"
+                    onChange={() => toggleExportField(field.key)}
+                    type="checkbox"
+                  />
+                  <span className="text-sm font-medium text-secondary">{field.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-card bg-dangerBg p-4">
                 <p className="text-xs text-red-700">Dị ứng</p>
                 <p className="mt-1 font-semibold text-red-900">{profile?.allergies ?? "Chưa cập nhật"}</p>
@@ -187,14 +178,6 @@ export function ProfilePage() {
               <div className="rounded-card bg-infoBg p-4">
                 <p className="text-xs text-blue-700">Nhóm máu</p>
                 <p className="mt-1 font-semibold text-blue-900">{profile?.bloodType ?? "Chưa cập nhật"}</p>
-              </div>
-              <div className="rounded-card bg-muted p-4">
-                <p className="text-xs text-mutedForeground">Số điện thoại</p>
-                <p className="mt-1 font-semibold text-secondary">{profile?.phoneNumber ?? "Chưa cập nhật"}</p>
-              </div>
-              <div className="rounded-card bg-muted p-4">
-                <p className="text-xs text-mutedForeground">CCCD</p>
-                <p className="mt-1 font-semibold text-secondary">{profile?.cccd ?? "Chưa cập nhật"}</p>
               </div>
               <div className="rounded-card bg-muted p-4">
                 <p className="text-xs text-mutedForeground">SĐT người thân</p>

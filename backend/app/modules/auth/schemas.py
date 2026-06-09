@@ -29,6 +29,9 @@ class RefreshResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
 class RegisterRequest(BaseModel):
     email: EmailStr
     phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
@@ -57,7 +60,7 @@ class RegisterDoctorRequest(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100)
     gender: str
     date_of_birth: date 
-    cccd: str = Field(..., min_length=12, max_length=12)
+    cccd: str = Field(..., min_length=12, max_length=12, pattern=r"^\d{12}$")
     license_number: str 
     specialty: str
     hospital: str

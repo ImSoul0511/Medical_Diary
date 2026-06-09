@@ -77,7 +77,7 @@ export function PrivacySettings() {
   const currentToken = activeTokens[activeTokenIndex];
 
   return (
-    <AppShell role="user" title="Cài đặt quyền riêng tư">
+    <AppShell role="user" title="Quản lý truy cập công khai">
       <div className="grid gap-6 xl:grid-cols-[350px_1fr]">
         {/* Cột trái: Hồ sơ cấp cứu chung */}
         <div className="space-y-6">

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.modules.doctors.schemas import (
+    ManagedPatientResponse,
     PatientProfileResponse,
     PatientPublicResponse,
     RequestAccessRequest,
@@ -67,6 +68,18 @@ async def search_patients(
     current_user: dict = Depends(require_verified_doctor),
 ) -> list[PatientPublicResponse]:
     return await service.search_patients(phone_number)
+
+
+@router.get(
+    "/patients",
+    response_model=list[ManagedPatientResponse],
+    responses={401: _error_responses[401], 403: _error_responses[403]},
+)
+async def list_managed_patients(
+    service: DoctorService = Depends(_get_service),
+    current_user: dict = Depends(require_verified_doctor),
+) -> list[ManagedPatientResponse]:
+    return await service.list_managed_patients(UUID(current_user["sub"]))
 
 
 @router.get(

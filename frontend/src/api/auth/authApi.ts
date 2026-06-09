@@ -2,6 +2,7 @@ import { apiClient } from "../apiClient";
 import type {
   LoginRequest,
   LoginResponse,
+  PasswordResetRequest,
   RefreshResponse,
   RegisterDoctorRequest,
   RegisterDoctorResponse,
@@ -50,6 +51,13 @@ export const authApi = {
     const response = await apiClient.post<RefreshResponse>("/auth/refresh", undefined, {
       skipAuthRefresh: true,
       withCredentials: true,
+    });
+    return response.data;
+  },
+
+  requestPasswordReset: async (data: PasswordResetRequest): Promise<MessageResponse> => {
+    const response = await apiClient.post<MessageResponse>("/auth/password-reset/request", data, {
+      skipAuthRefresh: true,
     });
     return response.data;
   },

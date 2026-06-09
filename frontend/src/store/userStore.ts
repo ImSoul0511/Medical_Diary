@@ -3,6 +3,7 @@ import { userApi } from "../api/users/userApi";
 import {
   mapAccessHistoryItemDto,
   mapDoctorPublicProfileDto,
+  mapPrivateProfileFormToDto,
   mapPrivacySettingsToDto,
   mapUserProfileDto,
   mapUserProfileFormToDto,
@@ -10,6 +11,7 @@ import {
 import type {
   AccessHistoryItem,
   DoctorPublicProfile,
+  PrivateProfileForm,
   PrivacySettings,
   UserProfile,
   UserProfileForm,
@@ -30,6 +32,7 @@ type UserStore = {
   error: string | null;
   loadMe: () => Promise<UserProfile>;
   updateProfile: (form: UserProfileForm) => Promise<UserProfile>;
+  updatePrivateProfile: (form: PrivateProfileForm) => Promise<UserProfile>;
   updatePrivacy: (payload: Partial<PrivacySettings>) => Promise<PrivacySettings>;
   loadAccessHistory: () => Promise<AccessHistoryItem[]>;
   searchDoctors: (filters: { name?: string; specialty?: string }) => Promise<DoctorPublicProfile[]>;
@@ -95,6 +98,24 @@ export const useUserStore = create<UserStore>((set, get) => ({
       return profile;
     } catch (error) {
       const message = getErrorMessage(error, "Failed to update profile.");
+      set({ isSavingProfile: false, error: message });
+      throw error;
+    }
+  },
+  updatePrivateProfile: async (form) => {
+    set({ isSavingProfile: true, error: null });
+    try {
+      const profile = mapUserProfileDto(
+        await userApi.updatePrivateProfile(mapPrivateProfileFormToDto(form)),
+      );
+      set({
+        profile,
+        profileForm: profileToForm(profile),
+        isSavingProfile: false,
+      });
+      return profile;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to update private profile.");
       set({ isSavingProfile: false, error: message });
       throw error;
     }

@@ -35,6 +35,8 @@ export function mapConsentHistoryItemDto(dto: unknown): ConsentHistoryItem {
   return {
     doctorId: asString(source.doctor_id),
     doctorName: asString(source.doctor_name),
+    doctorSpecialty: asNullableString(source.doctor_specialty),
+    doctorHospital: asNullableString(source.doctor_hospital),
     scopes: mapScopes(source.scope ?? source.scopes),
     grantedAt: asString(source.granted_at),
     expiresAt: asNullableString(source.expires_at),
@@ -46,6 +48,8 @@ export function mapActivePermissionFromHistory(item: ConsentHistoryItem): Active
     id: `${item.doctorId}-${item.grantedAt}`,
     doctorId: item.doctorId,
     doctorName: item.doctorName,
+    doctorSpecialty: item.doctorSpecialty,
+    doctorHospital: item.doctorHospital,
     approvedScopes: item.scopes,
     grantedAt: item.grantedAt,
     expiresAt: item.expiresAt,

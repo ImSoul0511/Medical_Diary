@@ -41,6 +41,8 @@ export type ActivePermission = {
   id: string;
   doctorId: string;
   doctorName: string;
+  doctorSpecialty: string | null;
+  doctorHospital: string | null;
   approvedScopes: ConsentScope[];
   grantedAt: string;
   expiresAt: string | null;
@@ -49,6 +51,8 @@ export type ActivePermission = {
 export type ConsentHistoryItem = {
   doctorId: string;
   doctorName: string;
+  doctorSpecialty: string | null;
+  doctorHospital: string | null;
   scopes: ConsentScope[];
   grantedAt: string;
   expiresAt: string | null;

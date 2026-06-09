@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Activity, ArrowLeft, HeartPulse, NotebookText, Pill } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import { Activity, ArrowLeft, HeartPulse, NotebookText, Pill, Plus } from "lucide-react";
 import {
   CartesianGrid,
   Line,
@@ -12,16 +12,21 @@ import {
 import { Link, useParams } from "react-router-dom";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
+import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { DataTable, type DataTableColumn } from "../../components/DataTable";
+import { FormInput } from "../../components/FormInput";
+import { Modal } from "../../components/Modal";
 import { ROUTES } from "../../constants/routes";
 import { useDiaryStore } from "../../store/diaryStore";
 import { useDoctorStore } from "../../store/doctorStore";
 import { useHealthMetricsStore } from "../../store/healthMetricsStore";
 import { useMedicalRecordStore } from "../../store/medicalRecordStore";
+import { useUiStore } from "../../store/uiStore";
 import type { DiaryEntry } from "../../types/diary";
 import type { MedicalRecord } from "../../types/medicalRecord";
 import { formatDate, formatDateTime } from "../../utils/date";
+import { formatGender } from "../../utils/gender";
 
 export function DoctorPatientDetail() {
   const { patientId = "" } = useParams();
@@ -34,6 +39,13 @@ export function DoctorPatientDetail() {
   const loadPatientDiaries = useDiaryStore((state) => state.loadPatientDiaries);
   const medicalRecords = useMedicalRecordStore((state) => state.patientRecords);
   const loadPatientRecords = useMedicalRecordStore((state) => state.loadPatientRecords);
+  const createRecord = useMedicalRecordStore((state) => state.createRecord);
+  const isCreatingRecord = useMedicalRecordStore((state) => state.isCreating);
+  const showToast = useUiStore((state) => state.showToast);
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const [diagnosis, setDiagnosis] = useState("");
+  const [recordNotes, setRecordNotes] = useState("");
+  const [attachments, setAttachments] = useState("");
   const chartData = healthMetrics.map((metric) => ({
     day: formatDate(metric.recordedAt, "dd/MM"),
     heartRate: metric.heartRate,
@@ -53,6 +65,31 @@ export function DoctorPatientDetail() {
     void loadPatientDiaries(patientId).catch(() => undefined);
     void loadPatientRecords(patientId).catch(() => undefined);
   }, [loadPatientDetail, loadPatientDiaries, loadPatientMetrics, loadPatientRecords, patientId]);
+
+  function handleCreateRecord(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!patientId) return;
+
+    const attachmentList = attachments
+      .split(/\r?\n/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    void createRecord({
+      patientId,
+      diagnosis,
+      notes: recordNotes,
+      attachments: attachmentList,
+    })
+      .then(() => {
+        setDiagnosis("");
+        setRecordNotes("");
+        setAttachments("");
+        setIsRecordModalOpen(false);
+        showToast("Đã tạo hồ sơ bệnh án.");
+      })
+      .catch(() => undefined);
+  }
 
   const diaryColumns: DataTableColumn<DiaryEntry>[] = [
     { key: "time", header: "Thời gian", render: (row) => formatDateTime(row.createdAt) },
@@ -84,21 +121,34 @@ export function DoctorPatientDetail() {
         <Card padding="lg">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <Badge tone={patient ? "success" : "pending"}>{patient ? "Đã cấp quyền" : "Đang chờ dữ liệu"}</Badge>
-              <h2 className="mt-3 text-2xl font-semibold text-secondary">{patient?.fullName ?? "Chưa có hồ sơ"}</h2>
+              <Badge tone={patient ? "success" : "pending"}>
+                {patient ? "Đã cấp quyền" : "Đang chờ dữ liệu"}
+              </Badge>
+              <h2 className="mt-3 text-2xl font-semibold text-secondary">
+                {patient?.fullName ?? "Chưa có hồ sơ"}
+              </h2>
               <p className="text-sm text-mutedForeground">
                 {patient
-                  ? `Giới tính ${patient.gender} - Nhóm máu ${patient.bloodType ?? "chưa cập nhật"}`
+                  ? `Giới tính ${formatGender(patient.gender)} - Nhóm máu ${patient.bloodType ?? "chưa cập nhật"}`
                   : doctorError ?? "Chọn bệnh nhân từ trang tìm kiếm."}
               </p>
             </div>
-            <Link
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-input bg-accent px-4 text-sm font-medium text-white transition hover:bg-teal-700"
-              to={patientId ? `/bac-si/tao-don-thuoc/${patientId}` : ROUTES.doctorPrescription}
-            >
-              <Pill className="h-4 w-4" />
-              Tạo đơn thuốc
-            </Link>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                disabled={!patientId || isCreatingRecord}
+                leftIcon={<Plus className="h-4 w-4" />}
+                onClick={() => setIsRecordModalOpen(true)}
+              >
+                Thêm bệnh án
+              </Button>
+              <Link
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-input bg-accent px-4 text-sm font-medium text-white transition hover:bg-teal-700"
+                to={patientId ? `/bac-si/tao-don-thuoc/${patientId}` : ROUTES.doctorPrescription}
+              >
+                <Pill className="h-4 w-4" />
+                Tạo đơn thuốc
+              </Link>
+            </div>
           </div>
         </Card>
 
@@ -139,9 +189,57 @@ export function DoctorPatientDetail() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-secondary">Hồ sơ bệnh án</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold text-secondary">Hồ sơ bệnh án</h2>
+            <Button
+              disabled={!patientId || isCreatingRecord}
+              leftIcon={<Plus className="h-4 w-4" />}
+              onClick={() => setIsRecordModalOpen(true)}
+              variant="outline"
+            >
+              Thêm bệnh án
+            </Button>
+          </div>
           <DataTable columns={recordColumns} getRowKey={(row) => row.id} rows={medicalRecords} />
         </section>
+
+        <Modal
+          confirmLabel="Create"
+          onClose={() => setIsRecordModalOpen(false)}
+          open={isRecordModalOpen}
+          title="Thêm hồ sơ bệnh án"
+        >
+          <form className="space-y-4" id="create-record-form" onSubmit={handleCreateRecord}>
+            <FormInput
+              label="Chẩn đoán"
+              onChange={(event) => setDiagnosis(event.target.value)}
+              required
+              value={diagnosis}
+            />
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-secondary">Ghi chú</span>
+              <textarea
+                className="min-h-24 w-full rounded-input border border-border bg-inputBackground px-3 py-2 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                onChange={(event) => setRecordNotes(event.target.value)}
+                value={recordNotes}
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-secondary">URL đính kèm</span>
+              <textarea
+                className="min-h-20 w-full rounded-input border border-border bg-inputBackground px-3 py-2 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                onChange={(event) => setAttachments(event.target.value)}
+                placeholder="Mỗi dòng một URL"
+                value={attachments}
+              />
+            </label>
+            <div className="flex justify-end">
+              <Button disabled={isCreatingRecord} type="submit">
+                Tạo hồ sơ
+              </Button>
+            </div>
+          </form>
+        </Modal>
       </div>
     </AppShell>
   );

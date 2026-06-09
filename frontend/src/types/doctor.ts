@@ -27,3 +27,13 @@ export type RequestAccessResult = {
     status: string;
     createdAt: string;
 }
+
+export type ManagedPatient = {
+    patientId: string;
+    fullName: string;
+    gender: Gender | string;
+    scopes: ConsentScope[];
+    grantedAt: string;
+    expiresAt: string | null;
+    accessStatus: "active" | "expired" | string;
+}

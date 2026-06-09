@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { doctorsApi } from "../api/doctors/doctorsApi";
 import {
+  mapManagedPatientDto,
   mapPatientProfileDto,
   mapPatientSearchResultDto,
   mapRequestAccessFormToDto,
@@ -9,6 +10,7 @@ import {
 import type {
   PatientProfile,
   PatientSearchResult,
+  ManagedPatient,
   RequestAccessForm,
   RequestAccessResult,
 } from "../types/doctor";
@@ -16,6 +18,7 @@ import { getErrorMessage } from "./storeUtils";
 
 type DoctorStore = {
   patientSearchResults: PatientSearchResult[];
+  managedPatients: ManagedPatient[];
   selectedPatient: PatientProfile | null;
   selectedPatientId: string | null;
   requestAccessResult: RequestAccessResult | null;
@@ -24,10 +27,12 @@ type DoctorStore = {
   searchValidationError: string;
   hasSearched: boolean;
   isSearching: boolean;
+  isLoadingManagedPatients: boolean;
   isLoadingPatient: boolean;
   isRequestingAccess: boolean;
   error: string | null;
   searchPatients: (phoneNumber: string) => Promise<PatientSearchResult[]>;
+  loadManagedPatients: () => Promise<ManagedPatient[]>;
   loadPatientDetail: (patientId: string) => Promise<PatientProfile>;
   requestAccess: (form: RequestAccessForm) => Promise<RequestAccessResult>;
   setSearchQuery: (query: string) => void;
@@ -41,6 +46,7 @@ type DoctorStore = {
 
 export const useDoctorStore = create<DoctorStore>((set) => ({
   patientSearchResults: [],
+  managedPatients: [],
   selectedPatient: null,
   selectedPatientId: null,
   requestAccessResult: null,
@@ -49,6 +55,7 @@ export const useDoctorStore = create<DoctorStore>((set) => ({
   searchValidationError: "",
   hasSearched: false,
   isSearching: false,
+  isLoadingManagedPatients: false,
   isLoadingPatient: false,
   isRequestingAccess: false,
   error: null,
@@ -63,6 +70,18 @@ export const useDoctorStore = create<DoctorStore>((set) => ({
     } catch (error) {
       const message = getErrorMessage(error, "Failed to search patients.");
       set({ isSearching: false, error: message, hasSearched: true });
+      throw error;
+    }
+  },
+  loadManagedPatients: async () => {
+    set({ isLoadingManagedPatients: true, error: null });
+    try {
+      const managedPatients = (await doctorsApi.listManagedPatients()).map(mapManagedPatientDto);
+      set({ managedPatients, isLoadingManagedPatients: false });
+      return managedPatients;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load managed patients.");
+      set({ isLoadingManagedPatients: false, error: message });
       throw error;
     }
   },
@@ -102,6 +121,7 @@ export const useDoctorStore = create<DoctorStore>((set) => ({
   clear: () =>
     set({
       patientSearchResults: [],
+      managedPatients: [],
       selectedPatient: null,
       selectedPatientId: null,
       requestAccessResult: null,
@@ -110,6 +130,7 @@ export const useDoctorStore = create<DoctorStore>((set) => ({
       searchValidationError: "",
       hasSearched: false,
       isSearching: false,
+      isLoadingManagedPatients: false,
       isLoadingPatient: false,
       isRequestingAccess: false,
       error: null,

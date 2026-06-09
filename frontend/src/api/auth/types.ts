@@ -19,6 +19,10 @@ export interface RefreshResponse {
   token_type: "bearer";
 }
 
+export interface PasswordResetRequest {
+  email: string;
+}
+
 export interface RegisterRequest {
   email: string;
   phone_number: string;

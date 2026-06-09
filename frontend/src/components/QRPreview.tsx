@@ -49,7 +49,7 @@ export function QRPreview({
   return (
     <div
       className={cn(
-        "inline-flex flex-col items-center rounded-card border border-border bg-white p-4 shadow-card",
+        "inline-flex flex-col items-center rounded-card bg-white p-3",
         compact && "p-3",
       )}
     >
@@ -57,7 +57,7 @@ export function QRPreview({
         <div
           aria-label={label}
           className={cn(
-            "grid grid-cols-[repeat(13,minmax(0,1fr))] gap-0.5 rounded-input bg-white p-2",
+            "grid grid-cols-[repeat(13,minmax(0,1fr))] gap-0.5 bg-white p-1",
             compact ? "h-28 w-28" : "h-40 w-40",
           )}
           role="img"
@@ -74,7 +74,7 @@ export function QRPreview({
         <img
           alt={label}
           className={cn(
-            "rounded-input border border-border bg-white p-2 object-contain",
+            "bg-white p-1 object-contain",
             compact ? "h-28 w-28" : "h-40 w-40",
           )}
           src={qrDataUrl}

@@ -8,6 +8,7 @@ export type PrivacySettings = {
 
 export type UserProfile = {
   id: string;
+  email: string | null;
   fullName: string;
   gender: Gender | null;
   dateOfBirth: string | null; // Remove null later
@@ -29,6 +30,15 @@ export type UserProfileForm = {
   phoneNumber: string | "";
   cccd: string | "";
 }
+
+export type PrivateProfileForm = {
+  password: string;
+  fullName: string;
+  gender: Gender | "";
+  dateOfBirth: string | "";
+  phoneNumber: string | "";
+  cccd: string | "";
+};
 export type AccessHistoryItem = {
   id: string;
   doctorName: string;
