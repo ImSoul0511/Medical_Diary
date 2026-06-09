@@ -40,11 +40,21 @@ def upgrade() -> None:
                comment='Actual measurement time',
                existing_comment='Thời điểm đo thực tế',
                existing_nullable=False)
-    op.create_check_constraint(
-        "ck_profiles_blood_type",
-        "profiles",
-        "blood_type IN ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-')"
-    )
+    op.execute("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM pg_constraint
+                WHERE conname = 'ck_profiles_blood_type'
+                  AND conrelid = 'profiles'::regclass
+            ) THEN
+                ALTER TABLE profiles
+                ADD CONSTRAINT ck_profiles_blood_type
+                CHECK (blood_type IN ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'));
+            END IF;
+        END $$;
+    """)
     # ### end Alembic commands ###
 
 
@@ -70,5 +80,5 @@ def downgrade() -> None:
                comment='Dữ liệu đo lường, cấu trúc tùy theo metric_type',
                existing_comment='Metric payload, shaped by metric_type',
                existing_nullable=False)
-    op.drop_constraint("ck_profiles_blood_type", "profiles")
+    op.execute("ALTER TABLE profiles DROP CONSTRAINT IF EXISTS ck_profiles_blood_type")
     # ### end Alembic commands ###

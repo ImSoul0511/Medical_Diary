@@ -19,9 +19,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('emergency_tokens', sa.Column('show_blood_type', sa.Boolean(), nullable=True))
-    op.add_column('emergency_tokens', sa.Column('show_allergies', sa.Boolean(), nullable=True))
-    op.add_column('emergency_tokens', sa.Column('show_emergency_contact', sa.Boolean(), nullable=True))
+    op.execute("ALTER TABLE emergency_tokens ADD COLUMN IF NOT EXISTS show_blood_type BOOLEAN")
+    op.execute("ALTER TABLE emergency_tokens ADD COLUMN IF NOT EXISTS show_allergies BOOLEAN")
+    op.execute("ALTER TABLE emergency_tokens ADD COLUMN IF NOT EXISTS show_emergency_contact BOOLEAN")
 
     op.execute("""
         UPDATE emergency_tokens AS et
@@ -46,6 +46,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_column('emergency_tokens', 'show_emergency_contact')
-    op.drop_column('emergency_tokens', 'show_allergies')
-    op.drop_column('emergency_tokens', 'show_blood_type')
+    op.execute("ALTER TABLE emergency_tokens DROP COLUMN IF EXISTS show_emergency_contact")
+    op.execute("ALTER TABLE emergency_tokens DROP COLUMN IF EXISTS show_allergies")
+    op.execute("ALTER TABLE emergency_tokens DROP COLUMN IF EXISTS show_blood_type")
