@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, Plus, Trash2, Calendar, Clock, Eye, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShieldCheck, Plus, Trash2, Calendar, Clock, Eye, AlertTriangle, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { Button } from "../../components/Button";
 import { useEmergencyStore } from "../../store/emergencyStore";
 import { formatDate } from "../../utils/date";
 import { Card } from "../../components/Card";
 import { QRPreview } from "../../components/QRPreview";
+import { FormInput } from "../../components/FormInput";
 import { useUiStore } from "../../store/uiStore";
 import { useUserStore } from "../../store/userStore";
+import { useAuthStore } from "../../store/authStore";
 import type { PrivacySettings as PrivacySettingsType } from "../../types/users";
 
 const defaultSettings: PrivacySettingsType = {
@@ -56,6 +58,44 @@ export function PrivacySettings() {
   const [showAllergiesField, setShowAllergiesField] = useState(true);
   const [showEmergencyField, setShowEmergencyField] = useState(true);
   const [activeTokenIndex, setActiveTokenIndex] = useState(0);
+
+  const changePasswordAction = useAuthStore((state) => state.changePassword);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState(false);
+
+  async function handleChangePasswordSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (newPassword.length < 8) {
+      setPwError("Mật khẩu mới tối thiểu 8 ký tự.");
+      setPwSuccess(false);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError("Mật khẩu xác nhận không khớp.");
+      setPwSuccess(false);
+      return;
+    }
+
+    setPwError("");
+    setPwSuccess(false);
+    setPwLoading(true);
+    try {
+      await changePasswordAction(currentPassword, newPassword);
+      setPwSuccess(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      showToast("Đã thay đổi mật khẩu thành công.");
+    } catch (err: any) {
+      setPwError(err?.message ?? "Đổi mật khẩu thất bại. Vui lòng thử lại.");
+    } finally {
+      setPwLoading(false);
+    }
+  }
 
   useEffect(() => {
     void loadMe().catch(() => undefined);
@@ -142,6 +182,54 @@ export function PrivacySettings() {
               )}
             </div>
           </Card>
+
+          {/* Box Đổi mật khẩu */}
+          <Card padding="lg">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="rounded-card bg-infoBg p-3 text-primary">
+                <Lock className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-secondary">Đổi mật khẩu</h2>
+                <p className="text-sm text-mutedForeground">Cập nhật mật khẩu bảo mật mới cho tài khoản.</p>
+              </div>
+            </div>
+            
+            <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
+              <FormInput
+                label="Mật khẩu hiện tại"
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                required
+                type="password"
+                value={currentPassword}
+              />
+              <FormInput
+                label="Mật khẩu mới"
+                onChange={(event) => setNewPassword(event.target.value)}
+                required
+                type="password"
+                value={newPassword}
+              />
+              <FormInput
+                label="Xác nhận mật khẩu mới"
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                required
+                type="password"
+                value={confirmPassword}
+              />
+              
+              {pwError ? (
+                <p className="text-xs text-emergency font-medium">{pwError}</p>
+              ) : null}
+              {pwSuccess ? (
+                <p className="text-xs text-green-600 font-medium">Đổi mật khẩu thành công!</p>
+              ) : null}
+              
+              <Button className="w-full text-xs py-2 animate-pulse-subtle" disabled={pwLoading} type="submit">
+                {pwLoading ? "Đang lưu..." : "Cập nhật mật khẩu"}
+              </Button>
+            </form>
+          </Card>
         </div>
 
         {/* Cột phải: Quản lý mã QR cấp cứu */}
@@ -153,14 +241,14 @@ export function PrivacySettings() {
                 Quản lý các mã QR truy xuất thông tin cấp cứu lâm thời hoặc vĩnh viễn (tối đa 4 mã hoạt động).
               </p>
             </div>
-            <div className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-secondary">
+            <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-secondary">
               Đang hoạt động: {activeTokens.length}/4
             </div>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Box 1: Tạo mã mới */}
-            <div className="rounded-card border border-border p-5 bg-slate-50 dark:bg-slate-900">
+            <div className="rounded-card border border-border p-5 bg-slate-50">
               <h3 className="text-sm font-semibold text-secondary mb-3 flex items-center gap-1.5">
                 <Plus className="h-4 w-4 text-primary" />
                 Tạo mã QR cấp cứu mới
@@ -356,7 +444,7 @@ export function PrivacySettings() {
             {accessHistory.length > 0 ? (
               <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
                 {accessHistory.map((log) => (
-                  <div key={log.id} className="flex items-center justify-between rounded-input border border-border p-3 text-xs bg-slate-50 dark:bg-slate-900">
+                  <div key={log.id} className="flex items-center justify-between rounded-input border border-border p-3 text-xs bg-slate-50">
                     <span className="font-medium text-secondary">
                       Yêu cầu truy cập cấp cứu thành công
                     </span>

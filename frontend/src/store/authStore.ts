@@ -27,6 +27,9 @@ type AuthStore = {
   revokeAllSessions: (password: string) => Promise<void>;
   setAccessToken: (accessToken: string | null) => void;
   setSelectedRole: (role: Role) => void;
+  forgotPassword: (email: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  resetPassword: (newPassword: string) => Promise<void>;
 };
 
 let refreshSessionPromise: Promise<string> | null = null;
@@ -280,4 +283,43 @@ export const useAuthStore = create<AuthStore>((set) => ({
       isHydrated: true,
     }),
   setSelectedRole: (role) => set({ selectedRole: role }),
+  forgotPassword: async (email) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authApi.forgotPassword({ email });
+      set({ isLoading: false, error: null });
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error?.message ?? "Gửi yêu cầu khôi phục thất bại.",
+      });
+      throw error;
+    }
+  },
+  changePassword: async (currentPassword, newPassword) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authApi.changePassword({ current_password: currentPassword, new_password: newPassword });
+      set({ isLoading: false, error: null });
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error?.message ?? "Đổi mật khẩu thất bại.",
+      });
+      throw error;
+    }
+  },
+  resetPassword: async (newPassword) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authApi.resetPassword({ new_password: newPassword });
+      set({ isLoading: false, error: null });
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error?.message ?? "Đặt lại mật khẩu thất bại.",
+      });
+      throw error;
+    }
+  },
 }));

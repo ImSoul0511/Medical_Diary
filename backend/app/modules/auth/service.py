@@ -15,7 +15,10 @@ from app.modules.auth.schemas import (
     RegisterDoctorResponse,
     SessionResponse,
     SessionListResponse,
-    UserBrief
+    UserBrief,
+    ForgotPasswordRequest,
+    ChangePasswordRequest,
+    ResetPasswordRequest
 )
 from app.shared.schemas import MessageResponse
 
@@ -300,3 +303,50 @@ class AuthService:
         except Exception as e:
             logger.error(f"Revoke all user sessions failed: {e}")
             raise HTTPException(status_code=400, detail="Không thể thu hồi tất cả phiên đăng nhập.")
+
+    async def forgot_password(self, email: str, redirect_url: str) -> MessageResponse:
+        try:
+            self.supabase.auth.reset_password_for_email(email, {"redirect_to": redirect_url})
+            logger.info(f"Password reset email sent to: {email} with redirect: {redirect_url}")
+            return MessageResponse(message="Email khôi phục mật khẩu đã được gửi.")
+        except Exception as e:
+            logger.error(f"Forgot password failed for {email}: {e}")
+            raise HTTPException(status_code=400, detail="Không thể gửi email khôi phục mật khẩu.")
+
+    async def change_password(self, user_id: str, current_password: str, new_password: str) -> MessageResponse:
+        try:
+            # Verify current password
+            is_valid = self.supabase.rpc("verify_user_password", {
+                "target_user_id": user_id,
+                "plain_password": current_password
+            }).execute()
+            
+            if not is_valid.data:
+                raise HTTPException(status_code=400, detail="Mật khẩu hiện tại không chính xác.")
+                
+            # Update password via service role client
+            from supabase import create_client
+            from app.core.config import settings
+            admin_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+            admin_client.auth.admin.update_user_by_id(user_id, {"password": new_password})
+            
+            logger.info(f"Password changed successfully for user: {user_id}")
+            return MessageResponse(message="Đổi mật khẩu thành công.")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Change password failed: {e}")
+            raise HTTPException(status_code=400, detail="Không thể đổi mật khẩu.")
+
+    async def reset_password(self, user_id: str, new_password: str) -> MessageResponse:
+        try:
+            from supabase import create_client
+            from app.core.config import settings
+            admin_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+            admin_client.auth.admin.update_user_by_id(user_id, {"password": new_password})
+            
+            logger.info(f"Password reset successfully for user: {user_id}")
+            return MessageResponse(message="Đặt lại mật khẩu thành công.")
+        except Exception as e:
+            logger.error(f"Reset password failed: {e}")
+            raise HTTPException(status_code=400, detail="Không thể đặt lại mật khẩu.")

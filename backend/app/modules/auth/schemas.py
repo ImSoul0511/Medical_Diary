@@ -89,3 +89,13 @@ class RevokeSessionRequest(BaseModel):
 
 class RevokeAllRequest(BaseModel):
     password: str = Field(..., min_length=8)
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., min_length=8)
+    new_password: str = Field(..., min_length=8)
+
+class ResetPasswordRequest(BaseModel):
+    new_password: str = Field(..., min_length=8)

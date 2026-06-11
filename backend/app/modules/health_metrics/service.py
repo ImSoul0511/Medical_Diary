@@ -4,7 +4,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.consent.schemas import HEALTH_METRIC_SCOPES
@@ -25,6 +25,89 @@ class HealthMetricsService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def _consolidate_past_days(self, user_id: UUID, new_recorded_at: datetime) -> None:
+        """
+        Consolidates raw metrics on days prior to the new record's date.
+        Replaces raw records for each past day with a single aggregated record:
+        - heart_rate: average
+        - respiratory_rate: average
+        - step_count: sum (total)
+        - recorded_at: set to 23:59:59 of that day
+        """
+        new_date = new_recorded_at.date()
+        
+        # Query older records that are not soft-deleted
+        stmt = (
+            select(HealthMetric)
+            .where(
+                HealthMetric.user_id == user_id,
+                HealthMetric.deleted_at.is_(None),
+                func.date(HealthMetric.recorded_at) < new_date
+            )
+        )
+        result = await self.db.execute(stmt)
+        records = result.scalars().all()
+        
+        if not records:
+            return
+
+        # Group records by date
+        from collections import defaultdict
+        import datetime as dt
+        
+        grouped = defaultdict(list)
+        for r in records:
+            day = r.recorded_at.date()
+            grouped[day].append(r)
+            
+        for day, group in grouped.items():
+            # Only consolidate if there is more than 1 record, or if the single record's time is not 23:59:59
+            if len(group) == 1 and group[0].recorded_at.time() == dt.time(23, 59, 59):
+                continue
+                
+            heart_rates = [r.heart_rate for r in group if r.heart_rate is not None]
+            respiratory_rates = [r.respiratory_rate for r in group if r.respiratory_rate is not None]
+            step_counts = [r.step_count for r in group if r.step_count is not None]
+            
+            # Calculate average heart rate
+            avg_heart_rate = None
+            if heart_rates:
+                val = int(round(sum(heart_rates) / len(heart_rates)))
+                avg_heart_rate = max(30, min(250, val)) # Clamp to DB check constraints
+                
+            # Calculate average respiratory rate
+            avg_respiratory_rate = None
+            if respiratory_rates:
+                val = int(round(sum(respiratory_rates) / len(respiratory_rates)))
+                avg_respiratory_rate = max(5, min(60, val)) # Clamp to DB check constraints
+                
+            # Calculate total step count
+            total_step_count = None
+            if step_counts:
+                val = sum(step_counts)
+                total_step_count = max(0, val) # Clamp to DB check constraints
+                
+            # Construct the consolidated time using timezone of the first record
+            tz = group[0].recorded_at.tzinfo
+            consolidated_time = dt.datetime.combine(day, dt.time(23, 59, 59), tzinfo=tz)
+            
+            # Delete the raw records
+            for r in group:
+                await self.db.delete(r)
+                
+            # Create consolidated record
+            consolidated = HealthMetric(
+                user_id=user_id,
+                heart_rate=avg_heart_rate,
+                step_count=total_step_count,
+                respiratory_rate=avg_respiratory_rate,
+                recorded_at=consolidated_time
+            )
+            self.db.add(consolidated)
+            
+        await self.db.flush()
+        logger.info(f"Consolidated past health metrics for user {user_id} before date {new_date}")
+
     async def create(
         self,
         user_id: UUID,
@@ -33,6 +116,9 @@ class HealthMetricsService:
         """Ghi nhận chỉ số đo lường mới. Yêu cầu ít nhất 1 trường không None."""
         if data.heart_rate is None and data.step_count is None and data.respiratory_rate is None:
             raise HTTPException(status_code=400, detail="Phải có ít nhất một chỉ số đo lường.")
+
+        # Consolidate past days health metrics
+        await self._consolidate_past_days(user_id, data.recorded_at)
 
         metric = HealthMetric(
             user_id=user_id,

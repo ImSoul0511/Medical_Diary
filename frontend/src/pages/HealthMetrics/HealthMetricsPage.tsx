@@ -63,6 +63,19 @@ function formatManualMetric(record: ManualHealthRecord) {
   }
 }
 
+// Exported for use in DoctorPatientDetail
+export const manualMetricLabels: Record<MetricType, string> = {
+  blood_pressure: "Huyết áp",
+  blood_glucose: "Đường huyết",
+  spo2: "SpO2 (Oxy máu)",
+  body_temperature: "Nhiệt độ cơ thể",
+  weight: "Cân nặng",
+};
+
+export function formatManualMetricValue(type: MetricType, metrics: Record<string, unknown>): string {
+  return formatManualMetric({ metricType: type, metrics } as ManualHealthRecord);
+}
+
 type TimelineRow = {
   id: string;
   source: "automatic" | "manual";

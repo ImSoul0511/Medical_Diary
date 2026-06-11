@@ -34,11 +34,11 @@ type HealthMetricsStore = {
   loadMine: (filters?: HealthMetricFilters) => Promise<HealthMetric[]>;
   loadPatientMetrics: (patientId: string, filters?: HealthMetricFilters) => Promise<HealthMetric[]>;
   createMetric: (form: HealthMetricForm) => Promise<HealthMetric>;
+  loadMineManual: (filters?: ManualHealthRecordFilters) => Promise<ManualHealthRecord[]>;
+  loadPatientManual: (patientId: string, filters?: ManualHealthRecordFilters) => Promise<ManualHealthRecord[]>;
+  // Aliases matching main branch naming
   loadManualMetrics: (filters?: ManualHealthRecordFilters) => Promise<ManualHealthRecord[]>;
-  loadPatientManualMetrics: (
-    patientId: string,
-    filters?: ManualHealthRecordFilters,
-  ) => Promise<ManualHealthRecord[]>;
+  loadPatientManualMetrics: (patientId: string, filters?: ManualHealthRecordFilters) => Promise<ManualHealthRecord[]>;
   createManualMetric: (form: ManualHealthRecordForm) => Promise<ManualHealthRecord>;
   setFilters: (filters: HealthMetricFilters) => void;
   clear: () => void;
@@ -53,7 +53,7 @@ function toChartData(items: HealthMetric[]): HealthMetricChartPoint[] {
   }));
 }
 
-export const useHealthMetricsStore = create<HealthMetricsStore>((set) => ({
+export const useHealthMetricsStore = create<HealthMetricsStore>((set, get) => ({
   items: [],
   manualItems: [],
   latest: null,
@@ -125,7 +125,7 @@ export const useHealthMetricsStore = create<HealthMetricsStore>((set) => ({
       throw error;
     }
   },
-  loadManualMetrics: async (filters = {}) => {
+  loadMineManual: async (filters = {}) => {
     set({ isLoadingManual: true, error: null, manualFilters: filters });
     try {
       const manualItems = (
@@ -139,7 +139,7 @@ export const useHealthMetricsStore = create<HealthMetricsStore>((set) => ({
       throw error;
     }
   },
-  loadPatientManualMetrics: async (patientId, filters = {}) => {
+  loadPatientManual: async (patientId, filters = {}) => {
     const nextFilters = { ...filters, patientId };
     set({ isLoadingManual: true, error: null, manualFilters: nextFilters });
     try {
@@ -154,6 +154,9 @@ export const useHealthMetricsStore = create<HealthMetricsStore>((set) => ({
       throw error;
     }
   },
+  // Aliases for compatibility
+  loadManualMetrics: async (filters = {}) => get().loadMineManual(filters),
+  loadPatientManualMetrics: async (patientId, filters = {}) => get().loadPatientManual(patientId, filters),
   createManualMetric: async (form) => {
     set({ isCreatingManual: true, error: null });
     try {

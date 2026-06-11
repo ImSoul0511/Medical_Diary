@@ -19,6 +19,7 @@ import { HealthMetricsPage } from "../pages/HealthMetrics/HealthMetricsPage";
 import { AdminLoginPage } from "../pages/Login/AdminLoginPage";
 import { LoginPage } from "../pages/Login/LoginPage";
 import { RegisterPage } from "../pages/Login/RegisterPage";
+import { ResetPasswordPage } from "../pages/Login/ResetPasswordPage";
 import { ConsentManagement } from "../pages/Profile/ConsentManagement";
 import { EmergencyPublicView } from "../pages/Profile/EmergencyPublicView";
 import { PrivacySettings } from "../pages/Profile/PrivacySettings";
@@ -30,6 +31,7 @@ export function AppRouter() {
     <Routes>
       <Route element={<LoginPage />} path={ROUTES.login} />
       <Route element={<RegisterPage />} path={ROUTES.register} />
+      <Route element={<ResetPasswordPage />} path={ROUTES.resetPassword} />
       <Route element={<AdminLoginPage />} path={ROUTES.adminLogin} />
       <Route element={<PatientDashboard />} path={ROUTES.patientDashboard} />
       <Route element={<DiaryPage />} path={ROUTES.diary} />

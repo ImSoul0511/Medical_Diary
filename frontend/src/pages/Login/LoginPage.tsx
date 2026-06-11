@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { FormInput } from "../../components/FormInput";
+import { Modal } from "../../components/Modal";
 import { ROUTES, roleHomePath } from "../../constants/routes";
 import { roleLabels } from "../../constants/roles";
 import { useAuthStore } from "../../store/authStore";
@@ -25,10 +26,35 @@ export function LoginPage() {
   const setSelectedRole = useAuthStore((state) => state.setSelectedRole);
   const login = useAuthStore((state) => state.login);
   const requestPasswordReset = useAuthStore((state) => state.requestPasswordReset);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [resetMessage, setResetMessage] = useState("");
+
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  async function handleForgotPasswordSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!isEmail(forgotEmail)) {
+      setForgotError("Email chưa đúng định dạng.");
+      return;
+    }
+    setForgotError("");
+    setForgotLoading(true);
+    try {
+      await forgotPasswordAction(forgotEmail);
+      setForgotSuccess(true);
+    } catch (err: any) {
+      setForgotError(err?.message ?? "Gửi yêu cầu khôi phục thất bại. Vui lòng thử lại.");
+    } finally {
+      setForgotLoading(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -141,12 +167,61 @@ export function LoginPage() {
             <Link className="font-medium text-primary hover:underline" to={ROUTES.register}>
               Tạo tài khoản
             </Link>
+            <button
+              onClick={() => {
+                setIsForgotOpen(true);
+                setForgotSuccess(false);
+                setForgotEmail("");
+                setForgotError("");
+              }}
+              className="font-medium text-mutedForeground hover:text-primary transition"
+              type="button"
+            >
+              Quên mật khẩu?
+            </button>
             <Link className="inline-flex items-center gap-1 text-mutedForeground hover:text-primary" to={ROUTES.adminLogin}>
               <ShieldCheck className="h-4 w-4" />
               Admin
             </Link>
           </div>
         </Card>
+
+        <Modal
+          open={isForgotOpen}
+          title="Khôi phục mật khẩu"
+          description="Nhập email của bạn để nhận liên kết đặt lại mật khẩu"
+          onClose={() => setIsForgotOpen(false)}
+          cancelLabel="Đóng"
+        >
+          {forgotSuccess ? (
+            <div className="rounded-card border border-green-100 bg-successBg p-4 text-green-900 text-sm">
+              <p className="font-medium">Đã gửi email khôi phục!</p>
+              <p className="mt-1 text-green-800">
+                Chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu đến <strong>{forgotEmail}</strong>. Vui lòng kiểm tra hộp thư của bạn.
+              </p>
+              <Button className="mt-3 w-full" onClick={() => setIsForgotOpen(false)}>
+                Đồng ý
+              </Button>
+            </div>
+          ) : (
+            <form className="space-y-4" onSubmit={handleForgotPasswordSubmit}>
+              <FormInput
+                label="Email khôi phục"
+                onChange={(event) => setForgotEmail(event.target.value)}
+                required
+                type="email"
+                value={forgotEmail}
+                icon={<Mail className="h-4 w-4" />}
+              />
+              {forgotError ? (
+                <p className="text-sm text-emergency font-medium">{forgotError}</p>
+              ) : null}
+              <Button className="w-full" disabled={forgotLoading} type="submit">
+                {forgotLoading ? "Đang gửi..." : "Gửi email khôi phục"}
+              </Button>
+            </form>
+          )}
+        </Modal>
       </main>
     </div>
   );

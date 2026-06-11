@@ -30,6 +30,9 @@ export type HealthMetricChartPoint = {
 
 export type MetricType = "blood_pressure" | "blood_glucose" | "spo2" | "body_temperature" | "weight";
 
+// Alias for compatibility
+export type ManualMetricType = MetricType;
+
 export type ManualHealthRecord = {
     id: string;
     userId: string;

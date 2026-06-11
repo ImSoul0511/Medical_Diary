@@ -10,6 +10,9 @@ import type {
   RevokeAllRequest,
   RevokeSessionRequest,
   SessionListResponse,
+  ForgotPasswordRequest,
+  ChangePasswordRequest,
+  ResetPasswordRequest,
 } from "./types";
 
 type MessageResponse = {
@@ -96,6 +99,21 @@ export const authApi = {
 
   revokeAllSessions: async (data: RevokeAllRequest): Promise<MessageResponse> => {
     const response = await apiClient.post<MessageResponse>("/auth/revoke-all", data);
+    return response.data;
+  },
+
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<MessageResponse> => {
+    const response = await apiClient.post<MessageResponse>("/auth/forgot-password", data);
+    return response.data;
+  },
+
+  changePassword: async (data: ChangePasswordRequest): Promise<MessageResponse> => {
+    const response = await apiClient.post<MessageResponse>("/auth/change-password", data);
+    return response.data;
+  },
+
+  resetPassword: async (data: ResetPasswordRequest): Promise<MessageResponse> => {
+    const response = await apiClient.post<MessageResponse>("/auth/reset-password", data);
     return response.data;
   },
 };

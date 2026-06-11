@@ -16,7 +16,10 @@ from app.modules.auth.schemas import (
     RegisterDoctorResponse,
     SessionListResponse,
     RevokeSessionRequest,
-    RevokeAllRequest
+    RevokeAllRequest,
+    ForgotPasswordRequest,
+    ChangePasswordRequest,
+    ResetPasswordRequest
 )
 
 from app.modules.auth.service import AuthService
@@ -207,3 +210,29 @@ async def revoke_selected_session(
     service: AuthService = Depends(_get_service)
 ) -> MessageResponse:
     return await service.revoke_selected_session(str(data.session_id), current_user["sub"], data.password)
+
+@router.post("/forgot-password", response_model=MessageResponse, responses={400: _error_responses[400]})
+async def forgot_password(
+    request: Request,
+    data: ForgotPasswordRequest,
+    service: AuthService = Depends(_get_service)
+) -> MessageResponse:
+    origin = request.headers.get("origin") or "http://localhost:5173"
+    redirect_url = f"{origin}/reset-password"
+    return await service.forgot_password(data.email, redirect_url)
+
+@router.post("/change-password", response_model=MessageResponse, responses={400: _error_responses[400]})
+async def change_password(
+    data: ChangePasswordRequest,
+    current_user: dict = Depends(get_current_user),
+    service: AuthService = Depends(_get_service)
+) -> MessageResponse:
+    return await service.change_password(current_user["sub"], data.current_password, data.new_password)
+
+@router.post("/reset-password", response_model=MessageResponse, responses={400: _error_responses[400]})
+async def reset_password(
+    data: ResetPasswordRequest,
+    current_user: dict = Depends(get_current_user),
+    service: AuthService = Depends(_get_service)
+) -> MessageResponse:
+    return await service.reset_password(current_user["sub"], data.new_password)

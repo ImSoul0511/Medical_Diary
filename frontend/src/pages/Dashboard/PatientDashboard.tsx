@@ -32,6 +32,8 @@ import { useUserStore } from "../../store/userStore";
 import { formatDate } from "../../utils/date";
 import { formatNumber } from "../../utils/format";
 
+import { aggregateHealthMetrics } from "../../utils/healthMetrics";
+
 function metricValue(value: number | null | undefined) {
   return value == null ? "--" : String(value);
 }
@@ -61,11 +63,7 @@ export function PatientDashboard() {
   const takenCount = prescriptionLogs.filter((log) => log.status === "taken").length;
   const medicationProgress =
     prescriptionLogs.length > 0 ? `${takenCount}/${prescriptionLogs.length}` : "0/0";
-  const chartData = healthMetrics.map((metric) => ({
-    day: formatDate(metric.recordedAt, "dd/MM"),
-    heartRate: metric.heartRate,
-    respiratoryRate: metric.respiratoryRate,
-  }));
+  const chartData = aggregateHealthMetrics(healthMetrics);
 
   return (
     <AppShell role="user" title="Trang chủ bệnh nhân">

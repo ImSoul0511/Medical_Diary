@@ -76,7 +76,7 @@ export function FormSelect({
                     setIsOpen(false);
                   }}
                   className={cn(
-                    "flex w-full items-center px-3 py-2 text-left text-sm text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors",
+                    "flex w-full items-center px-3 py-2 text-left text-sm text-secondary hover:bg-slate-100 transition-colors",
                     option.value === value && "bg-primary/10 font-medium text-primary"
                   )}
                 >

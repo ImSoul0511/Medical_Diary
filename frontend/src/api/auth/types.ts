@@ -68,3 +68,16 @@ export interface RevokeSessionRequest {
 export interface RevokeAllRequest {
   password: string;
 }
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+}
+
+export interface ResetPasswordRequest {
+  new_password: string;
+}

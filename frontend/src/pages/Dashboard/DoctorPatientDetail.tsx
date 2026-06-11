@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Activity, ArrowLeft, HeartPulse, NotebookText, Pill, Plus } from "lucide-react";
+import { Activity, ArrowLeft, HeartPulse, NotebookText, Pill, Plus, Droplets, Thermometer, Scale, Calendar } from "lucide-react";
+
 import {
   CartesianGrid,
   Line,
@@ -27,6 +28,7 @@ import type { DiaryEntry } from "../../types/diary";
 import type { MedicalRecord } from "../../types/medicalRecord";
 import { formatDate, formatDateTime } from "../../utils/date";
 import { formatGender } from "../../utils/gender";
+import { manualMetricLabels, formatManualMetricValue } from "../HealthMetrics/HealthMetricsPage";
 
 export function DoctorPatientDetail() {
   const { patientId = "" } = useParams();
@@ -35,6 +37,8 @@ export function DoctorPatientDetail() {
   const doctorError = useDoctorStore((state) => state.error);
   const healthMetrics = useHealthMetricsStore((state) => state.items);
   const loadPatientMetrics = useHealthMetricsStore((state) => state.loadPatientMetrics);
+  const manualMetrics = useHealthMetricsStore((state) => state.manualItems);
+  const loadPatientManual = useHealthMetricsStore((state) => state.loadPatientManual);
   const diaries = useDiaryStore((state) => state.items);
   const loadPatientDiaries = useDiaryStore((state) => state.loadPatientDiaries);
   const medicalRecords = useMedicalRecordStore((state) => state.patientRecords);
@@ -62,9 +66,10 @@ export function DoctorPatientDetail() {
     if (!patientId) return;
     void loadPatientDetail(patientId).catch(() => undefined);
     void loadPatientMetrics(patientId).catch(() => undefined);
+    void loadPatientManual(patientId).catch(() => undefined);
     void loadPatientDiaries(patientId).catch(() => undefined);
     void loadPatientRecords(patientId).catch(() => undefined);
-  }, [loadPatientDetail, loadPatientDiaries, loadPatientMetrics, loadPatientRecords, patientId]);
+  }, [loadPatientDetail, loadPatientDiaries, loadPatientMetrics, loadPatientManual, loadPatientRecords, patientId]);
 
   function handleCreateRecord(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -181,6 +186,86 @@ export function DoctorPatientDetail() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </Card>
+
+        {/* Manual Measurements History Card */}
+        <Card padding="lg">
+          <div>
+            <h2 className="text-lg font-semibold text-secondary">Chỉ số sức khỏe đo tay (Manual Vitals)</h2>
+            <p className="text-xs text-mutedForeground">Thông tin sức khỏe do bệnh nhân tự đo lường tại nhà.</p>
+          </div>
+
+          {manualMetrics.length === 0 ? (
+            <p className="mt-4 text-xs text-mutedForeground italic">Không tìm thấy bản ghi chỉ số đo tay nào.</p>
+          ) : (
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {manualMetrics.map((item) => {
+                let MetricIcon = Activity;
+                let cardColor = "bg-slate-50 border-slate-200";
+                let textTone = "text-slate-700";
+
+                if (item.metricType === "blood_pressure") {
+                  MetricIcon = HeartPulse;
+                  cardColor = "bg-red-50/50 border-red-100";
+                  textTone = "text-red-700";
+                } else if (item.metricType === "blood_glucose") {
+                  MetricIcon = Droplets;
+                  cardColor = "bg-cyan-50/50 border-cyan-100";
+                  textTone = "text-cyan-700";
+                } else if (item.metricType === "spo2") {
+                  MetricIcon = Activity;
+                  cardColor = "bg-indigo-50/50 border-indigo-100";
+                  textTone = "text-indigo-700";
+                } else if (item.metricType === "body_temperature") {
+                  MetricIcon = Thermometer;
+                  cardColor = "bg-orange-50/50 border-orange-100";
+                  textTone = "text-orange-700";
+                } else if (item.metricType === "weight") {
+                  MetricIcon = Scale;
+                  cardColor = "bg-emerald-50/50 border-emerald-100";
+                  textTone = "text-emerald-700";
+                }
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`rounded-card border p-4 flex flex-col justify-between transition-all hover:shadow-sm ${cardColor}`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className={`inline-flex items-center gap-1 text-xs font-bold ${textTone}`}>
+                          <MetricIcon className="h-4 w-4" />
+                          {manualMetricLabels[item.metricType]}
+                        </span>
+                        <span className="text-[10px] text-mutedForeground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {formatDateTime(item.recordedAt)}
+                        </span>
+                      </div>
+                      <p className="text-sm font-bold text-secondary">
+                        {formatManualMetricValue(item.metricType, item.metrics)}
+                      </p>
+                    </div>
+
+                    {(item.deviceName || item.notes) && (
+                      <div className="mt-3 pt-2 border-t border-dashed border-border text-[10px] text-mutedForeground space-y-1 font-sans">
+                        {item.deviceName && (
+                          <p>
+                            Thiết bị: <span className="font-medium text-secondary">{item.deviceName}</span>
+                          </p>
+                        )}
+                        {item.notes && (
+                          <p className="italic">
+                            Ghi chú: {item.notes}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </Card>
 
         <section className="space-y-4">

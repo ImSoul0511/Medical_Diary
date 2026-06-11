@@ -30,6 +30,7 @@ export const ROUTES = {
   doctorPrescription: "/bac-si/tao-don-thuoc/demo-patient",
   adminDoctorApproval: "/quan-tri/phe-duyet-bac-si",
   adminAuditLogs: "/quan-tri/nhat-ky-kiem-toan",
+  resetPassword: "/reset-password",
 } as const;
 
 export type NavigationItem = {
