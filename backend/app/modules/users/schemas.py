@@ -17,6 +17,7 @@ class UserProfileResponse(BaseModel):
     cccd: Optional[str] = None
 
 class UserProfileUpdateRequest(BaseModel):
+    password: Optional[str] = Field(None)
     full_name: Optional[str] = Field(None, min_length=2, max_length=100)
     gender: Optional[Literal['male', 'female']] = None
     date_of_birth: Optional[date] = None
@@ -40,7 +41,7 @@ class UserProfileUpdateRequest(BaseModel):
     }
 
 class PrivateProfileUpdateRequest(BaseModel):
-    password: str = Field(..., min_length=8)
+    password: Optional[str] = Field(None)
     full_name: Optional[str] = Field(None, min_length=2, max_length=100)
     gender: Optional[Literal['male', 'female']] = None
     date_of_birth: Optional[date] = None

@@ -7,6 +7,7 @@ import { Card } from "../../components/Card";
 import { DataTable, type DataTableColumn } from "../../components/DataTable";
 import { FormInput } from "../../components/FormInput";
 import { FormSelect } from "../../components/FormSelect";
+import { Modal } from "../../components/Modal";
 import { useMedicalRecordStore } from "../../store/medicalRecordStore";
 import { usePrescriptionStore } from "../../store/prescriptionStore";
 import { useUiStore } from "../../store/uiStore";
@@ -56,6 +57,13 @@ export function ProfilePage() {
     "allergies",
   ]);
 
+  // States for profile editing and confirmation modal
+  const [isEditing, setIsEditing] = useState(false);
+  const [isConfirmPasswordModalOpen, setIsConfirmPasswordModalOpen] = useState(false);
+  const [profileUpdatePassword, setProfileUpdatePassword] = useState("");
+  const [confirmPasswordLoading, setConfirmPasswordLoading] = useState(false);
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
   useEffect(() => {
     void loadMe().catch(() => undefined);
     void loadRecords().catch(() => undefined);
@@ -69,21 +77,45 @@ export function ProfilePage() {
     setEmergencyContact(profile.emergencyContact ?? "");
   }, [profile]);
 
+  function closeConfirmPasswordModal() {
+    setIsConfirmPasswordModalOpen(false);
+    setProfileUpdatePassword("");
+    setConfirmPasswordError("");
+  }
+
+  async function handleConfirmProfileUpdate() {
+    if (profileUpdatePassword.length < 8) {
+      setConfirmPasswordError("Mật khẩu tối thiểu 8 ký tự.");
+      return;
+    }
+    setConfirmPasswordError("");
+    setConfirmPasswordLoading(true);
+    try {
+      if (!profile) return;
+      await updateProfile({
+        password: profileUpdatePassword,
+        fullName: profile.fullName,
+        gender: profile.gender ?? "male",
+        dateOfBirth: profile.dateOfBirth ?? "",
+        phoneNumber: profile.phoneNumber ?? "",
+        cccd: profile.cccd ?? "",
+        bloodType,
+        allergies,
+        emergencyContact,
+      });
+      showToast("Đã lưu hồ sơ y tế.");
+      setIsEditing(false);
+      closeConfirmPasswordModal();
+    } catch (err: any) {
+      setConfirmPasswordError(err?.message ?? "Xác nhận mật khẩu thất bại. Vui lòng thử lại.");
+    } finally {
+      setConfirmPasswordLoading(false);
+    }
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!profile) return;
-    void updateProfile({
-      fullName: profile.fullName,
-      gender: profile.gender ?? "male",
-      dateOfBirth: profile.dateOfBirth ?? "",
-      phoneNumber: profile.phoneNumber ?? "",
-      cccd: profile.cccd ?? "",
-      bloodType,
-      allergies,
-      emergencyContact,
-    })
-      .then(() => showToast("Đã lưu hồ sơ y tế."))
-      .catch(() => undefined);
+    setIsConfirmPasswordModalOpen(true);
   }
 
   function toggleExportField(field: string) {
@@ -138,12 +170,55 @@ export function ProfilePage() {
           <Card padding="lg">
             <h2 className="text-lg font-semibold text-secondary">Thông tin y tế có thể cập nhật</h2>
             <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
-              <FormSelect label="Nhóm máu" options={bloodTypeOptions} value={bloodType} onChange={setBloodType} />
-              <FormInput label="Dị ứng" onChange={(event) => setAllergies(event.target.value)} value={allergies} />
-              <FormInput label="SĐT người thân" onChange={(event) => setEmergencyContact(event.target.value.replace(/\D/g, ""))} value={emergencyContact} />
-              <Button leftIcon={<Save className="h-4 w-4" />} type="submit">
-                Lưu thông tin y tế
-              </Button>
+              <FormSelect
+                disabled={!isEditing}
+                label="Nhóm máu"
+                options={bloodTypeOptions}
+                value={bloodType}
+                onChange={setBloodType}
+              />
+              <FormInput
+                disabled={!isEditing}
+                label="Dị ứng"
+                onChange={(event) => setAllergies(event.target.value)}
+                value={allergies}
+              />
+              <FormInput
+                disabled={!isEditing}
+                label="SĐT người thân"
+                onChange={(event) => setEmergencyContact(event.target.value.replace(/\D/g, ""))}
+                value={emergencyContact}
+              />
+              <div className="flex gap-2">
+                {isEditing ? (
+                  <>
+                    <Button leftIcon={<Save className="h-4 w-4" />} type="submit">
+                      Xác nhận
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsEditing(false);
+                        if (profile) {
+                          setBloodType(profile.bloodType ?? "");
+                          setAllergies(profile.allergies ?? "");
+                          setEmergencyContact(profile.emergencyContact ?? "");
+                        }
+                      }}
+                      type="button"
+                      variant="outline"
+                    >
+                      Hủy
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    type="button"
+                  >
+                    Cập nhật thông tin
+                  </Button>
+                )}
+              </div>
             </form>
           </Card>
 
@@ -203,6 +278,31 @@ export function ProfilePage() {
           <DataTable columns={prescriptionColumns} getRowKey={(row) => row.id} rows={prescriptions} />
         </section>
       </div>
+
+      <Modal
+        confirmDisabled={profileUpdatePassword.length < 8 || confirmPasswordLoading}
+        confirmLabel={confirmPasswordLoading ? "Đang lưu..." : "Xác nhận"}
+        confirmVariant="primary"
+        description="Vui lòng nhập mật khẩu của bạn để xác nhận cập nhật thông tin y tế."
+        onClose={closeConfirmPasswordModal}
+        onConfirm={handleConfirmProfileUpdate}
+        open={isConfirmPasswordModalOpen}
+        title="Xác nhận mật khẩu"
+      >
+        <div className="space-y-4">
+          <FormInput
+            label="Mật khẩu"
+            onChange={(event) => setProfileUpdatePassword(event.target.value)}
+            required
+            type="password"
+            value={profileUpdatePassword}
+            helperText="Mật khẩu tối thiểu 8 ký tự."
+          />
+          {confirmPasswordError ? (
+            <p className="text-xs text-emergency font-medium">{confirmPasswordError}</p>
+          ) : null}
+        </div>
+      </Modal>
     </AppShell>
   );
 }

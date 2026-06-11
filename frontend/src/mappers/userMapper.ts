@@ -52,7 +52,7 @@ export function mapUserProfileDto(dto: unknown): UserProfile {
 
 export function mapPrivateProfileFormToDto(form: PrivateProfileForm): PrivateProfileUpdateRequest {
   return {
-    password: form.password,
+    password: form.password || undefined,
     ...compactPayload({
       full_name: emptyToNull(form.fullName),
       gender: form.gender || null,
@@ -65,6 +65,7 @@ export function mapPrivateProfileFormToDto(form: PrivateProfileForm): PrivatePro
 
 export function mapUserProfileFormToDto(form: UserProfileForm) {
   return compactPayload({
+    password: form.password || undefined,
     full_name: emptyToNull(form.fullName),
     gender: form.gender || null,
     date_of_birth: emptyToNull(form.dateOfBirth),

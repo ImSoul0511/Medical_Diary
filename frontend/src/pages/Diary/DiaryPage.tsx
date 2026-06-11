@@ -53,7 +53,11 @@ export function DiaryPage() {
   const [content, setContent] = useState("");
   const [selectedOption, setSelectedOption] = useState(symptomOptions[0]);
   const [customSymptom, setCustomSymptom] = useState("");
-  const [selectedSymptoms, setSelectedSymptoms] = useState<SymptomEntry[]>([]);
+  const [severity, setSeverity] = useState(3);
+  const [entryDate, setEntryDate] = useState(() => {
+    const tzoffset = new Date().getTimezoneOffset() * 60000;
+    return new Date(Date.now() - tzoffset).toISOString().slice(0, 16);
+  });
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const groupedEntries = useMemo(() => groupEntriesByDay(diaries), [diaries]);
 
@@ -61,42 +65,32 @@ export function DiaryPage() {
     void loadMine().catch(() => undefined);
   }, [loadMine]);
 
-  function addSymptom(name: string) {
-    const trimmed = name.trim().slice(0, 20);
-    if (!trimmed) return;
-    setSelectedSymptoms((current) => {
-      if (current.some((item) => item.name.toLowerCase() === trimmed.toLowerCase())) {
-        return current;
-      }
-      return [...current, { name: trimmed, severity: 3 }];
-    });
-  }
-
-  function updateSymptomSeverity(name: string, severity: number) {
-    setSelectedSymptoms((current) =>
-      current.map((item) => (item.name === name ? { ...item, severity } : item)),
-    );
-  }
-
-  function removeSymptom(name: string) {
-    setSelectedSymptoms((current) => current.filter((item) => item.name !== name));
-  }
-
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmedContent = content.trim();
-    const symptoms = mode === "symptoms" ? selectedSymptoms : [];
+    
+    let symptoms: SymptomEntry[] = [];
+    if (mode === "symptoms") {
+      const name = selectedOption === "other" ? customSymptom.trim() : selectedOption;
+      if (name) {
+        symptoms = [{ name: name.slice(0, 20), severity }];
+      }
+    }
+
     if (!trimmedContent && symptoms.length === 0) return;
 
     void createDiary({
       content: trimmedContent,
       symptoms,
+      createdAt: entryDate ? new Date(entryDate).toISOString() : undefined,
     })
       .then(() => {
         setContent("");
+        const tzoffset = new Date().getTimezoneOffset() * 60000;
+        setEntryDate(new Date(Date.now() - tzoffset).toISOString().slice(0, 16));
         if (mode === "symptoms") {
-          setSelectedSymptoms([]);
           setCustomSymptom("");
+          setSeverity(3);
         }
       })
       .catch(() => undefined);
@@ -128,6 +122,17 @@ export function DiaryPage() {
           {error ? <p className="mb-3 text-sm text-emergency">{error}</p> : null}
 
           <form className="space-y-4" onSubmit={handleSubmit}>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-secondary">Ngày ghi nhận</span>
+              <input
+                className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                onChange={(event) => setEntryDate(event.target.value)}
+                required
+                type="datetime-local"
+                value={entryDate}
+              />
+            </label>
+
             {mode === "diary" ? (
               <label className="block">
                 <span className="mb-1.5 block text-sm font-medium text-secondary">Nội dung nhật ký</span>
@@ -140,84 +145,82 @@ export function DiaryPage() {
               </label>
             ) : (
               <div className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <div className="space-y-4">
                   <label className="block">
-                    <span className="mb-1.5 block text-sm font-medium text-secondary">Triệu chứng có sẵn</span>
-                    <select
-                      className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      onChange={(event) => setSelectedOption(event.target.value)}
-                      value={selectedOption}
-                    >
-                      {symptomOptions.map((symptom) => (
-                        <option key={symptom} value={symptom}>
-                          {symptom}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <div className="flex items-end">
-                    <Button onClick={() => addSymptom(selectedOption)} type="button" variant="outline">
-                      Thêm
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <label className="block">
-                    <span className="mb-1.5 block text-sm font-medium text-secondary">Triệu chứng khác</span>
-                    <input
-                      className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      maxLength={20}
-                      onChange={(event) => setCustomSymptom(event.target.value.replace(/[<>]/g, "").slice(0, 20))}
-                      placeholder="Tối đa 20 ký tự"
-                      value={customSymptom}
-                    />
-                  </label>
-                  <div className="flex items-end">
-                    <Button onClick={() => addSymptom(customSymptom)} type="button" variant="outline">
-                      Thêm
-                    </Button>
-                  </div>
-                </div>
-
-                {selectedSymptoms.length > 0 ? (
-                  <div className="space-y-3">
-                    {selectedSymptoms.map((symptom) => (
-                      <div className="rounded-card border border-border p-3" key={symptom.name}>
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="font-medium text-secondary">{symptom.name}</span>
-                          <button
-                            className="rounded-input p-1.5 text-mutedForeground hover:bg-dangerBg hover:text-emergency"
-                            onClick={() => removeSymptom(symptom.name)}
-                            type="button"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <label className="mt-2 block">
-                          <span className="text-xs text-mutedForeground">Mức độ: {symptom.severity}/10</span>
-                          <input
-                            className="mt-1 w-full accent-primary"
-                            max={10}
-                            min={1}
-                            onChange={(event) => updateSymptomSeverity(symptom.name, Number(event.target.value))}
-                            type="range"
-                            value={symptom.severity}
-                          />
-                        </label>
+                    <span className="mb-1.5 block text-sm font-medium text-secondary font-medium">Chọn triệu chứng</span>
+                    <div className="relative">
+                      <select
+                        className="h-10 w-full appearance-none rounded-input border border-border bg-inputBackground pl-3 pr-10 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        onChange={(event) => {
+                          const val = event.target.value;
+                          setSelectedOption(val);
+                          if (val !== "other") {
+                            setCustomSymptom("");
+                          }
+                        }}
+                        value={selectedOption}
+                      >
+                        {symptomOptions.map((symptom) => (
+                          <option key={symptom} value={symptom}>
+                            {symptom}
+                          </option>
+                        ))}
+                        <option value="other">Tùy chọn khác...</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center pr-1 text-mutedForeground">
+                        <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M7 10l5 5 5-5H7z" fillRule="evenodd" clipRule="evenodd" />
+                        </svg>
                       </div>
-                    ))}
+                    </div>
+                  </label>
+
+                  {selectedOption === "other" && (
+                    <label className="block animate-slideDown">
+                      <span className="mb-1.5 block text-sm font-medium text-secondary">Tên triệu chứng khác</span>
+                      <input
+                        className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        maxLength={20}
+                        onChange={(event) => setCustomSymptom(event.target.value.replace(/[<>]/g, "").slice(0, 20))}
+                        placeholder="Tùy chọn"
+                        value={customSymptom}
+                      />
+                    </label>
+                  )}
+
+                  <div className="rounded-card border border-border p-4 bg-muted/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-secondary">Mức độ nghiêm trọng</span>
+                      <Badge tone={severity > 6 ? "emergency" : "pending"}>
+                        {severity}/10
+                      </Badge>
+                    </div>
+                    <input
+                      className="mt-3 w-full accent-primary"
+                      max={10}
+                      min={1}
+                      onChange={(event) => setSeverity(Number(event.target.value))}
+                      type="range"
+                      value={severity}
+                    />
+                    <div className="mt-1 flex justify-between text-[10px] text-mutedForeground font-medium">
+                      <span>Nhẹ</span>
+                      <span>Trung bình</span>
+                      <span>Nghiêm trọng</span>
+                    </div>
                   </div>
-                ) : (
-                  <p className="rounded-card border border-dashed border-border p-4 text-sm text-mutedForeground">
-                    Chọn một triệu chứng hoặc nhập triệu chứng riêng để bắt đầu.
-                  </p>
-                )}
+                </div>
               </div>
             )}
 
             <Button
-              disabled={mode === "diary" ? !content.trim() : selectedSymptoms.length === 0}
+              disabled={
+                mode === "diary"
+                  ? !content.trim()
+                  : selectedOption === "other"
+                  ? !customSymptom.trim()
+                  : !selectedOption
+              }
               leftIcon={<Plus className="h-4 w-4" />}
               type="submit"
             >

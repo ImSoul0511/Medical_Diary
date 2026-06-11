@@ -13,6 +13,7 @@ class SymptomEntry(BaseModel):
 class DiaryCreateRequest(BaseModel):
     content: Optional[str] = None
     symptoms: Optional[list[SymptomEntry]] = None
+    created_at: Optional[datetime] = None
 
     model_config = {
         "json_schema_extra": {

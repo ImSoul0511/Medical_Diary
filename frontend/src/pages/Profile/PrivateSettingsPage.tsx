@@ -15,6 +15,7 @@ import type { AuthSession, Role } from "../../types/auth";
 import type { AccessHistoryItem, Gender } from "../../types/users";
 import { formatDate, formatDateTime } from "../../utils/date";
 import { formatGender } from "../../utils/gender";
+import { parseUserAgent } from "../../utils/format";
 
 export function PrivateSettingsPage() {
   const navigate = useNavigate();
@@ -23,14 +24,12 @@ export function PrivateSettingsPage() {
   const profile = useUserStore((state) => state.profile);
   const loadMe = useUserStore((state) => state.loadMe);
   const updatePrivateProfile = useUserStore((state) => state.updatePrivateProfile);
-  const accessHistory = useUserStore((state) => state.accessHistory);
-  const loadAccessHistory = useUserStore((state) => state.loadAccessHistory);
   const profileError = useUserStore((state) => state.error);
   const sessions = useAuthStore((state) => state.sessions);
   const loadSessions = useAuthStore((state) => state.loadSessions);
   const revokeSession = useAuthStore((state) => state.revokeSession);
   const revokeAllSessions = useAuthStore((state) => state.revokeAllSessions);
-  const requestPasswordReset = useAuthStore((state) => state.requestPasswordReset);
+  const changePasswordAction = useAuthStore((state) => state.changePassword);
   const sessionMutationLoading = useAuthStore((state) => state.sessionMutationLoading);
   const sessionError = useAuthStore((state) => state.sessionError);
   const showToast = useUiStore((state) => state.showToast);
@@ -40,17 +39,93 @@ export function PrivateSettingsPage() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [cccd, setCccd] = useState("");
-  const [password, setPassword] = useState("");
   const [sessionPassword, setSessionPassword] = useState("");
   const [sessionModal, setSessionModal] = useState<
     { mode: "selected"; session: AuthSession } | { mode: "all" } | null
   >(null);
 
+  // States for change password modal popup
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState("");
+
+  // States for profile editing and confirmation modal
+  const [isEditing, setIsEditing] = useState(false);
+  const [isConfirmPasswordModalOpen, setIsConfirmPasswordModalOpen] = useState(false);
+  const [profileUpdatePassword, setProfileUpdatePassword] = useState("");
+  const [confirmPasswordLoading, setConfirmPasswordLoading] = useState(false);
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  function closeChangePasswordModal() {
+    setIsChangePasswordModalOpen(false);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPwError("");
+  }
+
+  async function handleConfirmChangePassword() {
+    if (newPassword.length < 8) {
+      setPwError("Mật khẩu mới tối thiểu 8 ký tự.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    setPwError("");
+    setPwLoading(true);
+    try {
+      await changePasswordAction(currentPassword, newPassword);
+      showToast("Đã thay đổi mật khẩu thành công.");
+      closeChangePasswordModal();
+    } catch (err: any) {
+      setPwError(err?.message ?? "Đổi mật khẩu thất bại. Vui lòng thử lại.");
+    } finally {
+      setPwLoading(false);
+    }
+  }
+
+  function closeConfirmPasswordModal() {
+    setIsConfirmPasswordModalOpen(false);
+    setProfileUpdatePassword("");
+    setConfirmPasswordError("");
+  }
+
+  async function handleConfirmProfileUpdate() {
+    if (profileUpdatePassword.length < 8) {
+      setConfirmPasswordError("Mật khẩu tối thiểu 8 ký tự.");
+      return;
+    }
+    setConfirmPasswordError("");
+    setConfirmPasswordLoading(true);
+    try {
+      await updatePrivateProfile({
+        password: profileUpdatePassword,
+        fullName,
+        gender,
+        dateOfBirth,
+        phoneNumber,
+        cccd,
+      });
+      showToast("Đã cập nhật thông tin riêng tư.");
+      setIsEditing(false);
+      closeConfirmPasswordModal();
+    } catch (err: any) {
+      setConfirmPasswordError(err?.message ?? "Xác nhận mật khẩu thất bại. Vui lòng thử lại.");
+    } finally {
+      setConfirmPasswordLoading(false);
+    }
+  }
+
   useEffect(() => {
     void loadMe().catch(() => undefined);
     void loadSessions().catch(() => undefined);
-    void loadAccessHistory().catch(() => undefined);
-  }, [loadAccessHistory, loadMe, loadSessions]);
+  }, [loadMe, loadSessions]);
 
   useEffect(() => {
     if (!profile) return;
@@ -63,19 +138,7 @@ export function PrivateSettingsPage() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void updatePrivateProfile({
-      password,
-      fullName,
-      gender,
-      dateOfBirth,
-      phoneNumber,
-      cccd,
-    })
-      .then(() => {
-        setPassword("");
-        showToast("Đã cập nhật thông tin riêng tư.");
-      })
-      .catch(() => undefined);
+    setIsConfirmPasswordModalOpen(true);
   }
 
   function closeSessionModal() {
@@ -99,12 +162,7 @@ export function PrivateSettingsPage() {
       .catch(() => undefined);
   }
 
-  const accessHistoryColumns: DataTableColumn<AccessHistoryItem>[] = [
-    { key: "doctor", header: "Người truy cập", render: (row) => row.doctorName || "Không rõ" },
-    { key: "action", header: "Hành động", render: (row) => row.action },
-    { key: "dataType", header: "Dữ liệu", render: (row) => row.dataType },
-    { key: "date", header: "Thời điểm", render: (row) => formatDate(row.accessedAt) },
-  ];
+
 
   const sessionColumns: DataTableColumn<AuthSession>[] = [
     {
@@ -112,7 +170,9 @@ export function PrivateSettingsPage() {
       header: "Thiết bị",
       render: (row) => (
         <div className="max-w-md">
-          <p className="truncate font-medium text-secondary">{row.userAgent || "Không rõ thiết bị"}</p>
+          <p className="truncate font-medium text-secondary" title={row.userAgent || "Không rõ thiết bị"}>
+            {parseUserAgent(row.userAgent)}
+          </p>
           <p className="text-xs text-mutedForeground">{row.ip || "Không rõ IP"}</p>
         </div>
       ),
@@ -153,11 +213,19 @@ export function PrivateSettingsPage() {
             </div>
           </div>
           <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
-            <FormInput label="Họ và tên" onChange={(event) => setFullName(event.target.value)} required value={fullName} />
+            <FormInput
+              disabled={!isEditing}
+              className="disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed"
+              label="Họ và tên"
+              onChange={(event) => setFullName(event.target.value)}
+              required
+              value={fullName}
+            />
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium text-secondary">Giới tính</span>
               <select
-                className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                disabled={!isEditing}
+                className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed"
                 onChange={(event) => setGender(event.target.value as Gender)}
                 value={gender}
               >
@@ -165,9 +233,25 @@ export function PrivateSettingsPage() {
                 <option value="female">Nữ</option>
               </select>
             </label>
-            <FormInput label="Ngày sinh" onChange={(event) => setDateOfBirth(event.target.value)} type="date" value={dateOfBirth} />
-            <FormInput inputMode="numeric" label="Số điện thoại" onChange={(event) => setPhoneNumber(event.target.value.replace(/\D/g, ""))} value={phoneNumber} />
             <FormInput
+              disabled={!isEditing}
+              className="disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed"
+              label="Ngày sinh"
+              onChange={(event) => setDateOfBirth(event.target.value)}
+              type="date"
+              value={dateOfBirth}
+            />
+            <FormInput
+              disabled={!isEditing}
+              className="disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed"
+              inputMode="numeric"
+              label="Số điện thoại"
+              onChange={(event) => setPhoneNumber(event.target.value.replace(/\D/g, ""))}
+              value={phoneNumber}
+            />
+            <FormInput
+              disabled={!isEditing}
+              className="disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed"
               helperText="Chỉ nhận đúng 12 chữ số."
               inputMode="numeric"
               label="CCCD"
@@ -176,21 +260,42 @@ export function PrivateSettingsPage() {
               pattern="[0-9]{12}"
               value={cccd}
             />
-            <FormInput label="Xác nhận mật khẩu" onChange={(event) => setPassword(event.target.value)} required type="password" value={password} />
             {profileError ? <p className="text-sm text-emergency sm:col-span-2">{profileError}</p> : null}
             <div className="flex flex-wrap gap-2 sm:col-span-2">
-              <Button disabled={password.length < 8} leftIcon={<Save className="h-4 w-4" />} type="submit">
-                Cập nhật thông tin
-              </Button>
+              {isEditing ? (
+                <>
+                  <Button leftIcon={<Save className="h-4 w-4" />} type="submit">
+                    Xác nhận
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setIsEditing(false);
+                      if (profile) {
+                        setFullName(profile.fullName);
+                        setGender(profile.gender ?? "male");
+                        setDateOfBirth(profile.dateOfBirth ?? "");
+                        setPhoneNumber(profile.phoneNumber ?? "");
+                        setCccd(profile.cccd ?? "");
+                      }
+                    }}
+                    type="button"
+                    variant="outline"
+                  >
+                    Hủy
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  leftIcon={<Save className="h-4 w-4" />}
+                  onClick={() => setIsEditing(true)}
+                  type="button"
+                >
+                  Cập nhật thông tin
+                </Button>
+              )}
               <Button
                 leftIcon={<KeyRound className="h-4 w-4" />}
-                onClick={() => {
-                  const email = profile?.email ?? currentUser?.email;
-                  if (!email) return;
-                  void requestPasswordReset(email)
-                    .then(() => showToast("Nếu email tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi."))
-                    .catch(() => undefined);
-                }}
+                onClick={() => setIsChangePasswordModalOpen(true)}
                 type="button"
                 variant="outline"
               >
@@ -244,18 +349,7 @@ export function PrivateSettingsPage() {
           <DataTable columns={sessionColumns} emptyDescription="Chưa có phiên đăng nhập nào." emptyTitle="Chưa có phiên đăng nhập" getRowKey={(row) => row.sessionId} rows={sessions} />
         </section>
 
-        {role === "user" ? (
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-secondary">Lịch sử truy cập</h2>
-            <DataTable
-              columns={accessHistoryColumns}
-              emptyDescription="Chưa có bản ghi truy cập nào."
-              emptyTitle="Chưa có lịch sử truy cập"
-              getRowKey={(row) => `${row.id}-${row.accessedAt}-${row.action}`}
-              rows={accessHistory}
-            />
-          </section>
-        ) : null}
+
       </div>
 
       <Modal
@@ -275,6 +369,70 @@ export function PrivateSettingsPage() {
           type="password"
           value={sessionPassword}
         />
+      </Modal>
+
+      <Modal
+        confirmDisabled={currentPassword.length === 0 || newPassword.length < 8 || confirmPassword.length < 8 || pwLoading}
+        confirmLabel={pwLoading ? "Đang xử lý..." : "Cập nhật mật khẩu"}
+        confirmVariant="primary"
+        description="Nhập thông tin bên dưới để thay đổi mật khẩu của bạn."
+        onClose={closeChangePasswordModal}
+        onConfirm={handleConfirmChangePassword}
+        open={isChangePasswordModalOpen}
+        title="Đặt lại mật khẩu"
+      >
+        <div className="space-y-4">
+          <FormInput
+            label="Mật khẩu hiện tại"
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            required
+            type="password"
+            value={currentPassword}
+          />
+          <FormInput
+            label="Mật khẩu mới"
+            onChange={(event) => setNewPassword(event.target.value)}
+            required
+            type="password"
+            value={newPassword}
+            helperText="Mật khẩu tối thiểu 8 ký tự."
+          />
+          <FormInput
+            label="Xác nhận mật khẩu mới"
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            required
+            type="password"
+            value={confirmPassword}
+          />
+          {pwError ? (
+            <p className="text-xs text-emergency font-medium">{pwError}</p>
+          ) : null}
+        </div>
+      </Modal>
+
+      <Modal
+        confirmDisabled={profileUpdatePassword.length < 8 || confirmPasswordLoading}
+        confirmLabel={confirmPasswordLoading ? "Đang lưu..." : "Xác nhận"}
+        confirmVariant="primary"
+        description="Vui lòng nhập mật khẩu của bạn để xác nhận cập nhật thông tin cá nhân."
+        onClose={closeConfirmPasswordModal}
+        onConfirm={handleConfirmProfileUpdate}
+        open={isConfirmPasswordModalOpen}
+        title="Xác nhận mật khẩu"
+      >
+        <div className="space-y-4">
+          <FormInput
+            label="Mật khẩu"
+            onChange={(event) => setProfileUpdatePassword(event.target.value)}
+            required
+            type="password"
+            value={profileUpdatePassword}
+            helperText="Mật khẩu tối thiểu 8 ký tự."
+          />
+          {confirmPasswordError ? (
+            <p className="text-xs text-emergency font-medium">{confirmPasswordError}</p>
+          ) : null}
+        </div>
       </Modal>
     </AppShell>
   );

@@ -15,6 +15,7 @@ export type DiaryEntry = {
 export type DiaryForm = {
     content: string;
     symptoms: SymptomEntry[];
+    createdAt?: string;
 }
 
 export type DiaryFilters = {

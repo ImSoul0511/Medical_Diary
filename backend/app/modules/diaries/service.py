@@ -41,6 +41,7 @@ class DiariesService:
             user_id=user_id,
             content=data.content,
             symptoms=[s.model_dump() for s in data.symptoms] if data.symptoms else None,
+            created_at=data.created_at if data.created_at else None,
         )
         self.db.add(diary)
         await self.db.flush()

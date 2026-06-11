@@ -4,9 +4,12 @@ import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
+import { DataTable, type DataTableColumn } from "../../components/DataTable";
 import { consentScopeLabels } from "../../constants/consentScopes";
 import { useConsent } from "../../hooks/useConsent";
-import { formatDateTime } from "../../utils/date";
+import { useUserStore } from "../../store/userStore";
+import type { AccessHistoryItem } from "../../types/users";
+import { formatDate, formatDateTime } from "../../utils/date";
 
 export function ConsentManagement() {
   const {
@@ -20,14 +23,26 @@ export function ConsentManagement() {
     error,
   } = useConsent();
 
+  const accessHistory = useUserStore((state) => state.accessHistory);
+  const loadAccessHistory = useUserStore((state) => state.loadAccessHistory);
+
   useEffect(() => {
     void loadAccessRequests().catch(() => undefined);
     void loadHistory().catch(() => undefined);
-  }, [loadAccessRequests, loadHistory]);
+    void loadAccessHistory().catch(() => undefined);
+  }, [loadAccessRequests, loadHistory, loadAccessHistory]);
+
+  const accessHistoryColumns: DataTableColumn<AccessHistoryItem>[] = [
+    { key: "doctor", header: "Người truy cập", render: (row) => row.doctorName || "Không rõ" },
+    { key: "action", header: "Hành động", render: (row) => row.action },
+    { key: "dataType", header: "Dữ liệu", render: (row) => row.dataType },
+    { key: "date", header: "Thời điểm", render: (row) => formatDate(row.accessedAt) },
+  ];
 
   return (
     <AppShell role="user" title="Quản lý cấp quyền">
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="space-y-6">
+        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
@@ -141,6 +156,18 @@ export function ConsentManagement() {
           ))}
         </section>
       </div>
-    </AppShell>
-  );
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-secondary">Lịch sử truy cập</h2>
+        <DataTable
+          columns={accessHistoryColumns}
+          emptyDescription="Chưa có bản ghi truy cập nào."
+          emptyTitle="Chưa có lịch sử truy cập"
+          getRowKey={(row) => `${row.id}-${row.accessedAt}-${row.action}`}
+          rows={accessHistory}
+        />
+      </section>
+    </div>
+  </AppShell>
+);
 }

@@ -121,15 +121,9 @@ export function HealthMetricsPage() {
   const manualItems = useHealthMetricsStore((state) => state.manualItems);
   const loadMine = useHealthMetricsStore((state) => state.loadMine);
   const loadManualMetrics = useHealthMetricsStore((state) => state.loadManualMetrics);
-  const createMetric = useHealthMetricsStore((state) => state.createMetric);
   const createManualMetric = useHealthMetricsStore((state) => state.createManualMetric);
-  const isCreating = useHealthMetricsStore((state) => state.isCreating);
   const isCreatingManual = useHealthMetricsStore((state) => state.isCreatingManual);
   const error = useHealthMetricsStore((state) => state.error);
-  const [heartRate, setHeartRate] = useState("");
-  const [stepCount, setStepCount] = useState("");
-  const [respiratoryRate, setRespiratoryRate] = useState("");
-  const [metricRecordedAt, setMetricRecordedAt] = useState(nowInputValue());
   const [metricType, setMetricType] = useState<MetricType>("blood_pressure");
   const [manualValue, setManualValue] = useState("");
   const [systolic, setSystolic] = useState("");
@@ -155,24 +149,6 @@ export function HealthMetricsPage() {
     void loadMine().catch(() => undefined);
     void loadManualMetrics().catch(() => undefined);
   }, [loadManualMetrics, loadMine]);
-
-  function submitAutomaticMetric(kind: "heartRate" | "stepCount" | "respiratoryRate") {
-    const value = kind === "heartRate" ? heartRate : kind === "stepCount" ? stepCount : respiratoryRate;
-    if (!value.trim()) return;
-
-    void createMetric({
-      recordedAt: new Date(metricRecordedAt).toISOString(),
-      heartRate: kind === "heartRate" ? value : "",
-      stepCount: kind === "stepCount" ? value : "",
-      respiratoryRate: kind === "respiratoryRate" ? value : "",
-    })
-      .then(() => {
-        if (kind === "heartRate") setHeartRate("");
-        if (kind === "stepCount") setStepCount("");
-        if (kind === "respiratoryRate") setRespiratoryRate("");
-      })
-      .catch(() => undefined);
-  }
 
   function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -238,72 +214,57 @@ export function HealthMetricsPage() {
           <StatCard icon={Wind} label="Nhịp thở" tone="accent" unit="lần/phút" value={displayMetric(latest?.respiratoryRate)} />
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-2">
-          <Card padding="lg">
-            <h2 className="text-lg font-semibold text-secondary">Nhập chỉ số tự động</h2>
-            <div className="mt-5 space-y-4">
-              <FormInput label="Thời điểm đo" onChange={(event) => setMetricRecordedAt(event.target.value)} required type="datetime-local" value={metricRecordedAt} />
-              <div className="grid gap-3">
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <FormInput label="Nhịp tim" onChange={(event) => setHeartRate(event.target.value)} type="number" value={heartRate} />
-                  <Button className="self-end" disabled={isCreating || !heartRate.trim()} onClick={() => submitAutomaticMetric("heartRate")} type="button">Lưu</Button>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <FormInput label="Bước chân" onChange={(event) => setStepCount(event.target.value)} type="number" value={stepCount} />
-                  <Button className="self-end" disabled={isCreating || !stepCount.trim()} onClick={() => submitAutomaticMetric("stepCount")} type="button">Lưu</Button>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <FormInput label="Nhịp thở" onChange={(event) => setRespiratoryRate(event.target.value)} type="number" value={respiratoryRate} />
-                  <Button className="self-end" disabled={isCreating || !respiratoryRate.trim()} onClick={() => submitAutomaticMetric("respiratoryRate")} type="button">Lưu</Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card padding="lg">
+        {/* Row 1: Manual Input & History Timeline */}
+        <section className="grid gap-6 xl:grid-cols-[450px_1fr]">
+          <Card padding="lg" className="h-fit">
             <h2 className="text-lg font-semibold text-secondary">Chỉ số nhập tay</h2>
-            <form className="mt-5 grid gap-4 sm:grid-cols-2" onSubmit={handleManualSubmit}>
-              <FormSelect label="Loại chỉ số" onChange={(value) => setMetricType(value as MetricType)} options={metricTypeOptions} value={metricType} />
-              <FormInput label="Thời điểm đo" onChange={(event) => setManualRecordedAt(event.target.value)} required type="datetime-local" value={manualRecordedAt} />
+            <form className="mt-5 space-y-4" onSubmit={handleManualSubmit}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormSelect label="Loại chỉ số" onChange={(value) => setMetricType(value as MetricType)} options={metricTypeOptions} value={metricType} />
+                <FormInput label="Thời điểm đo" onChange={(event) => setManualRecordedAt(event.target.value)} required type="datetime-local" value={manualRecordedAt} />
+              </div>
+              
               {metricType === "blood_pressure" ? (
-                <>
+                <div className="grid gap-3 sm:grid-cols-3">
                   <FormInput label="Tâm thu" onChange={(event) => setSystolic(event.target.value)} required type="number" value={systolic} />
                   <FormInput label="Tâm trương" onChange={(event) => setDiastolic(event.target.value)} required type="number" value={diastolic} />
                   <FormInput label="Mạch" onChange={(event) => setPulse(event.target.value)} type="number" value={pulse} />
-                </>
+                </div>
               ) : null}
               {metricType === "blood_glucose" ? (
-                <>
+                <div className="grid gap-3 sm:grid-cols-2">
                   <FormInput label="Đường huyết" onChange={(event) => setManualValue(event.target.value)} required type="number" value={manualValue} />
                   <FormSelect label="Bữa ăn" onChange={(value) => setMealContext(value as "fasting" | "after_meal" | "random")} options={mealContextOptions} value={mealContext} />
-                </>
+                </div>
               ) : null}
               {metricType === "spo2" || metricType === "body_temperature" ? (
                 <FormInput label={metricType === "spo2" ? "SpO2" : "Thân nhiệt"} onChange={(event) => setManualValue(event.target.value)} required type="number" value={manualValue} />
               ) : null}
               {metricType === "weight" ? (
-                <>
+                <div className="grid gap-3 sm:grid-cols-2">
                   <FormInput label="Cân nặng" onChange={(event) => setManualValue(event.target.value)} required type="number" value={manualValue} />
                   <FormInput label="Chiều cao" onChange={(event) => setHeight(event.target.value)} type="number" value={height} />
-                </>
+                </div>
               ) : null}
+              
               <FormInput label="Thiết bị" onChange={(event) => setDeviceName(event.target.value)} value={deviceName} />
               <FormInput label="Ghi chú" onChange={(event) => setManualNotes(event.target.value)} value={manualNotes} />
-              <div className="flex items-end sm:col-span-2">
+              <div className="flex items-end pt-2">
                 <Button className="w-full" disabled={isCreatingManual} leftIcon={<Plus className="h-4 w-4" />} type="submit">
                   Thêm chỉ số nhập tay
                 </Button>
               </div>
             </form>
           </Card>
+
+          <Card padding="lg" className="h-full">
+            <h2 className="text-lg font-semibold text-secondary mb-4">Lịch sử chỉ số</h2>
+            <DataTable columns={timelineColumns} emptyDescription="Chưa có chỉ số nào." emptyTitle="Chưa có dữ liệu" getRowKey={(row) => row.id} rows={timelineRows} />
+          </Card>
         </section>
 
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-secondary">Lịch sử chỉ số</h2>
-          <DataTable columns={timelineColumns} emptyDescription="Chưa có chỉ số nào." emptyTitle="Chưa có dữ liệu" getRowKey={(row) => row.id} rows={timelineRows} />
-        </section>
-
-        <section className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+        {/* Row 2: Vitals Display Plots */}
+        <section className="grid gap-6 md:grid-cols-2">
           <Card padding="lg">
             <h2 className="text-lg font-semibold text-secondary">Nhịp tim và nhịp thở</h2>
             <div className="mt-4 h-72">

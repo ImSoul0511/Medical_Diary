@@ -47,7 +47,7 @@ export function LoginPage() {
     setForgotError("");
     setForgotLoading(true);
     try {
-      await forgotPasswordAction(forgotEmail);
+      await requestPasswordReset(forgotEmail);
       setForgotSuccess(true);
     } catch (err: any) {
       setForgotError(err?.message ?? "Gửi yêu cầu khôi phục thất bại. Vui lòng thử lại.");
@@ -72,21 +72,6 @@ export function LoginPage() {
       navigate(roleHomePath[user.role]);
     } catch (err) {
       setError("Đăng nhập thất bại. Vui lòng thử lại.");
-    }
-  }
-
-  async function handlePasswordReset() {
-    if (!isEmail(email)) {
-      setError("Nhập email hợp lệ trước khi đặt lại mật khẩu.");
-      return;
-    }
-    setError("");
-    setResetMessage("");
-    try {
-      await requestPasswordReset(email);
-      setResetMessage("Nếu email tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi.");
-    } catch {
-      setError("Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại.");
     }
   }
 
@@ -152,7 +137,16 @@ export function LoginPage() {
               value={password}
             />
             <div className="-mt-2 flex justify-end">
-              <button className="text-sm font-medium text-primary hover:underline" onClick={() => void handlePasswordReset()} type="button">
+              <button
+                onClick={() => {
+                  setIsForgotOpen(true);
+                  setForgotSuccess(false);
+                  setForgotEmail("");
+                  setForgotError("");
+                }}
+                className="text-sm font-medium text-mutedForeground hover:text-primary transition"
+                type="button"
+              >
                 Quên mật khẩu?
               </button>
             </div>
@@ -167,18 +161,6 @@ export function LoginPage() {
             <Link className="font-medium text-primary hover:underline" to={ROUTES.register}>
               Tạo tài khoản
             </Link>
-            <button
-              onClick={() => {
-                setIsForgotOpen(true);
-                setForgotSuccess(false);
-                setForgotEmail("");
-                setForgotError("");
-              }}
-              className="font-medium text-mutedForeground hover:text-primary transition"
-              type="button"
-            >
-              Quên mật khẩu?
-            </button>
             <Link className="inline-flex items-center gap-1 text-mutedForeground hover:text-primary" to={ROUTES.adminLogin}>
               <ShieldCheck className="h-4 w-4" />
               Admin

@@ -187,12 +187,9 @@ export function PatientDashboard() {
               <Shield className="h-5 w-5 text-success" />
               <div>
                 <h3 className="font-semibold text-secondary">Quyền riêng tư</h3>
-                <p className="text-sm text-mutedForeground">
-                  {profile?.privacySettings.showEmergencyContact ? "Có SĐT khẩn cấp" : "Ẩn SĐT khẩn cấp"}
-                </p>
               </div>
             </div>
-            <Link className="mt-3 inline-flex text-sm font-medium text-primary" to={ROUTES.privacy}>
+            <Link className="mt-3 inline-flex text-sm font-medium text-primary" to={ROUTES.privateSettings}>
               Cài đặt quyền riêng tư
             </Link>
           </Card>

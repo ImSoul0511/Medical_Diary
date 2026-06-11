@@ -12,13 +12,36 @@ security = HTTPBearer()
 
 from app.core.config import settings
 from app.core.database import get_db 
-def get_supabase_client() -> Client:
+from supabase.lib.client_options import SyncClientOptions
+
+def get_supabase_client(request: Request = None) -> Client:
     """Dependency để tạo và trả về Supabase Client, đảm bảo kết nối luôn được khởi tạo"""
     try:
-        return create_client(
-            settings.SUPABASE_URL,
-            settings.SUPABASE_ANON_KEY
-        )
+        headers = {}
+        if request:
+            user_agent = request.headers.get("user-agent")
+            if user_agent:
+                headers["User-Agent"] = user_agent
+            
+            # Forward IP address
+            x_forwarded_for = request.headers.get("x-forwarded-for")
+            if x_forwarded_for:
+                headers["x-forwarded-for"] = x_forwarded_for
+            elif request.client and request.client.host:
+                headers["x-forwarded-for"] = request.client.host
+
+        if headers:
+            options = SyncClientOptions(headers=headers)
+            return create_client(
+                settings.SUPABASE_URL,
+                settings.SUPABASE_ANON_KEY,
+                options=options
+            )
+        else:
+            return create_client(
+                settings.SUPABASE_URL,
+                settings.SUPABASE_ANON_KEY
+            )
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Database connection error: {str(e)}")
 def get_current_user(

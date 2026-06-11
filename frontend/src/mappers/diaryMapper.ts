@@ -27,6 +27,7 @@ export function mapDiaryFormToDto(form: DiaryForm) {
   return compactPayload({
     content: form.content.trim() || null,
     symptoms: form.symptoms.length > 0 ? form.symptoms : null,
+    created_at: form.createdAt || null,
   });
 }
 

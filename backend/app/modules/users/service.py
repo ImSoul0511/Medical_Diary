@@ -1,6 +1,7 @@
 import logging
 import json
 import io
+from datetime import date, datetime
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -62,7 +63,12 @@ class UsersService:
 
     async def update_profile(self, user_id: str, data: UserProfileUpdateRequest) -> UserProfileResponse:
         try:
+            if data.password:
+                await self._verify_password(user_id, data.password)
+            
             update_data = data.model_dump(exclude_unset=True)
+            update_data.pop("password", None)
+            
             for required_field in ("full_name", "gender"):
                 if required_field in update_data and update_data[required_field] is None:
                     update_data.pop(required_field)
@@ -118,7 +124,8 @@ class UsersService:
             raise HTTPException(status_code=401, detail="Mật khẩu không chính xác.")
 
     async def update_private_profile(self, user_id: str, data: PrivateProfileUpdateRequest) -> UserProfileResponse:
-        await self._verify_password(user_id, data.password)
+        if data.password:
+            await self._verify_password(user_id, data.password)
         payload = UserProfileUpdateRequest(
             full_name=data.full_name,
             gender=data.gender,
@@ -274,7 +281,10 @@ class UsersService:
                         "allergies": "Dị ứng (Allergies)",
                     }
                     display_key = key_mapping.get(key, key.replace('_', ' ').title())
-                    display_val = str(value) if value is not None else "Trống (N/A)"
+                    if key == "date_of_birth" and isinstance(value, (date, datetime)):
+                        display_val = value.strftime("%d/%m/%Y")
+                    else:
+                        display_val = str(value) if value is not None else "Trống (N/A)"
                     
                     table_data.append([Paragraph(f"<b>{display_key}</b>", normal_style), Paragraph(display_val, normal_style)])
 

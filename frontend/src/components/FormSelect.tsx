@@ -17,6 +17,7 @@ type FormSelectProps = {
   placeholder?: string;
   className?: string;
   id?: string;
+  disabled?: boolean;
 };
 
 export function FormSelect({
@@ -29,6 +30,7 @@ export function FormSelect({
   placeholder = "Chọn...",
   className,
   id,
+  disabled,
 }: FormSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,9 +53,10 @@ export function FormSelect({
       <span className="mb-1.5 block text-sm font-medium text-secondary">{label}</span>
       <button
         type="button"
+        disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20",
+          "flex h-10 w-full items-center justify-between rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-75 disabled:bg-slate-100 disabled:cursor-not-allowed",
           error && "border-emergency focus:border-emergency focus:ring-emergency/20",
           className
         )}

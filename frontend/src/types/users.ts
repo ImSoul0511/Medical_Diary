@@ -21,6 +21,7 @@ export type UserProfile = {
 };
 
 export type UserProfileForm = {
+  password?: string;
   fullName: string; 
   gender: Gender | "";
   dateOfBirth: string | "";
@@ -32,7 +33,7 @@ export type UserProfileForm = {
 }
 
 export type PrivateProfileForm = {
-  password: string;
+  password?: string;
   fullName: string;
   gender: Gender | "";
   dateOfBirth: string | "";

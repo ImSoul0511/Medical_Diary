@@ -24,7 +24,7 @@ export interface UserProfileUpdateRequest {
 }
 
 export interface PrivateProfileUpdateRequest {
-  password: string;
+  password?: string;
   full_name?: string | null;
   gender?: string | null;
   date_of_birth?: string | null;
