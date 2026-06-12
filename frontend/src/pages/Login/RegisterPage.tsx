@@ -36,13 +36,13 @@ export function RegisterPage() {
     const action =
       mode === "doctor"
         ? registerDoctor({
-            ...base,
-            cccd: String(formData.get("cccd") ?? ""),
-            licenseNumber: String(formData.get("licenseNumber") ?? ""),
-            specialty: String(formData.get("specialty") ?? ""),
-            hospital: String(formData.get("hospital") ?? ""),
-            certificateFile: (formData.get("certificateFile") as File | null) ?? null,
-          })
+          ...base,
+          cccd: String(formData.get("cccd") ?? ""),
+          licenseNumber: String(formData.get("licenseNumber") ?? ""),
+          specialty: String(formData.get("specialty") ?? ""),
+          hospital: String(formData.get("hospital") ?? ""),
+          certificateFile: (formData.get("certificateFile") as File | null) ?? null,
+        })
         : registerPatient(base);
 
     void action
@@ -103,9 +103,9 @@ export function RegisterPage() {
               </div>
             ) : (
               <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
-                <FormInput label="Họ và tên" name="fullName" placeholder="Nguyễn Văn An" required />
-                <FormInput label="Email" name="email" placeholder="email@example.com" required type="email" />
-                <FormInput label="Số điện thoại" name="phoneNumber" placeholder="0987654321" required />
+                <FormInput label="Họ và tên" name="fullName" placeholder="" required />
+                <FormInput label="Email" name="email" placeholder="" required type="email" />
+                <FormInput label="Số điện thoại" name="phoneNumber" placeholder="" required />
                 <FormInput label="Ngày sinh" name="dateOfBirth" required type="date" />
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium text-secondary">Giới tính</span>

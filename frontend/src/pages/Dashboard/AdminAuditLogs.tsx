@@ -72,7 +72,7 @@ export function AdminAuditLogs() {
               icon={<Search className="h-4 w-4" />}
               label="Tìm kiếm"
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="REQUEST_ACCESS"
+              placeholder=""
               value={query}
             />
           </div>
