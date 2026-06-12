@@ -302,17 +302,17 @@ export function DoctorPatientDetail() {
               value={diagnosis}
             />
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-secondary">Ghi chú</span>
+              <span className="mb-1.5 block text-sm font-medium text-secondary font-medium">Ghi chú</span>
               <textarea
-                className="min-h-24 w-full rounded-input border border-border bg-inputBackground px-3 py-2 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="min-h-24 w-full rounded-input border border-border/50 bg-white px-3 py-2 text-sm text-secondary outline-none transition-all duration-200 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                 onChange={(event) => setRecordNotes(event.target.value)}
                 value={recordNotes}
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-secondary">URL đính kèm</span>
+              <span className="mb-1.5 block text-sm font-medium text-secondary font-medium">URL đính kèm</span>
               <textarea
-                className="min-h-20 w-full rounded-input border border-border bg-inputBackground px-3 py-2 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="min-h-20 w-full rounded-input border border-border/50 bg-white px-3 py-2 text-sm text-secondary outline-none transition-all duration-200 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                 onChange={(event) => setAttachments(event.target.value)}
                 placeholder="Mỗi dòng một URL"
                 value={attachments}

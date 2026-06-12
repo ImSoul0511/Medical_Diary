@@ -225,7 +225,7 @@ export function PrivateSettingsPage() {
               <span className="mb-1.5 block text-sm font-medium text-secondary">Giới tính</span>
               <select
                 disabled={!isEditing}
-                className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                className="h-10 w-full rounded-input border border-border/50 bg-white px-3 text-sm text-secondary outline-none transition-all duration-200 focus:border-primary/40 focus:ring-4 focus:ring-primary/10 disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed"
                 onChange={(event) => setGender(event.target.value as Gender)}
                 value={gender}
               >
@@ -264,10 +264,11 @@ export function PrivateSettingsPage() {
             <div className="flex flex-wrap gap-2 sm:col-span-2">
               {isEditing ? (
                 <>
-                  <Button leftIcon={<Save className="h-4 w-4" />} type="submit">
+                  <Button key="confirm-btn" leftIcon={<Save className="h-4 w-4" />} type="submit">
                     Xác nhận
                   </Button>
                   <Button
+                    key="cancel-btn"
                     onClick={() => {
                       setIsEditing(false);
                       if (profile) {
@@ -286,6 +287,7 @@ export function PrivateSettingsPage() {
                 </>
               ) : (
                 <Button
+                  key="edit-btn"
                   leftIcon={<Save className="h-4 w-4" />}
                   onClick={() => setIsEditing(true)}
                   type="button"

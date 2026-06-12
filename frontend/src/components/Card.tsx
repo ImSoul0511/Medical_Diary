@@ -16,12 +16,12 @@ const paddingClasses = {
 };
 
 const toneClasses = {
-  default: "border-border bg-card",
-  info: "border-blue-100 bg-infoBg",
-  success: "border-green-100 bg-successBg",
-  danger: "border-red-100 bg-dangerBg",
-  warning: "border-amber-100 bg-warningBg",
-  admin: "border-sky-200 bg-white",
+  default: "border-border/50 bg-white",
+  info: "border-blue-200/40 bg-blue-50/90",
+  success: "border-green-200/40 bg-green-50/90",
+  danger: "border-red-200/40 bg-red-50/90",
+  warning: "border-amber-200/40 bg-amber-50/90",
+  admin: "border-sky-200/40 bg-sky-50/90",
 };
 
 export function Card({
@@ -35,10 +35,10 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-card border shadow-card",
+        "rounded-card border shadow-soft transition-all duration-300",
         toneClasses[tone],
         paddingClasses[padding],
-        interactive && "transition hover:-translate-y-0.5 hover:shadow-md",
+        interactive && "hover:-translate-y-1 hover:shadow-card-hover cursor-pointer",
         className,
       )}
       {...props}

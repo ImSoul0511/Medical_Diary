@@ -14,6 +14,7 @@ import type { Role } from "../types/auth";
 
 export const ROUTES = {
   login: "/",
+  doctorLogin: "/bac-si/dang-nhap",
   register: "/dang-ky",
   adminLogin: "/quan-tri/dang-nhap",
   patientDashboard: "/trang-chu",

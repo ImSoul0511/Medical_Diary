@@ -192,10 +192,11 @@ export function ProfilePage() {
               <div className="flex gap-2">
                 {isEditing ? (
                   <>
-                    <Button leftIcon={<Save className="h-4 w-4" />} type="submit">
+                    <Button key="confirm-btn" leftIcon={<Save className="h-4 w-4" />} type="submit">
                       Xác nhận
                     </Button>
                     <Button
+                      key="cancel-btn"
                       onClick={() => {
                         setIsEditing(false);
                         if (profile) {
@@ -212,6 +213,7 @@ export function ProfilePage() {
                   </>
                 ) : (
                   <Button
+                    key="edit-btn"
                     onClick={() => setIsEditing(true)}
                     type="button"
                   >

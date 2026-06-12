@@ -30,6 +30,7 @@ export function AppRouter() {
   return (
     <Routes>
       <Route element={<LoginPage />} path={ROUTES.login} />
+      <Route element={<LoginPage />} path={ROUTES.doctorLogin} />
       <Route element={<RegisterPage />} path={ROUTES.register} />
       <Route element={<ResetPasswordPage />} path={ROUTES.resetPassword} />
       <Route element={<AdminLoginPage />} path={ROUTES.adminLogin} />

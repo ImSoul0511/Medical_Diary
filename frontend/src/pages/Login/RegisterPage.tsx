@@ -110,7 +110,7 @@ export function RegisterPage() {
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium text-secondary">Giới tính</span>
                   <select
-                    className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="h-10 w-full rounded-input border border-border/50 bg-white px-3 text-sm text-secondary outline-none transition-all duration-200 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                     defaultValue={defaultGender}
                     name="gender"
                   >

@@ -30,26 +30,26 @@ export function Modal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
-      <div className="w-full max-w-lg rounded-card border border-border bg-card shadow-xl">
-        <div className="flex items-start justify-between border-b border-border p-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 transition-all duration-300">
+      <div className="w-full max-w-lg rounded-modal border border-border/60 bg-white shadow-soft-xl animate-scale-in overflow-hidden">
+        <div className="flex items-start justify-between border-b border-border/40 p-6">
           <div>
-            <h2 className="text-lg font-semibold text-secondary">{title}</h2>
+            <h2 className="text-lg font-bold text-secondary tracking-tight">{title}</h2>
             {description ? (
-              <p className="mt-1 text-sm text-mutedForeground">{description}</p>
+              <p className="mt-1 text-sm text-mutedForeground font-medium">{description}</p>
             ) : null}
           </div>
           <button
             aria-label="Đóng"
-            className="rounded-input p-2 text-mutedForeground hover:bg-muted"
+            className="rounded-xl p-2 text-mutedForeground hover:bg-muted/60 transition-colors"
             onClick={onClose}
             type="button"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        {children ? <div className="p-5">{children}</div> : null}
-        <div className="flex justify-end gap-2 border-t border-border p-4">
+        {children ? <div className="p-6">{children}</div> : null}
+        <div className="flex justify-end gap-2 border-t border-border/40 p-5 bg-white/40">
           <Button onClick={onClose} variant="outline">
             {cancelLabel}
           </Button>

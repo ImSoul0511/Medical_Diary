@@ -66,15 +66,14 @@ export function Sidebar({ role }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "flex h-full w-64 shrink-0 flex-col border-r border-slate-700 bg-secondary text-white",
-        currentRoleTheme === "admin" && "border-slate-700",
+        "flex h-full w-64 shrink-0 flex-col border-r border-white/5 bg-secondary/95 text-white backdrop-blur-glass-heavy",
       )}
     >
-      <div className="flex h-20 items-center justify-between border-b border-slate-700 px-5">
+      <div className="flex h-20 items-center justify-between border-b border-white/5 px-5">
         <div className="flex min-w-0 items-center gap-3">
           <div
             className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary",
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-soft-sm",
               currentRoleTheme === "admin" && "bg-adminPrimary",
               currentRoleTheme === "doctor" && "bg-accent",
             )}
@@ -82,13 +81,13 @@ export function Sidebar({ role }: SidebarProps) {
             <Heart className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">Nhật ký Y tế</p>
-            <p className="text-xs text-slate-300">{roleLabels[role]}</p>
+            <p className="truncate text-sm font-semibold tracking-wide">Nhật ký Y tế</p>
+            <p className="text-[11px] text-slate-300 font-medium">{roleLabels[role]}</p>
           </div>
         </div>
         <button
           aria-label="Đóng điều hướng"
-          className="rounded-input p-2 text-slate-300 hover:bg-slate-800 lg:hidden"
+          className="rounded-xl p-2 text-slate-300 hover:bg-white/8 lg:hidden transition-colors"
           onClick={() => setMobileSidebarOpen(false)}
           type="button"
         >
@@ -103,20 +102,20 @@ export function Sidebar({ role }: SidebarProps) {
               <NavLink
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-3 rounded-card px-3 py-2.5 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white",
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-all duration-200 hover:bg-white/8 hover:text-white",
                     isActive &&
                       (currentRoleTheme === "admin"
-                        ? "bg-adminPrimary text-white"
+                        ? "bg-adminPrimary text-white shadow-soft-sm"
                         : currentRoleTheme === "doctor"
-                          ? "bg-accent text-white"
-                          : "bg-primary text-white"),
+                          ? "bg-accent text-white shadow-soft-sm"
+                          : "bg-primary text-white shadow-soft-sm"),
                   )
                 }
                 onClick={() => setMobileSidebarOpen(false)}
                 to={item.path}
               >
                 <item.icon className="h-4 w-4 shrink-0" />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                <span className="min-w-0 flex-1 truncate font-medium">{item.label}</span>
                 {dynamicBadges[item.path] ? <Badge tone="emergency">{dynamicBadges[item.path]}</Badge> : null}
               </NavLink>
             </li>
@@ -124,11 +123,11 @@ export function Sidebar({ role }: SidebarProps) {
         </ul>
       </nav>
 
-      <div className="border-t border-slate-700 p-3">
-        <div className="mb-2 flex items-center gap-3 rounded-card bg-slate-800 p-3">
+      <div className="border-t border-white/5 p-3">
+        <div className="mb-2 flex items-center gap-3 rounded-2xl bg-white/8 p-3 shadow-soft-sm border border-white/5">
           <div
             className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold shadow-soft-sm",
               currentRoleTheme === "admin" && "bg-adminPrimary",
               currentRoleTheme === "doctor" && "bg-accent",
             )}
@@ -137,11 +136,11 @@ export function Sidebar({ role }: SidebarProps) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-semibold">{currentUser?.fullName ?? "Khách"}</p>
-            <p className="truncate text-[11px] text-slate-400">{currentUser?.subtitle ?? roleLabels[role]}</p>
+            <p className="truncate text-[10px] text-slate-400 font-medium">{currentUser?.subtitle ?? roleLabels[role]}</p>
           </div>
         </div>
         <Button
-          className="w-full justify-start text-slate-300"
+          className="w-full justify-start text-slate-300 hover:text-white"
           onClick={() => void handleLogout()}
           variant="ghost"
         >

@@ -1,5 +1,5 @@
 :root {
-  color: #0f172a;
+  color: #1e293b;
   background: #f8fafc;
   font-family: Inter, Roboto, system-ui, sans-serif;
   font-size: 16px;
@@ -41,4 +41,25 @@ html {
 
 .recharts-wrapper text {
   font-family: Inter, Roboto, system-ui, sans-serif;
+}
+
+/* Smooth global scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(59, 130, 246, 0.15);
+  color: inherit;
 }

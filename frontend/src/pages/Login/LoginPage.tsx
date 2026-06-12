@@ -4,9 +4,9 @@
  * Hành vi: Gọi `useAuthStore.login` và điều hướng theo role backend trả về.
  */
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Activity, HeartPulse, Lock, Mail, ShieldCheck } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { FormInput } from "../../components/FormInput";
@@ -22,10 +22,20 @@ const loginRoles: Role[] = ["user", "doctor"];
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const selectedRole = useAuthStore((state) => state.selectedRole);
   const setSelectedRole = useAuthStore((state) => state.setSelectedRole);
   const login = useAuthStore((state) => state.login);
+  const logout = useAuthStore((state) => state.logout);
   const requestPasswordReset = useAuthStore((state) => state.requestPasswordReset);
+
+  useEffect(() => {
+    if (location.pathname === ROUTES.doctorLogin) {
+      setSelectedRole("doctor");
+    } else {
+      setSelectedRole("user");
+    }
+  }, [location.pathname, setSelectedRole]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -69,6 +79,15 @@ export function LoginPage() {
     setError("");
     try {
       const user = await login(selectedRole, email, password);
+      if (user.role !== selectedRole) {
+        await logout();
+        if (selectedRole === "doctor") {
+          setError("Tài khoản này là Bệnh nhân. Vui lòng đăng nhập ở trang Bệnh nhân.");
+        } else {
+          setError("Tài khoản này là Bác sĩ. Vui lòng đăng nhập ở trang Bác sĩ.");
+        }
+        return;
+      }
       navigate(roleHomePath[user.role]);
     } catch (err) {
       setError("Đăng nhập thất bại. Vui lòng thử lại.");
@@ -77,44 +96,52 @@ export function LoginPage() {
 
   return (
     <div className="grid min-h-screen bg-background lg:grid-cols-[0.95fr_1.05fr]">
-      <section className="hidden items-center bg-gradient-to-br from-primary via-primaryDark to-accent p-12 text-white lg:flex">
-        <div className="max-w-xl">
+      <section className="relative hidden items-center bg-gradient-to-br from-primary via-primaryDark to-accent p-12 text-white lg:flex overflow-hidden">
+        <div aria-hidden="true" className="absolute -top-20 -right-20 h-80 w-80 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+        <div aria-hidden="true" className="absolute bottom-10 left-10 h-60 w-60 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+        <div className="relative z-10 max-w-xl">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-white/15 p-3">
+            <div className="rounded-2xl bg-white/15 p-3 shadow-soft-sm backdrop-blur-sm">
               <HeartPulse className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-lg font-semibold">Medical Diary</p>
-              <p className="text-sm text-white/75">Nhật ký Y tế</p>
+              <p className="text-lg font-semibold tracking-wide">Medical Diary</p>
+              <p className="text-sm text-white/75 font-medium">Nhật ký Y tế</p>
             </div>
           </div>
 
-          <h1 className="mt-12 text-3xl font-semibold leading-tight">
+          <h1 className="mt-12 text-3xl font-semibold leading-tight tracking-tight">
             Theo dõi sức khỏe, quyền riêng tư và hồ sơ y tế trong một giao diện gọn.
           </h1>
         </div>
       </section>
 
       <main className="flex items-center justify-center px-4 py-8 sm:px-6">
-        <Card className="w-full max-w-md" padding="lg">
+        <Card className="w-full max-w-md animate-scale-in" padding="lg">
           <div className="mb-6 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primaryDark text-white shadow-soft">
               <Activity className="h-6 w-6" />
             </div>
-            <h1 className="text-2xl font-semibold text-secondary">Đăng nhập hệ thống</h1>
+            <h1 className="text-2xl font-bold text-secondary tracking-tight">Đăng nhập hệ thống</h1>
           </div>
 
-          <div className="mb-5 grid grid-cols-2 gap-2 rounded-card bg-muted p-1">
+          <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl bg-muted/40 p-1.5 shadow-soft-sm">
             {loginRoles.map((role) => (
               <button
                 className={cn(
-                  "rounded-input px-3 py-2 text-sm font-medium transition",
+                  "rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200",
                   selectedRole === role
-                    ? "bg-card text-primary shadow-sm"
+                    ? "bg-white text-primary shadow-soft-sm scale-[1.02]"
                     : "text-mutedForeground hover:text-secondary",
                 )}
                 key={role}
-                onClick={() => setSelectedRole(role)}
+                onClick={() => {
+                  if (role === "doctor") {
+                    navigate(ROUTES.doctorLogin);
+                  } else {
+                    navigate(ROUTES.login);
+                  }
+                }}
                 type="button"
               >
                 {roleLabels[role]}

@@ -67,38 +67,39 @@ export function PatientDashboard() {
 
   return (
     <AppShell role="user" title="Trang chủ bệnh nhân">
-      <div className="space-y-6">
-        <section className="rounded-card bg-gradient-to-r from-primary to-primaryDark p-6 text-white shadow-card">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="space-y-8">
+        <section className="relative rounded-2xl bg-gradient-to-r from-primary to-primaryDark p-6 text-white shadow-soft-md overflow-hidden">
+          <div aria-hidden="true" className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm text-white/75">Xin chào</p>
-              <h2 className="mt-1 text-2xl font-semibold">
+              <p className="text-sm text-white/75 font-medium">Xin chào</p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight">
                 {profile?.fullName ?? "Đang tải hồ sơ"}
               </h2>
             </div>
             <Link
               to={ROUTES.privacy}
-              className="group flex flex-col items-center justify-center rounded-card border border-white/20 bg-white/10 p-3 hover:bg-white/20 transition duration-200"
+              className="group flex flex-col items-center justify-center rounded-2xl border border-white/20 bg-white/10 p-3.5 hover:bg-white/20 hover:scale-[1.02] shadow-soft-sm transition-all duration-300"
               title="Quản lý mã QR cấp cứu"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded bg-white text-primary">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-primary shadow-soft-sm">
                 <QrCode className="h-8 w-8" />
               </div>
-              <span className="mt-1.5 text-xs font-semibold text-white/90 group-hover:text-white">
+              <span className="mt-2 text-xs font-bold text-white/90 group-hover:text-white transition-colors">
                 Tạo & Quản lý QR
               </span>
             </Link>
           </div>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard icon={HeartPulse} label="Nhịp tim" trend="stable" unit="bpm" value={metricValue(latestMetric?.heartRate)} />
           <StatCard icon={Wind} label="Nhịp thở" tone="accent" unit="lần/phút" value={metricValue(latestMetric?.respiratoryRate)} />
           <StatCard icon={Footprints} label="Bước chân" tone="success" unit="bước" value={latestMetric?.stepCount == null ? "--" : formatNumber(latestMetric.stepCount)} />
           <StatCard icon={Pill} label="Thuốc hôm nay" tone="warning" value={medicationProgress} />
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <Card padding="lg">
             <div className="mb-4 flex items-center justify-between">
               <div>

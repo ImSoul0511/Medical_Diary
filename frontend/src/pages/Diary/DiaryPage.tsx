@@ -123,9 +123,9 @@ export function DiaryPage() {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-secondary">Ngày ghi nhận</span>
+              <span className="mb-1.5 block text-sm font-medium text-secondary font-medium">Ngày ghi nhận</span>
               <input
-                className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="h-10 w-full rounded-input border border-border/50 bg-white px-3 text-sm text-secondary outline-none transition-all duration-200 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                 onChange={(event) => setEntryDate(event.target.value)}
                 required
                 type="datetime-local"
@@ -135,9 +135,9 @@ export function DiaryPage() {
 
             {mode === "diary" ? (
               <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-secondary">Nội dung nhật ký</span>
+                <span className="mb-1.5 block text-sm font-medium text-secondary font-medium">Nội dung nhật ký</span>
                 <textarea
-                  className="min-h-40 w-full resize-none rounded-input border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="min-h-40 w-full resize-none rounded-input border border-border/50 bg-white px-3 py-2.5 text-sm text-secondary outline-none transition-all duration-200 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                   onChange={(event) => setContent(event.target.value)}
                   placeholder="Hôm nay bạn cảm thấy thế nào?"
                   value={content}
@@ -147,10 +147,10 @@ export function DiaryPage() {
               <div className="space-y-4">
                 <div className="space-y-4">
                   <label className="block">
-                    <span className="mb-1.5 block text-sm font-medium text-secondary font-medium">Chọn triệu chứng</span>
+                    <span className="mb-1.5 block text-sm font-medium text-secondary font-medium font-medium">Chọn triệu chứng</span>
                     <div className="relative">
                       <select
-                        className="h-10 w-full appearance-none rounded-input border border-border bg-inputBackground pl-3 pr-10 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="h-10 w-full appearance-none rounded-input border border-border/50 bg-white pl-3 pr-10 text-sm text-secondary outline-none transition-all duration-200 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                         onChange={(event) => {
                           const val = event.target.value;
                           setSelectedOption(val);
@@ -177,9 +177,9 @@ export function DiaryPage() {
 
                   {selectedOption === "other" && (
                     <label className="block animate-slideDown">
-                      <span className="mb-1.5 block text-sm font-medium text-secondary">Tên triệu chứng khác</span>
+                      <span className="mb-1.5 block text-sm font-medium text-secondary font-medium">Tên triệu chứng khác</span>
                       <input
-                        className="h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="h-10 w-full rounded-input border border-border/50 bg-white px-3 text-sm text-secondary outline-none transition-all duration-200 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                         maxLength={20}
                         onChange={(event) => setCustomSymptom(event.target.value.replace(/[<>]/g, "").slice(0, 20))}
                         placeholder="Tùy chọn"
@@ -243,36 +243,75 @@ export function DiaryPage() {
                   <Badge tone="info">{group.entries.length} mục</Badge>
                 </div>
                 <div className="space-y-3">
-                  {group.entries.map((entry) => (
-                    <div className="rounded-card border border-border p-3" key={entry.id}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-xs text-mutedForeground">{formatDateTime(entry.createdAt)}</p>
-                          {entry.content ? <p className="mt-2 text-sm text-secondary">{entry.content}</p> : null}
-                        </div>
-                        <Button
-                          aria-label="Xóa nhật ký"
-                          onClick={() => setDeleteTarget(entry.id)}
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <Trash2 className="h-4 w-4 text-emergency" />
-                        </Button>
-                      </div>
-                      {entry.symptoms.length > 0 ? (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {entry.symptoms.map((symptom) => (
-                            <Badge
-                              key={`${entry.id}-${symptom.name}`}
-                              tone={symptom.severity > 6 ? "emergency" : "pending"}
+                  {group.entries.map((entry) => {
+                    const isSymptomOnly = !entry.content && entry.symptoms.length > 0;
+                    
+                    if (isSymptomOnly) {
+                      const primarySymptom = entry.symptoms[0];
+                      const isHighSeverity = primarySymptom.severity > 6;
+                      const toneClass = isHighSeverity 
+                        ? "bg-red-50/80 border-red-200/80 text-red-950 shadow-soft-sm" 
+                        : "bg-amber-50/80 border-amber-200/80 text-amber-950 shadow-soft-sm";
+                        
+                      return (
+                        <div className={`rounded-2xl border p-4 transition-all duration-300 ${toneClass}`} key={entry.id}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-bold uppercase tracking-wider opacity-60">Ghi nhận triệu chứng</p>
+                              <h3 className="mt-1 text-base font-bold tracking-tight">
+                                {primarySymptom.name}
+                              </h3>
+                              <p className="mt-1 text-sm font-semibold opacity-90">
+                                Mức độ: <span className="font-bold">{primarySymptom.severity}/10</span>
+                              </p>
+                              <p className="mt-2 text-xs opacity-60 font-medium">{formatDateTime(entry.createdAt)}</p>
+                            </div>
+                            <Button
+                              aria-label="Xóa triệu chứng"
+                              onClick={() => setDeleteTarget(entry.id)}
+                              size="icon"
+                              variant="ghost"
+                              className="text-current hover:bg-black/5 active:scale-[0.95] transition-all"
                             >
-                              {symptom.name}: {symptom.severity}/10
-                            </Badge>
-                          ))}
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      ) : null}
-                    </div>
-                  ))}
+                      );
+                    }
+
+                    return (
+                      <div className="rounded-2xl border border-border bg-white p-4 shadow-soft-sm" key={entry.id}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-mutedForeground font-medium">{formatDateTime(entry.createdAt)}</p>
+                            {entry.content ? <p className="mt-2 text-sm text-secondary leading-relaxed font-medium">{entry.content}</p> : null}
+                          </div>
+                          <Button
+                            aria-label="Xóa nhật ký"
+                            onClick={() => setDeleteTarget(entry.id)}
+                            size="icon"
+                            variant="ghost"
+                            className="hover:bg-slate-50 text-mutedForeground hover:text-emergency"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {entry.symptoms.length > 0 ? (
+                          <div className="mt-3 flex flex-wrap gap-2 border-t border-border/50 pt-3">
+                            {entry.symptoms.map((symptom) => (
+                              <Badge
+                                key={`${entry.id}-${symptom.name}`}
+                                tone={symptom.severity > 6 ? "emergency" : "pending"}
+                              >
+                                {symptom.name}: {symptom.severity}/10
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
               </Card>
             ))

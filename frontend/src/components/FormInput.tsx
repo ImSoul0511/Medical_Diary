@@ -24,16 +24,16 @@ export function FormInput({
       <span className="mb-1.5 block text-sm font-medium text-secondary">{label}</span>
       <span className="relative block">
         {icon ? (
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-mutedForeground">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-mutedForeground transition-colors">
             {icon}
           </span>
         ) : null}
         <input
           id={inputId}
           className={cn(
-            "h-10 w-full rounded-input border border-border bg-inputBackground px-3 text-sm text-secondary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20",
-            icon && "pl-10",
-            error && "border-emergency focus:border-emergency focus:ring-emergency/20",
+            "h-11 w-full rounded-input border border-border/50 bg-white disabled:bg-slate-100 disabled:opacity-75 disabled:cursor-not-allowed px-4 text-sm text-secondary outline-none transition-all duration-200 shadow-soft-sm focus:border-primary/40 focus:ring-4 focus:ring-primary/10 focus:shadow-soft",
+            icon && "pl-11",
+            error && "border-emergency focus:border-emergency focus:ring-4 focus:ring-emergency/10",
             className,
           )}
           {...props}

@@ -201,7 +201,7 @@ export function HealthMetricsPage() {
 
   return (
     <AppShell role="user" title="Chỉ số sức khỏe">
-      <div className="space-y-6">
+      <div className="space-y-8 max-w-6xl">
         {error ? (
           <Card tone="warning">
             <p className="text-sm text-orange-900">{error}</p>
@@ -215,7 +215,7 @@ export function HealthMetricsPage() {
         </section>
 
         {/* Row 1: Manual Input & History Timeline */}
-        <section className="grid gap-6 xl:grid-cols-[450px_1fr]">
+        <section className="grid gap-6 xl:grid-cols-[450px_minmax(0,1fr)]">
           <Card padding="lg" className="h-fit">
             <h2 className="text-lg font-semibold text-secondary">Chỉ số nhập tay</h2>
             <form className="mt-5 space-y-4" onSubmit={handleManualSubmit}>

@@ -42,46 +42,46 @@ export function Topbar({ role, title, description }: TopbarProps) {
   }, [role, loadTokens]);
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
+    <header className="relative z-20 flex h-16 shrink-0 items-center justify-between border-b border-border/40 bg-white/70 backdrop-blur-glass px-4 lg:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <button
           aria-label="Mở điều hướng"
-          className="rounded-input p-2 text-mutedForeground hover:bg-muted lg:hidden"
+          className="rounded-xl p-2 text-mutedForeground hover:bg-muted/60 lg:hidden transition-all duration-200"
           onClick={() => setMobileSidebarOpen(true)}
           type="button"
         >
           <Menu className="h-5 w-5" />
         </button>
         <div className="min-w-0">
-          <h1 className="truncate text-base font-semibold text-secondary lg:text-lg">{title}</h1>
+          <h1 className="truncate text-base font-bold text-secondary tracking-tight lg:text-lg">{title}</h1>
           {description ? (
-            <p className="hidden truncate text-xs text-mutedForeground sm:block">{description}</p>
+            <p className="hidden truncate text-xs font-medium text-mutedForeground sm:block mt-0.5">{description}</p>
           ) : null}
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
         {role === "user" ? (
           <div className="relative">
             <button
               aria-label="QR cấp cứu"
-              className="inline-flex h-8 items-center justify-center gap-2 rounded-input border border-border bg-card px-3 text-xs font-medium text-secondary transition hover:bg-muted"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border/50 bg-white/60 backdrop-blur-sm px-3.5 text-xs font-semibold text-secondary shadow-soft-sm transition-all hover:bg-white hover:shadow-soft"
               type="button"
               onClick={() => {
                 setQrOpen((v) => !v);
                 setActiveQrIndex(0);
               }}
             >
-              <QrCode className="h-4 w-4" />
+              <QrCode className="h-4 w-4 text-primary" />
               <span className="hidden sm:inline">QR cấp cứu</span>
             </button>
 
             {qrOpen ? (
-              <div className="absolute right-0 mt-2 w-72 rounded-card border border-border bg-card p-4 shadow-lg z-50">
-                <div className="mb-3 flex items-center justify-between border-b border-border pb-2">
-                  <strong className="text-sm text-secondary">Mã QR cấp cứu</strong>
+              <div className="absolute right-0 mt-2.5 w-72 rounded-card border border-white/60 bg-white/80 backdrop-blur-glass p-4 shadow-soft-lg z-50 animate-scale-in">
+                <div className="mb-3 flex items-center justify-between border-b border-border/40 pb-2">
+                  <strong className="text-sm font-bold text-secondary">Mã QR cấp cứu</strong>
                   <button
-                    className="text-xs text-primary hover:underline font-medium"
+                    className="text-xs text-primary hover:underline font-bold"
                     onClick={() => {
                       setQrOpen(false);
                     }}
@@ -95,10 +95,10 @@ export function Topbar({ role, title, description }: TopbarProps) {
                   if (activeTokens.length === 0) {
                     return (
                       <div className="text-center py-4">
-                        <p className="text-xs text-mutedForeground mb-3">Chưa có mã QR hoạt động</p>
+                        <p className="text-xs text-mutedForeground mb-3 font-medium">Chưa có mã QR hoạt động</p>
                         <Link
                           to={ROUTES.privacy}
-                          className="inline-flex h-8 items-center justify-center rounded-input bg-primary px-3 text-xs font-medium text-white transition hover:bg-primaryDark"
+                          className="inline-flex h-9 items-center justify-center rounded-xl bg-gradient-to-r from-primary to-primaryDark px-4 text-xs font-semibold text-white transition hover:shadow-soft"
                           onClick={() => setQrOpen(false)}
                         >
                           Tạo mã QR mới
@@ -112,7 +112,7 @@ export function Topbar({ role, title, description }: TopbarProps) {
 
                   return (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="relative p-2 bg-white rounded border border-border">
+                      <div className="relative p-2 bg-white rounded-xl border border-border/50 shadow-soft-sm">
                         <QRPreview token={currentToken.token} size={150} />
                       </div>
                       
@@ -120,19 +120,19 @@ export function Topbar({ role, title, description }: TopbarProps) {
                         <div className="flex items-center justify-between w-full mt-1">
                           <button
                             type="button"
-                            className="p-1 rounded border border-border hover:bg-muted text-secondary"
+                            className="p-1 rounded-lg border border-border/50 hover:bg-muted/60 text-secondary"
                             onClick={() => {
                               setActiveQrIndex((prev) => (prev - 1 + activeTokens.length) % activeTokens.length);
                             }}
                           >
                             <ChevronLeft className="h-4 w-4" />
                           </button>
-                          <span className="text-xs font-semibold text-secondary">
+                          <span className="text-xs font-bold text-secondary">
                             QR {safeIndex + 1} / {activeTokens.length}
                           </span>
                           <button
                             type="button"
-                            className="p-1 rounded border border-border hover:bg-muted text-secondary"
+                            className="p-1 rounded-lg border border-border/50 hover:bg-muted/60 text-secondary"
                             onClick={() => {
                               setActiveQrIndex((prev) => (prev + 1) % activeTokens.length);
                             }}
@@ -142,23 +142,23 @@ export function Topbar({ role, title, description }: TopbarProps) {
                         </div>
                       ) : null}
 
-                      <div className="w-full text-center space-y-1 mt-2 text-[10px] text-mutedForeground">
-                        <p className="font-medium text-secondary truncate">
+                      <div className="w-full text-center space-y-1 mt-2 text-[10px] text-mutedForeground font-medium">
+                        <p className="font-bold text-secondary truncate">
                           Mã: {currentToken.token.substring(0, 12)}...
                         </p>
                         <p>
                           Hạn dùng: {currentToken.expiresAt ? formatDate(currentToken.expiresAt) : "Vĩnh viễn"}
                         </p>
                         <div className="pt-2 flex flex-wrap gap-1 justify-center">
-                          {currentToken.showBloodType && <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-[9px]">Nhóm máu</span>}
-                          {currentToken.showAllergies && <span className="bg-red-50 text-red-700 px-1.5 py-0.5 rounded text-[9px]">Dị ứng</span>}
-                          {currentToken.showEmergencyContact && <span className="bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-[9px]">Liên hệ</span>}
+                          {currentToken.showBloodType && <span className="bg-blue-50/80 text-blue-700 px-1.5 py-0.5 rounded-full text-[9px] font-bold">Nhóm máu</span>}
+                          {currentToken.showAllergies && <span className="bg-red-50/80 text-red-700 px-1.5 py-0.5 rounded-full text-[9px] font-bold">Dị ứng</span>}
+                          {currentToken.showEmergencyContact && <span className="bg-green-50/80 text-green-700 px-1.5 py-0.5 rounded-full text-[9px] font-bold">Liên hệ</span>}
                         </div>
                       </div>
 
                       <Link
                         to={ROUTES.privacy}
-                        className="mt-2 w-full text-center text-xs text-primary hover:underline font-semibold"
+                        className="mt-2 w-full text-center text-xs text-primary hover:underline font-bold"
                         onClick={() => setQrOpen(false)}
                       >
                         Quản lý tất cả QR
@@ -174,37 +174,35 @@ export function Topbar({ role, title, description }: TopbarProps) {
         <div className="relative">
           <button
             aria-label="Thông báo"
-            className="relative rounded-input border border-border p-2 text-mutedForeground hover:bg-muted"
+            className="relative rounded-xl border border-border/50 bg-white/60 backdrop-blur-sm p-2 text-mutedForeground shadow-soft-sm hover:bg-white hover:shadow-soft transition-all duration-200"
             type="button"
             onClick={() => setOpen((v) => !v)}
           >
             <Bell className="h-4 w-4" />
             {unreadCount > 0 ? (
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emergency px-1 text-[10px] font-semibold text-white">
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emergency px-1 text-[10px] font-bold text-white shadow-soft-sm animate-pulse">
                 {unreadCount}
               </span>
             ) : null}
           </button>
 
           {open ? (
-            <div className="absolute right-0 mt-2 w-80 rounded-card border border-border bg-card p-3 shadow-lg">
-              <div className="mb-2 flex items-center justify-between">
-                <strong className="text-sm">Thông báo</strong>
-                <button className="text-xs text-mutedForeground" onClick={() => { markAllLocalRead(); }} type="button">Đánh dấu tất cả</button>
+            <div className="absolute right-0 mt-2.5 w-80 rounded-card border border-white/60 bg-white/80 backdrop-blur-glass p-4 shadow-soft-lg z-50 animate-scale-in">
+              <div className="mb-2.5 flex items-center justify-between border-b border-border/40 pb-2">
+                <strong className="text-sm font-bold text-secondary">Thông báo</strong>
+                <button className="text-xs text-primary font-bold hover:underline" onClick={() => { markAllLocalRead(); }} type="button">Đánh dấu tất cả</button>
               </div>
-              <ul className="max-h-64 overflow-auto">
-                {items.length === 0 ? <li className="text-sm text-mutedForeground">Không có thông báo</li> : null}
+              <ul className="max-h-64 overflow-auto space-y-2">
+                {items.length === 0 ? <li className="text-xs text-mutedForeground font-medium py-3 text-center">Không có thông báo</li> : null}
                 {items.map((it) => (
-                  <li key={it.id} className="mb-2 flex items-start gap-2">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className={`text-sm ${!it.isRead ? "font-semibold" : "text-mutedForeground"}`}>{it.title}</p>
-                        {!it.isRead ? (
-                          <button className="text-xs text-mutedForeground" onClick={() => { void markAsRead(it.id); }} type="button">Đánh dấu đã đọc</button>
-                        ) : null}
-                      </div>
-                      <p className="text-xs text-mutedForeground">{it.message}</p>
+                  <li key={it.id} className="p-2 rounded-xl bg-white/40 border border-white/30 hover:bg-white/70 transition-colors flex flex-col gap-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`text-xs ${!it.isRead ? "font-bold text-secondary" : "text-mutedForeground font-medium"}`}>{it.title}</p>
+                      {!it.isRead ? (
+                        <button className="text-[10px] text-primary font-bold hover:underline shrink-0" onClick={() => { void markAsRead(it.id); }} type="button">Đọc</button>
+                      ) : null}
                     </div>
+                    <p className="text-[11px] text-mutedForeground leading-relaxed">{it.message}</p>
                   </li>
                 ))}
               </ul>

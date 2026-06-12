@@ -74,31 +74,31 @@ export function AppShell({ role, title, description, children }: AppShellProps) 
   if (!isAuthenticated) return null;
 
   return (
-    <div className={cn("flex h-screen overflow-hidden bg-background", isAdmin && "bg-adminBackground")}>
-      <div className="hidden h-full lg:block">
+    <div className={cn("flex h-screen overflow-hidden bg-background transition-colors duration-300", isAdmin && "bg-adminBackground")}>
+      <div className="hidden h-full w-64 shrink-0 lg:block">
         <Sidebar role={role} />
       </div>
       {mobileSidebarOpen ? (
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <button
             aria-label="Đóng lớp phủ"
-            className="absolute inset-0 bg-slate-950/45"
+            className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm transition-all duration-300"
             onClick={() => setMobileSidebarOpen(false)}
             type="button"
           />
-          <div className="relative z-10">
+          <div className="relative z-10 animate-slide-in-right">
             <Sidebar role={role} />
           </div>
         </div>
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar description={description} role={role} title={title} />
-        <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5 lg:p-6">
+        <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-5 sm:py-6 lg:p-7 space-y-8 animate-fade-in">
           {children}
         </main>
       </div>
       {toastMessage ? (
-        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-card border border-border bg-card px-4 py-3 text-sm text-secondary shadow-lg">
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-2xl border border-white/60 bg-white/80 backdrop-blur-glass px-5 py-3.5 text-sm font-semibold text-secondary shadow-soft-lg animate-slide-in-right">
           {toastMessage}
         </div>
       ) : null}
