@@ -15,6 +15,24 @@ function summarizeData(value: Record<string, unknown> | null) {
     .join("; ");
 }
 
+const actionLabels: Record<string, string> = {
+  INSERT: "Thêm mới",
+  UPDATE: "Cập nhật",
+  DELETE: "Xóa",
+  SELECT: "Xem thông tin",
+  CREATE: "Tạo mới",
+};
+
+const tableLabels: Record<string, string> = {
+  prescriptions: "Đơn thuốc",
+  medical_records: "Hồ sơ bệnh án",
+  diaries: "Nhật ký triệu chứng",
+  health_metrics: "Chỉ số sức khỏe",
+  users: "Thông tin cá nhân",
+  consents: "Cấp quyền truy cập",
+  consent_requests: "Yêu cầu cấp quyền",
+};
+
 export function AdminAuditLogs() {
   const [query, setQuery] = useState("");
   const auditLogs = useAdminStore((state) => state.auditLogs);
@@ -40,8 +58,8 @@ export function AdminAuditLogs() {
   const columns: DataTableColumn<AuditLog>[] = [
     { key: "time", header: "Thời gian", render: (row) => formatDateTime(row.createdAt) },
     { key: "actor", header: "Người thực hiện", render: (row) => <span className="font-medium text-secondary">{row.actorName || row.actorId}</span> },
-    { key: "action", header: "Hành động", render: (row) => row.action },
-    { key: "table", header: "Bảng", render: (row) => row.tableName },
+    { key: "action", header: "Hành động", render: (row) => actionLabels[row.action] || row.action },
+    { key: "table", header: "Bảng dữ liệu", render: (row) => tableLabels[row.tableName] || row.tableName },
     { key: "target", header: "Đối tượng", render: (row) => row.targetUserId ?? "--" },
     {
       key: "details",

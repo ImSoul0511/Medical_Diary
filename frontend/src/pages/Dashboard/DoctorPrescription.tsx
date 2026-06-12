@@ -31,7 +31,7 @@ export function DoctorPrescription() {
       medicationName: "",
       dosage: "",
       scheduledTimes: "08:00",
-      durationDays: 7,
+      durationDays: 3,
     },
   ]);
 

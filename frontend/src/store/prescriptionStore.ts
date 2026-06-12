@@ -32,6 +32,7 @@ type PrescriptionStore = {
   deletingPrescriptionId: string | null;
   error: string | null;
   loadPrescriptions: () => Promise<Prescription[]>;
+  loadPatientPrescriptions: (patientId: string) => Promise<Prescription[]>;
   loadPrescriptionLogs: (prescriptionId: string) => Promise<PrescriptionLog[]>;
   updateLogStatus: (logId: string, status: PrescriptionLogStatus) => Promise<PrescriptionLog>;
   createPrescription: (draft: PrescriptionDraft) => Promise<Prescription>;
@@ -77,10 +78,43 @@ export const usePrescriptionStore = create<PrescriptionStore>((set) => ({
     set({ isLoadingPrescriptions: true, error: null });
     try {
       const prescriptions = (await prescriptionApi.list()).map(mapPrescriptionDto);
-      set({ prescriptions, isLoadingPrescriptions: false });
+      
+      const logsByP: Record<string, PrescriptionLog[]> = {};
+      const allTodayLogs: PrescriptionLog[] = [];
+      const todayStr = new Date().toLocaleDateString("sv-SE");
+
+      for (const p of prescriptions) {
+        try {
+          const logs = (await prescriptionApi.getLogs(p.id)).map(mapPrescriptionLogDto);
+          logsByP[p.id] = logs;
+          const today = logs.filter((log) => log.scheduledDate === todayStr);
+          allTodayLogs.push(...today);
+        } catch (e) {
+          console.error("Failed to load logs for prescription:", p.id, e);
+        }
+      }
+
+      set({ 
+        prescriptions, 
+        isLoadingPrescriptions: false,
+        logsByPrescriptionId: logsByP,
+        todayLogs: allTodayLogs
+      });
       return prescriptions;
     } catch (error) {
       const message = getErrorMessage(error, "Failed to load prescriptions.");
+      set({ isLoadingPrescriptions: false, error: message });
+      throw error;
+    }
+  },
+  loadPatientPrescriptions: async (patientId) => {
+    set({ isLoadingPrescriptions: true, error: null });
+    try {
+      const prescriptions = (await prescriptionApi.listPatientPrescriptions(patientId)).map(mapPrescriptionDto);
+      set({ prescriptions, isLoadingPrescriptions: false });
+      return prescriptions;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load patient prescriptions.");
       set({ isLoadingPrescriptions: false, error: message });
       throw error;
     }

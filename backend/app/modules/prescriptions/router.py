@@ -123,6 +123,21 @@ async def delete_prescription(
     await service.soft_delete_prescription(UUID(current_user["sub"]), prescription_id)
 
 
+@router.get(
+    "/prescriptions/patient/{patient_id}",
+    response_model=List[PrescriptionResponse],
+    responses={401: _error_responses[401], 403: _error_responses[403]},
+    summary="Bác sĩ xem danh sách đơn thuốc của bệnh nhân",
+    description="Bác sĩ xem toàn bộ đơn thuốc của bệnh nhân cụ thể. Cần consent scope 'prescriptions'.",
+)
+async def list_patient_prescriptions(
+    patient_id: UUID,
+    service: PrescriptionsService = Depends(_get_service),
+    current_user: dict = Depends(require_role(["doctor"])),
+) -> List[PrescriptionResponse]:
+    return await service.list_patient_prescriptions(UUID(current_user["sub"]), patient_id)
+
+
 @router.post(
     "/prescriptions/internal/send-reminders",
     response_model=MessageResponse,

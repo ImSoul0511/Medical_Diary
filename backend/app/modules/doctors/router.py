@@ -99,6 +99,23 @@ async def get_patient_detail(
     return await service.get_patient_detail(UUID(current_user["sub"]), patient_id)
 
 
+@router.get(
+    "/patients/{patient_id}/public",
+    response_model=PatientProfileResponse,
+    responses={
+        401: _error_responses[401],
+        403: _error_responses[403],
+        404: _error_responses[404],
+    },
+)
+async def get_patient_public_profile(
+    patient_id: UUID,
+    service: DoctorService = Depends(_get_service),
+    current_user: dict = Depends(require_verified_doctor),
+) -> PatientProfileResponse:
+    return await service.get_patient_public_profile(patient_id)
+
+
 @router.post(
     "/request-access",
     response_model=RequestAccessResponse,

@@ -14,6 +14,11 @@ export const prescriptionApi = {
     return response.data;
   },
 
+  listPatientPrescriptions: async (patientId: string): Promise<PrescriptionResponse[]> => {
+    const response = await apiClient.get<PrescriptionResponse[]>(`/prescriptions/patient/${patientId}`);
+    return response.data;
+  },
+
   getLogs: async (prescriptionId: string): Promise<PrescriptionLogResponse[]> => {
     const response = await apiClient.get<PrescriptionLogResponse[]>("/prescription-logs", {
       params: { prescription_id: prescriptionId },

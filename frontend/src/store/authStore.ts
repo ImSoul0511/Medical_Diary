@@ -30,6 +30,7 @@ type AuthStore = {
   forgotPassword: (email: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   resetPassword: (newPassword: string) => Promise<void>;
+  clearError: () => void;
 };
 
 let refreshSessionPromise: Promise<string> | null = null;
@@ -322,4 +323,5 @@ export const useAuthStore = create<AuthStore>((set) => ({
       throw error;
     }
   },
+  clearError: () => set({ error: null }),
 }));

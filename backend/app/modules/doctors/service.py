@@ -115,7 +115,9 @@ class DoctorService:
     # ── 3. Gửi yêu cầu truy cập ────────────────────────────────────────
     async def list_managed_patients(self, doctor_id: UUID) -> list[ManagedPatientResponse]:
         now = datetime.now(timezone.utc)
-        stmt = (
+        
+        # 1. Fetch active permissions
+        permission_stmt = (
             select(ConsentPermission, Profile.full_name, Profile.gender)
             .join(Profile, Profile.id == ConsentPermission.patient_id)
             .where(
@@ -125,26 +127,56 @@ class DoctorService:
             )
             .order_by(ConsentPermission.granted_at.desc())
         )
-        result = await self.db.execute(stmt)
-        rows = result.all()
+        permission_result = await self.db.execute(permission_stmt)
+        active_rows = permission_result.all()
 
-        logger.info(f"Doctor {doctor_id} listed managed patients: {len(rows)}")
-        return [
-            ManagedPatientResponse(
-                patient_id=permission.patient_id,
-                full_name=full_name,
-                gender=gender,
-                scope=list(permission.scope or []),
-                granted_at=permission.granted_at,
-                expires_at=permission.expires_at,
-                access_status=(
-                    "expired"
-                    if permission.expires_at is not None and permission.expires_at <= now
-                    else "active"
-                ),
+        # 2. Fetch pending requests
+        request_stmt = (
+            select(ConsentRequest, Profile.full_name, Profile.gender)
+            .join(Profile, Profile.id == ConsentRequest.patient_id)
+            .where(
+                ConsentRequest.doctor_id == doctor_id,
+                ConsentRequest.status == "pending",
+                Profile.deleted_at.is_(None),
             )
-            for permission, full_name, gender in rows
-        ]
+            .order_by(ConsentRequest.created_at.desc())
+        )
+        request_result = await self.db.execute(request_stmt)
+        pending_rows = request_result.all()
+
+        response_items = []
+
+        # Add active permissions
+        for permission, full_name, gender in active_rows:
+            is_expired = permission.expires_at is not None and permission.expires_at <= now
+            response_items.append(
+                ManagedPatientResponse(
+                    patient_id=permission.patient_id,
+                    full_name=full_name,
+                    gender=gender,
+                    scope=list(permission.scope or []),
+                    granted_at=permission.granted_at,
+                    expires_at=permission.expires_at,
+                    access_status="expired" if is_expired else "active",
+                )
+            )
+
+        # Add pending requests
+        for request, full_name, gender in pending_rows:
+            response_items.append(
+                ManagedPatientResponse(
+                    patient_id=request.patient_id,
+                    full_name=full_name,
+                    gender=gender,
+                    scope=list(request.requested_scope or []),
+                    granted_at=request.created_at,
+                    expires_at=None,
+                    access_status="pending",
+                )
+            )
+
+        logger.info(f"Doctor {doctor_id} listed managed patients (active={len(active_rows)}, pending={len(pending_rows)})")
+        return response_items
 
     async def request_access(
         self, doctor_id: UUID, data: RequestAccessRequest, background_tasks: BackgroundTasks
@@ -247,4 +279,37 @@ class DoctorService:
             request_id=consent_request.id,
             status=consent_request.status,
             created_at=consent_request.created_at,
+        )
+
+    async def get_patient_public_profile(
+        self, patient_id: UUID
+    ) -> PatientProfileResponse:
+        """
+        Trả về hồ sơ công khai của bệnh nhân dựa trên cấu hình privacy_settings của họ.
+        Không yêu cầu active consent.
+        """
+        profile_stmt = select(Profile).where(
+            Profile.id == patient_id,
+            Profile.role == "user",
+            Profile.deleted_at.is_(None),
+        )
+        profile_result = await self.db.execute(profile_stmt)
+        profile = profile_result.scalar_one_or_none()
+
+        if profile is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy bệnh nhân.")
+
+        # Đọc privacy_settings. Mặc định là cho phép hiển thị nếu trống hoặc có cấu hình tương ứng
+        privacy = profile.privacy_settings or {}
+        show_blood_type = privacy.get("show_blood_type", True)
+        show_allergies = privacy.get("show_allergies", True)
+        show_emergency_contact = privacy.get("show_emergency_contact", True)
+
+        return PatientProfileResponse(
+            full_name=profile.full_name,
+            gender=profile.gender,
+            date_of_birth=None,  # Luôn ẩn ngày sinh ở chế độ xem công khai
+            blood_type=profile.blood_type if show_blood_type else None,
+            allergies=profile.allergies if show_allergies else None,
+            emergency_contact=profile.emergency_contact if show_emergency_contact else None,
         )

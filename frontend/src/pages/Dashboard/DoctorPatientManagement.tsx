@@ -59,12 +59,26 @@ export function DoctorPatientManagement() {
     {
       key: "status",
       header: "Quyền",
-      render: (row) => <Badge tone={row.accessStatus === "expired" ? "pending" : "success"}>{row.accessStatus === "expired" ? "Hết hạn" : "Còn hiệu lực"}</Badge>,
+      render: (row) => {
+        if (row.accessStatus === "pending") {
+          return <Badge tone="pending">Đang chờ duyệt</Badge>;
+        }
+        return (
+          <Badge tone={row.accessStatus === "expired" ? "pending" : "success"}>
+            {row.accessStatus === "expired" ? "Hết hạn" : "Còn hiệu lực"}
+          </Badge>
+        );
+      },
     },
     {
       key: "expires",
       header: "Hạn",
-      render: (row) => (row.expiresAt ? formatDateTime(row.expiresAt) : "Không thời hạn"),
+      render: (row) => {
+        if (row.accessStatus === "pending") {
+          return <span className="text-mutedForeground italic">-</span>;
+        }
+        return row.expiresAt ? formatDateTime(row.expiresAt) : "Không thời hạn";
+      },
     },
     {
       key: "scope",
@@ -77,6 +91,7 @@ export function DoctorPatientManagement() {
             </Badge>
           ))}
           {row.scopes.length > 4 ? <Badge tone="info">+{row.scopes.length - 4}</Badge> : null}
+          {row.scopes.length === 0 && <span className="text-mutedForeground text-xs italic">Không có scope</span>}
         </div>
       ),
     },
@@ -86,13 +101,17 @@ export function DoctorPatientManagement() {
       className: "text-right",
       render: (row) => (
         <div className="flex flex-wrap justify-end gap-2">
-          <Link
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-input border border-border px-3 text-sm font-medium text-secondary hover:bg-muted"
-            to={`/bac-si/benh-nhan/${row.patientId}`}
-          >
-            <Eye className="h-4 w-4" />
-            Xem
-          </Link>
+          {row.accessStatus !== "pending" ? (
+            <Link
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-input border border-border px-3 text-sm font-medium text-secondary hover:bg-muted"
+              to={`/bac-si/benh-nhan/${row.patientId}`}
+            >
+              <Eye className="h-4 w-4" />
+              Xem
+            </Link>
+          ) : (
+            <span className="text-xs text-mutedForeground italic self-center px-2">Chờ phản hồi</span>
+          )}
           {row.accessStatus === "expired" ? (
             <Button leftIcon={<ShieldPlus className="h-4 w-4" />} onClick={() => requestAgain(row.patientId)} size="sm" variant="success">
               Xin lại

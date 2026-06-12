@@ -14,6 +14,7 @@ type DataTableProps<T> = {
   getRowKey: (row: T) => string;
   emptyTitle?: string;
   emptyDescription?: string;
+  borderlessEmpty?: boolean;
 };
 
 export function DataTable<T>({
@@ -22,9 +23,10 @@ export function DataTable<T>({
   getRowKey,
   emptyTitle = "Không có dữ liệu",
   emptyDescription = "Bảng này chưa có bản ghi phù hợp.",
+  borderlessEmpty = false,
 }: DataTableProps<T>) {
   if (rows.length === 0) {
-    return <EmptyState description={emptyDescription} title={emptyTitle} />;
+    return <EmptyState description={emptyDescription} title={emptyTitle} borderless={borderlessEmpty} />;
   }
 
   return (

@@ -20,6 +20,11 @@ export const doctorsApi = {
     return response.data;
   },
 
+  getPatientPublicProfile: async (patientId: string): Promise<PatientProfileResponse> => {
+    const response = await apiClient.get<PatientProfileResponse>(`/doctors/patients/${patientId}/public`);
+    return response.data;
+  },
+
   listManagedPatients: async (): Promise<ManagedPatientResponse[]> => {
     const response = await apiClient.get<ManagedPatientResponse[]>("/doctors/patients");
     return response.data;

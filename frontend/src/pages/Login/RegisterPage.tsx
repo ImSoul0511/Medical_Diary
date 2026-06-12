@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { AlertTriangle, ArrowLeft, FileUp, HeartPulse, UserRound } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/Button";
@@ -18,8 +18,16 @@ export function RegisterPage() {
   const registerDoctor = useAuthStore((state) => state.registerDoctor);
   const isLoading = useAuthStore((state) => state.isLoading);
   const error = useAuthStore((state) => state.error);
+  const clearError = useAuthStore((state) => state.clearError);
   const [mode, setMode] = useState<RegisterMode>("patient");
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    clearError();
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

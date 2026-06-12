@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, Plus, Trash2, Calendar, Clock, Eye, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShieldCheck, Plus, Trash2, Calendar, Clock, Eye, AlertTriangle, ChevronLeft, ChevronRight, Copy, Maximize2 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { Button } from "../../components/Button";
 import { useEmergencyStore } from "../../store/emergencyStore";
@@ -8,6 +8,7 @@ import { formatDate } from "../../utils/date";
 import { Card } from "../../components/Card";
 import { QRPreview } from "../../components/QRPreview";
 import { FormInput } from "../../components/FormInput";
+import { Modal } from "../../components/Modal";
 import { useUiStore } from "../../store/uiStore";
 import { useUserStore } from "../../store/userStore";
 import type { PrivacySettings as PrivacySettingsType } from "../../types/users";
@@ -57,6 +58,22 @@ export function PrivacySettings() {
   const [showAllergiesField, setShowAllergiesField] = useState(true);
   const [showEmergencyField, setShowEmergencyField] = useState(true);
   const [activeTokenIndex, setActiveTokenIndex] = useState(0);
+  const [isQrZoomOpen, setIsQrZoomOpen] = useState(false);
+
+  function handleDownloadQr() {
+    const img = document.querySelector("#emergency-qr-large img") as HTMLImageElement | null;
+    if (!img || !img.src) {
+      showToast("Không thể xuất ảnh QR tại thời điểm này.");
+      return;
+    }
+    const link = document.createElement("a");
+    link.href = img.src;
+    link.download = `medical_diary_emergency_qr_${activeTokenIndex + 1}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Đã bắt đầu tải xuống ảnh QR.");
+  }
 
   useEffect(() => {
     void loadMe().catch(() => undefined);
@@ -304,15 +321,38 @@ export function PrivacySettings() {
                           {currentToken.showAllergies && <span className="bg-red-50 text-red-700 px-2 py-0.5 rounded text-[10px] font-medium">Dị ứng</span>}
                           {currentToken.showEmergencyContact && <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded text-[10px] font-medium">Liên hệ</span>}
                         </div>
-                        <a
-                          href={`${window.location.origin}/cap-cuu/${currentToken.token}`}
-                          className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-semibold pt-1"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          Xem trang công khai
-                        </a>
+                        <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-slate-100 mt-2">
+                          <a
+                            href={`${window.location.origin}/cap-cuu/${currentToken.token}`}
+                            className="inline-flex items-center gap-1.5 text-[11px] text-primary hover:underline font-semibold"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            Xem trang công khai
+                          </a>
+                          
+                          <button
+                            onClick={() => {
+                              const bypassUrl = `${window.location.origin}/cap-cuu/${currentToken.token}`;
+                              navigator.clipboard.writeText(bypassUrl)
+                                .then(() => showToast("Đã sao chép đường dẫn cấp cứu."))
+                                .catch(() => showToast("Không thể sao chép đường dẫn."));
+                            }}
+                            className="inline-flex items-center gap-1.5 text-[11px] text-accent hover:underline font-semibold cursor-pointer"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                            Sao chép Link
+                          </button>
+
+                          <button
+                            onClick={() => setIsQrZoomOpen(true)}
+                            className="inline-flex items-center gap-1.5 text-[11px] text-primary hover:underline font-semibold cursor-pointer"
+                          >
+                            <Maximize2 className="h-3.5 w-3.5" />
+                            Phóng to QR
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -373,6 +413,26 @@ export function PrivacySettings() {
           </div>
         </Card>
       </div>
+      <Modal
+        open={isQrZoomOpen}
+        title="Mã QR Cấp Cứu"
+        onClose={() => setIsQrZoomOpen(false)}
+        confirmLabel="Tải xuống QR"
+        confirmVariant="primary"
+        onConfirm={handleDownloadQr}
+      >
+        <div className="flex flex-col items-center justify-center p-4 space-y-4">
+          <p className="text-sm text-secondary text-center font-sans">
+            In mã QR này hoặc lưu trữ trên điện thoại của bạn. Người hỗ trợ y tế có thể quét mã này để xem thông tin cấp cứu khẩn cấp.
+          </p>
+          <div id="emergency-qr-large" className="p-4 bg-white border-2 border-border rounded-xl shadow-md">
+            {currentToken && <QRPreview token={currentToken.token} size={240} />}
+          </div>
+          <p className="text-xs text-mutedForeground">
+            Mã cấp cứu lâm thời. Ngày tạo: {currentToken && formatDate(currentToken.createdAt)}
+          </p>
+        </div>
+      </Modal>
     </AppShell>
   );
 }

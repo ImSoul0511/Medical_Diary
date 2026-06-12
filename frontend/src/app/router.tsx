@@ -25,6 +25,9 @@ import { EmergencyPublicView } from "../pages/Profile/EmergencyPublicView";
 import { PrivacySettings } from "../pages/Profile/PrivacySettings";
 import { PrivateSettingsPage } from "../pages/Profile/PrivateSettingsPage";
 import { ProfilePage } from "../pages/Profile/ProfilePage";
+import { LongTermAnalyticsPage } from "../pages/HealthMetrics/LongTermAnalyticsPage";
+import { PublicPatientProfile } from "../pages/Dashboard/PublicPatientProfile";
+import { PatientPrescriptionTracker } from "../pages/Dashboard/PatientPrescriptionTracker";
 
 export function AppRouter() {
   return (
@@ -35,8 +38,10 @@ export function AppRouter() {
       <Route element={<ResetPasswordPage />} path={ROUTES.resetPassword} />
       <Route element={<AdminLoginPage />} path={ROUTES.adminLogin} />
       <Route element={<PatientDashboard />} path={ROUTES.patientDashboard} />
+      <Route element={<PatientPrescriptionTracker />} path={ROUTES.prescriptions} />
       <Route element={<DiaryPage />} path={ROUTES.diary} />
       <Route element={<HealthMetricsPage />} path={ROUTES.healthMetrics} />
+      <Route element={<LongTermAnalyticsPage />} path="/chi-so-suc-khoe/phan-tich" />
       <Route element={<ProfilePage />} path={ROUTES.profile} />
       <Route element={<ConsentManagement />} path={ROUTES.consent} />
       <Route element={<PrivateSettingsPage />} path={ROUTES.privateSettings} />
@@ -45,6 +50,7 @@ export function AppRouter() {
       <Route element={<DoctorSearch />} path={ROUTES.doctorSearch} />
       <Route element={<DoctorPatientManagement />} path={ROUTES.doctorPatientManagement} />
       <Route element={<DoctorPatientDetail />} path="/bac-si/benh-nhan/:patientId" />
+      <Route element={<PublicPatientProfile />} path="/bac-si/benh-nhan/:patientId/cong-khai" />
       <Route element={<DoctorPrescription />} path="/bac-si/tao-don-thuoc/:patientId" />
       <Route element={<AdminDoctorApproval />} path={ROUTES.adminDoctorApproval} />
       <Route element={<AdminAuditLogs />} path={ROUTES.adminAuditLogs} />

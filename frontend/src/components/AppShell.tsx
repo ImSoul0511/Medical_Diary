@@ -32,6 +32,7 @@ export function AppShell({ role, title, description, children }: AppShellProps) 
   const currentUser = useAuthStore((state) => state.currentUser);
   const refreshSession = useAuthStore((state) => state.refreshSession);
   const receiveNotification = useNotificationStore((state) => state.receiveNotification);
+  const loadNotifications = useNotificationStore((state) => state.loadNotifications);
   const mobileSidebarOpen = useUiStore((state) => state.mobileSidebarOpen);
   const setMobileSidebarOpen = useUiStore((state) => state.setMobileSidebarOpen);
   const setRoleTheme = useUiStore((state) => state.setRoleTheme);
@@ -61,13 +62,19 @@ export function AppShell({ role, title, description, children }: AppShellProps) 
 
   useEffect(() => {
     if (!isAuthenticated || !currentUser?.id || !accessToken) return undefined;
+
+    // Load existing notifications
+    void loadNotifications().catch((err) => {
+      console.error("Failed to load notifications", err);
+    });
+
     return subscribeToNotificationInserts(currentUser.id, accessToken, (notification) => {
       receiveNotification(notification);
       if (!notification.isRead) {
         useUiStore.getState().showToast(notification.title || "Bạn có thông báo mới.");
       }
     });
-  }, [accessToken, currentUser?.id, isAuthenticated, receiveNotification]);
+  }, [accessToken, currentUser?.id, isAuthenticated, receiveNotification, loadNotifications]);
 
   const isAdmin = role === "admin";
 
@@ -82,11 +89,11 @@ export function AppShell({ role, title, description, children }: AppShellProps) 
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <button
             aria-label="Đóng lớp phủ"
-            className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm transition-all duration-300"
+            className="absolute inset-0 bg-slate-950/40 transition-opacity duration-200"
             onClick={() => setMobileSidebarOpen(false)}
             type="button"
           />
-          <div className="relative z-10 animate-slide-in-right">
+          <div className="relative z-10 animate-slide-in-left will-change-transform">
             <Sidebar role={role} />
           </div>
         </div>

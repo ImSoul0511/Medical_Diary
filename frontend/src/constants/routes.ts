@@ -4,6 +4,7 @@ import {
   FileText,
   HeartPulse,
   Home,
+  Pill,
   Search,
   Settings,
   Shield,
@@ -32,6 +33,7 @@ export const ROUTES = {
   adminDoctorApproval: "/quan-tri/phe-duyet-bac-si",
   adminAuditLogs: "/quan-tri/nhat-ky-kiem-toan",
   resetPassword: "/reset-password",
+  prescriptions: "/don-thuoc",
 } as const;
 
 export type NavigationItem = {
@@ -49,6 +51,7 @@ export const roleHomePath: Record<Role, string> = {
 
 export const patientNavigation: NavigationItem[] = [
   { icon: Home, label: "Trang chủ", path: ROUTES.patientDashboard },
+  { icon: Pill, label: "Đơn thuốc", path: ROUTES.prescriptions },
   { icon: Activity, label: "Nhật ký triệu chứng", path: ROUTES.diary },
   { icon: HeartPulse, label: "Chỉ số sức khỏe", path: ROUTES.healthMetrics },
   { icon: FileText, label: "Hồ sơ bệnh án", path: ROUTES.profile },

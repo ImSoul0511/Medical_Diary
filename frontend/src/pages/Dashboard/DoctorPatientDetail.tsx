@@ -23,6 +23,7 @@ import { useDiaryStore } from "../../store/diaryStore";
 import { useDoctorStore } from "../../store/doctorStore";
 import { useHealthMetricsStore } from "../../store/healthMetricsStore";
 import { useMedicalRecordStore } from "../../store/medicalRecordStore";
+import { usePrescriptionStore } from "../../store/prescriptionStore";
 import { useUiStore } from "../../store/uiStore";
 import type { DiaryEntry } from "../../types/diary";
 import type { MedicalRecord } from "../../types/medicalRecord";
@@ -45,6 +46,11 @@ export function DoctorPatientDetail() {
   const loadPatientRecords = useMedicalRecordStore((state) => state.loadPatientRecords);
   const createRecord = useMedicalRecordStore((state) => state.createRecord);
   const isCreatingRecord = useMedicalRecordStore((state) => state.isCreating);
+  
+  const prescriptions = usePrescriptionStore((state) => state.prescriptions);
+  const loadPatientPrescriptions = usePrescriptionStore((state) => state.loadPatientPrescriptions);
+  const deletePrescription = usePrescriptionStore((state) => state.deletePrescription);
+
   const showToast = useUiStore((state) => state.showToast);
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [diagnosis, setDiagnosis] = useState("");
@@ -69,7 +75,8 @@ export function DoctorPatientDetail() {
     void loadPatientManual(patientId).catch(() => undefined);
     void loadPatientDiaries(patientId).catch(() => undefined);
     void loadPatientRecords(patientId).catch(() => undefined);
-  }, [loadPatientDetail, loadPatientDiaries, loadPatientMetrics, loadPatientManual, loadPatientRecords, patientId]);
+    void loadPatientPrescriptions(patientId).catch(() => undefined);
+  }, [loadPatientDetail, loadPatientDiaries, loadPatientMetrics, loadPatientManual, loadPatientRecords, loadPatientPrescriptions, patientId]);
 
   function handleCreateRecord(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -92,6 +99,18 @@ export function DoctorPatientDetail() {
         setAttachments("");
         setIsRecordModalOpen(false);
         showToast("Đã tạo hồ sơ bệnh án.");
+      })
+      .catch(() => undefined);
+  }
+
+  function handleDeletePrescription(prescriptionId: string) {
+    if (!window.confirm("Bạn có chắc chắn muốn hủy đơn thuốc này?")) return;
+    void deletePrescription(prescriptionId)
+      .then(() => {
+        showToast("Đã hủy đơn thuốc thành công.");
+        if (patientId) {
+          void loadPatientPrescriptions(patientId).catch(() => undefined);
+        }
       })
       .catch(() => undefined);
   }
@@ -271,6 +290,71 @@ export function DoctorPatientDetail() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold text-secondary">Nhật ký triệu chứng</h2>
           <DataTable columns={diaryColumns} getRowKey={(row) => row.id} rows={diaries} />
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold text-secondary">Đơn thuốc đã kê</h2>
+            <Link
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-input bg-accent px-4 text-sm font-medium text-white transition hover:bg-teal-700"
+              to={patientId ? `/bac-si/tao-don-thuoc/${patientId}` : ROUTES.doctorPrescription}
+            >
+              <Pill className="h-4 w-4" />
+              Tạo đơn thuốc mới
+            </Link>
+          </div>
+          
+          {prescriptions.length === 0 ? (
+            <Card padding="md">
+              <p className="text-sm text-mutedForeground italic text-center py-4">Bệnh nhân chưa có đơn thuốc nào.</p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {prescriptions.map((rx) => (
+                <Card key={rx.id} padding="lg">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between border-b border-border pb-3 mb-3">
+                    <div>
+                      <p className="text-xs font-bold text-accent">Mã đơn: {rx.id.slice(0, 8).toUpperCase()}</p>
+                      <p className="text-xs text-mutedForeground">Ngày kê: {formatDate(rx.createdAt)}</p>
+                      {rx.notes && <p className="mt-1 text-sm text-secondary italic">Ghi chú: {rx.notes}</p>}
+                    </div>
+                    <Button
+                      onClick={() => handleDeletePrescription(rx.id)}
+                      size="sm"
+                      variant="ghost"
+                      className="text-emergency hover:bg-emergency/10 border border-emergency/20"
+                    >
+                      Hủy đơn thuốc
+                    </Button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-secondary font-sans">
+                      <thead>
+                        <tr className="border-b border-border text-xs uppercase text-mutedForeground">
+                          <th className="py-2">Tên thuốc</th>
+                          <th className="py-2">Liều lượng</th>
+                          <th className="py-2">Thời gian uống</th>
+                          <th className="py-2">Số ngày</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rx.items?.map((item) => (
+                          <tr key={item.id} className="border-b border-border/50 last:border-0">
+                            <td className="py-2 font-medium">{item.medicationName}</td>
+                            <td className="py-2">{item.dosage}</td>
+                            <td className="py-2">
+                              {item.scheduledTimes ? item.scheduledTimes.join(", ") : "Theo lịch"}
+                            </td>
+                            <td className="py-2">{item.durationDays ? `${item.durationDays} ngày` : "--"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="space-y-4">

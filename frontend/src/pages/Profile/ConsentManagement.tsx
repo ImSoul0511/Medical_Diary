@@ -1,15 +1,87 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Building2, Check, Shield, Stethoscope, X } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { DataTable, type DataTableColumn } from "../../components/DataTable";
+import { Modal } from "../../components/Modal";
 import { consentScopeLabels } from "../../constants/consentScopes";
 import { useConsent } from "../../hooks/useConsent";
 import { useUserStore } from "../../store/userStore";
 import type { AccessHistoryItem } from "../../types/users";
 import { formatDate, formatDateTime } from "../../utils/date";
+
+function formatAccessLog(row: AccessHistoryItem): string {
+  const doctor = row.doctorName || "Bác sĩ";
+  const actionText = (row.action || "").toUpperCase();
+  const typeText = (row.dataType || "").toLowerCase();
+  
+  if (actionText === "INSERT" || actionText === "CREATE") {
+    if (typeText.includes("prescription")) {
+      return `Bác sĩ ${doctor} đã kê đơn thuốc mới.`;
+    }
+    if (typeText.includes("medical_record")) {
+      return `Bác sĩ ${doctor} đã tạo hồ sơ bệnh án mới.`;
+    }
+    return `Bác sĩ ${doctor} đã thêm dữ liệu ${typeText}.`;
+  }
+  
+  if (actionText === "SELECT" || actionText === "READ") {
+    if (typeText.includes("prescription")) {
+      return `Bác sĩ ${doctor} đã xem danh sách đơn thuốc của bạn.`;
+    }
+    if (typeText.includes("medical_record")) {
+      return `Bác sĩ ${doctor} đã xem hồ sơ bệnh án của bạn.`;
+    }
+    if (typeText.includes("diary") || typeText.includes("diaries")) {
+      return `Bác sĩ ${doctor} đã xem nhật ký triệu chứng của bạn.`;
+    }
+    if (
+      typeText.includes("health_metric") || 
+      typeText.includes("heart_rate") || 
+      typeText.includes("step_count") || 
+      typeText.includes("respiratory_rate")
+    ) {
+      return `Bác sĩ ${doctor} đã xem chỉ số sức khỏe của bạn.`;
+    }
+    if (typeText.includes("profile") || typeText.includes("users")) {
+      return `Bác sĩ ${doctor} đã xem thông tin cá nhân của bạn.`;
+    }
+    if (typeText.includes("blood_type")) {
+      return `Bác sĩ ${doctor} đã xem thông tin nhóm máu của bạn.`;
+    }
+    if (typeText.includes("allergies")) {
+      return `Bác sĩ ${doctor} đã xem thông tin dị ứng của bạn.`;
+    }
+    if (typeText.includes("emergency_contact")) {
+      return `Bác sĩ ${doctor} đã xem liên hệ khẩn cấp của bạn.`;
+    }
+    return `Bác sĩ ${doctor} đã xem dữ liệu ${typeText} của bạn.`;
+  }
+
+  if (actionText === "UPDATE") {
+    if (typeText.includes("prescription")) {
+      return `Bác sĩ ${doctor} đã cập nhật đơn thuốc của bạn.`;
+    }
+    if (typeText.includes("medical_record")) {
+      return `Bác sĩ ${doctor} đã chỉnh sửa hồ sơ bệnh án của bạn.`;
+    }
+    return `Bác sĩ ${doctor} đã cập nhật dữ liệu ${typeText} của bạn.`;
+  }
+
+  if (actionText === "DELETE") {
+    if (typeText.includes("prescription")) {
+      return `Bác sĩ ${doctor} đã hủy/xóa đơn thuốc của bạn.`;
+    }
+    if (typeText.includes("medical_record")) {
+      return `Bác sĩ ${doctor} đã xóa hồ sơ bệnh án của bạn.`;
+    }
+    return `Bác sĩ ${doctor} đã xóa dữ liệu ${typeText} của bạn.`;
+  }
+
+  return `Bác sĩ ${doctor} đã thao tác trên dữ liệu của bạn.`;
+}
 
 export function ConsentManagement() {
   const {
@@ -26,6 +98,34 @@ export function ConsentManagement() {
   const accessHistory = useUserStore((state) => state.accessHistory);
   const loadAccessHistory = useUserStore((state) => state.loadAccessHistory);
 
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [targetRequest, setTargetRequest] = useState<any | null>(null);
+  const [allowedScopes, setAllowedScopes] = useState<Record<string, boolean>>({});
+
+  function handleOpenApproveModal(request: any) {
+    setTargetRequest(request);
+    const initialScopes: Record<string, boolean> = {};
+    request.requestedScopes.forEach((scope: string) => {
+      initialScopes[scope] = true;
+    });
+    setAllowedScopes(initialScopes);
+    setIsApproveModalOpen(true);
+  }
+
+  function handleConfirmApprove() {
+    if (!targetRequest) return;
+    const scopesToApprove = Object.keys(allowedScopes).filter((key) => allowedScopes[key]);
+    if (scopesToApprove.length === 0) {
+      alert("Vui lòng chọn ít nhất một quyền truy cập để đồng ý.");
+      return;
+    }
+    void approveRequest(targetRequest.id, scopesToApprove as any)
+      .then(() => {
+        setIsApproveModalOpen(false);
+      })
+      .catch(() => undefined);
+  }
+
   useEffect(() => {
     void loadAccessRequests().catch(() => undefined);
     void loadHistory().catch(() => undefined);
@@ -33,10 +133,20 @@ export function ConsentManagement() {
   }, [loadAccessRequests, loadHistory, loadAccessHistory]);
 
   const accessHistoryColumns: DataTableColumn<AccessHistoryItem>[] = [
-    { key: "doctor", header: "Người truy cập", render: (row) => row.doctorName || "Không rõ" },
-    { key: "action", header: "Hành động", render: (row) => row.action },
-    { key: "dataType", header: "Dữ liệu", render: (row) => row.dataType },
-    { key: "date", header: "Thời điểm", render: (row) => formatDate(row.accessedAt) },
+    {
+      key: "activity",
+      header: "Nội dung hoạt động",
+      render: (row) => <span className="font-semibold text-secondary">{formatAccessLog(row)}</span>,
+    },
+    {
+      key: "date",
+      header: "Thời điểm",
+      render: (row) => <span className="text-mutedForeground text-xs">{formatDateTime(row.accessedAt)}</span>,
+    },
+    // old column 1
+    // old column 2
+    // old column 3
+    // old column 4
   ];
 
   return (
@@ -85,9 +195,7 @@ export function ConsentManagement() {
                 <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
                   <Button
                     leftIcon={<Check className="h-4 w-4" />}
-                    onClick={() => {
-                      void approveRequest(request.id, request.requestedScopes).catch(() => undefined);
-                    }}
+                    onClick={() => handleOpenApproveModal(request)}
                     size="sm"
                     variant="success"
                   >
@@ -168,6 +276,33 @@ export function ConsentManagement() {
         />
       </section>
     </div>
-  </AppShell>
-);
+      <Modal
+        open={isApproveModalOpen}
+        title="Chấp nhận yêu cầu truy cập"
+        confirmLabel="Đồng ý cấp quyền"
+        confirmVariant="success"
+        onConfirm={handleConfirmApprove}
+        onClose={() => setIsApproveModalOpen(false)}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-secondary">
+            Bác sĩ <span className="font-semibold">{targetRequest?.doctorName}</span> đang yêu cầu truy cập các thông tin sau. Bạn có thể bỏ chọn các quyền không muốn chia sẻ:
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto border border-border/40 rounded-card p-3 bg-slate-50/50">
+            {targetRequest?.requestedScopes.map((scope: string) => (
+              <label key={scope} className="flex items-center gap-2 text-sm text-secondary hover:bg-muted/40 p-1.5 rounded-lg cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                  checked={!!allowedScopes[scope]}
+                  onChange={(e) => setAllowedScopes((prev) => ({ ...prev, [scope]: e.target.checked }))}
+                />
+                <span>{consentScopeLabels[scope as keyof typeof consentScopeLabels] || scope}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </Modal>
+    </AppShell>
+  );
 }

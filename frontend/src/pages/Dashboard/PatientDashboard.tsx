@@ -96,7 +96,9 @@ export function PatientDashboard() {
           <StatCard icon={HeartPulse} label="Nhịp tim" trend="stable" unit="bpm" value={metricValue(latestMetric?.heartRate)} />
           <StatCard icon={Wind} label="Nhịp thở" tone="accent" unit="lần/phút" value={metricValue(latestMetric?.respiratoryRate)} />
           <StatCard icon={Footprints} label="Bước chân" tone="success" unit="bước" value={latestMetric?.stepCount == null ? "--" : formatNumber(latestMetric.stepCount)} />
-          <StatCard icon={Pill} label="Thuốc hôm nay" tone="warning" value={medicationProgress} />
+          <Link to={ROUTES.prescriptions} className="block transition-transform hover:scale-[1.01]">
+            <StatCard icon={Pill} label="Thuốc hôm nay" tone="warning" value={medicationProgress} />
+          </Link>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -121,43 +123,34 @@ export function PatientDashboard() {
             </div>
           </Card>
 
-          <Card padding="lg">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-secondary">Thuốc hôm nay</h2>
-                <p className="text-sm text-mutedForeground">Cập nhật trạng thái dùng thuốc.</p>
-              </div>
-              <Pill className="h-5 w-5 text-warning" />
-            </div>
-            <div className="space-y-3">
-              {prescriptionLogs.length === 0 ? (
-                <p className="text-sm text-mutedForeground">Chưa có lịch uống thuốc.</p>
-              ) : null}
-              {prescriptionLogs.map((log) => (
-                <div className="rounded-card border border-border p-3" key={log.id}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-secondary">Lịch uống thuốc</p>
-                      <p className="text-xs text-mutedForeground">
-                        {log.scheduledTime} {formatDate(log.scheduledDate)}
-                      </p>
-                    </div>
-                    <Badge tone={log.status === "taken" ? "success" : "pending"}>
-                      {log.status === "taken" ? "Đã uống" : "Chưa uống"}
-                    </Badge>
-                  </div>
-                  <Button
-                    className="mt-3 w-full"
-                    onClick={() => {
-                      void updateLogStatus(log.id, log.status === "taken" ? "untaken" : "taken");
-                    }}
-                    size="sm"
-                    variant={log.status === "taken" ? "outline" : "success"}
-                  >
-                    {log.status === "taken" ? "Hoàn tác" : "Đánh dấu đã uống"}
-                  </Button>
+          <Card padding="lg" className="flex flex-col justify-between">
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-secondary">Thuốc hôm nay</h2>
+                  <p className="text-sm text-mutedForeground">Theo dõi và cập nhật lịch dùng thuốc.</p>
                 </div>
-              ))}
+                <Pill className="h-5 w-5 text-warning" />
+              </div>
+
+              <div className="mt-6 flex flex-col items-center justify-center text-center p-4 bg-slate-50/80 rounded-xl border border-slate-100/50">
+                <span className="text-3xl font-black text-primary">{medicationProgress}</span>
+                <span className="text-xs font-semibold text-secondary mt-1">Liều thuốc đã uống hôm nay</span>
+                <p className="text-[11px] text-mutedForeground mt-2 max-w-[200px]">
+                  {prescriptionLogs.length > 0 
+                    ? "Nhấp vào nút bên dưới để mở nhật ký uống thuốc chi tiết và đánh dấu các liều đã dùng."
+                    : "Hiện tại bạn không có lịch hẹn dùng thuốc nào cho ngày hôm nay."
+                  }
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <Link to={ROUTES.prescriptions} className="block w-full">
+                <Button className="w-full" variant="outline">
+                  Xem nhật ký dùng thuốc
+                </Button>
+              </Link>
             </div>
           </Card>
         </section>

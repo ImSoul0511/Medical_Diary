@@ -28,6 +28,15 @@ export function LoginPage() {
   const login = useAuthStore((state) => state.login);
   const logout = useAuthStore((state) => state.logout);
   const requestPasswordReset = useAuthStore((state) => state.requestPasswordReset);
+  const clearError = useAuthStore((state) => state.clearError);
+
+  useEffect(() => {
+    clearError();
+    setError("");
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
 
   useEffect(() => {
     if (location.pathname === ROUTES.doctorLogin) {

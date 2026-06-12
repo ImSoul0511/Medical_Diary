@@ -6,7 +6,7 @@
 
 import { Bell, Menu, QrCode, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ROUTES } from "../constants/routes";
 import { roleLabels } from "../constants/roles";
 import { useNotifications } from "../hooks/useNotifications";
@@ -26,7 +26,36 @@ type TopbarProps = {
 
 export function Topbar({ role, title, description }: TopbarProps) {
   const { unreadCount, items, markAsRead, markAllLocalRead } = useNotifications();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+
+  const handleNotificationClick = (it: any) => {
+    if (!it.isRead) {
+      void markAsRead(it.id);
+    }
+    setOpen(false);
+
+    const type = it.type || "";
+    const title = (it.title || "").toLowerCase();
+    const msg = (it.message || "").toLowerCase();
+
+    if (
+      type === "access_request" ||
+      title.includes("truy cập") ||
+      msg.includes("truy cập") ||
+      title.includes("xin quyền")
+    ) {
+      navigate(ROUTES.consent);
+    } else if (
+      type === "prescription_reminder" ||
+      type === "prescription_new" ||
+      title.includes("thuốc") ||
+      msg.includes("thuốc") ||
+      title.includes("kê đơn")
+    ) {
+      navigate(ROUTES.prescriptions);
+    }
+  };
   const [qrOpen, setQrOpen] = useState(false);
   const [activeQrIndex, setActiveQrIndex] = useState(0);
   const setMobileSidebarOpen = useUiStore((state) => state.setMobileSidebarOpen);
@@ -195,11 +224,24 @@ export function Topbar({ role, title, description }: TopbarProps) {
               <ul className="max-h-64 overflow-auto space-y-2">
                 {items.length === 0 ? <li className="text-xs text-mutedForeground font-medium py-3 text-center">Không có thông báo</li> : null}
                 {items.map((it) => (
-                  <li key={it.id} className="p-2 rounded-xl bg-white/40 border border-white/30 hover:bg-white/70 transition-colors flex flex-col gap-1">
+                  <li
+                    key={it.id}
+                    className="p-2 rounded-xl bg-white/40 border border-white/30 hover:bg-white/70 transition-colors flex flex-col gap-1 cursor-pointer"
+                    onClick={() => handleNotificationClick(it)}
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <p className={`text-xs ${!it.isRead ? "font-bold text-secondary" : "text-mutedForeground font-medium"}`}>{it.title}</p>
                       {!it.isRead ? (
-                        <button className="text-[10px] text-primary font-bold hover:underline shrink-0" onClick={() => { void markAsRead(it.id); }} type="button">Đọc</button>
+                        <button
+                          className="text-[10px] text-primary font-bold hover:underline shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void markAsRead(it.id);
+                          }}
+                          type="button"
+                        >
+                          Đọc
+                        </button>
                       ) : null}
                     </div>
                     <p className="text-[11px] text-mutedForeground leading-relaxed">{it.message}</p>

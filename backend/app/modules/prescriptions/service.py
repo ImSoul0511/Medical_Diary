@@ -21,6 +21,7 @@ from app.modules.prescriptions.schemas import (
     PrescriptionLogUpdateRequest,
     PrescriptionResponse,
 )
+from app.shared.consent import check_consent
 from app.shared.schemas import MessageResponse
 
 logger = logging.getLogger("medical_diary")
@@ -441,3 +442,64 @@ class PrescriptionsService:
         await self.db.flush()
         logger.info(f"Processed {sent_count} medication reminders.")
         return MessageResponse(message=f"Đã xử lý {sent_count} cữ nhắc nhở uống thuốc.")
+
+    async def list_patient_prescriptions(
+        self,
+        doctor_id: UUID,
+        patient_id: UUID,
+    ) -> list[PrescriptionResponse]:
+        """Bác sĩ xem tất cả đơn thuốc của bệnh nhân nếu có consent scope 'prescriptions'."""
+        has_consent = await check_consent(
+            self.db,
+            str(doctor_id),
+            str(patient_id),
+            "prescriptions",
+        )
+        if not has_consent:
+            raise HTTPException(
+                status_code=403,
+                detail="Không có quyền truy cập đơn thuốc của bệnh nhân này.",
+            )
+
+        rx_stmt = (
+            select(Prescription)
+            .where(
+                Prescription.patient_id == patient_id,
+                Prescription.deleted_at.is_(None),
+            )
+            .order_by(Prescription.created_at.desc())
+        )
+        rx_result = await self.db.execute(rx_stmt)
+        prescriptions = rx_result.scalars().all()
+
+        responses = []
+        for rx in prescriptions:
+            items_stmt = select(PrescriptionItem).where(
+                PrescriptionItem.prescription_id == rx.id,
+                PrescriptionItem.deleted_at.is_(None),
+            )
+            items_result = await self.db.execute(items_stmt)
+            items = items_result.scalars().all()
+
+            responses.append(PrescriptionResponse(
+                id=rx.id,
+                patient_id=rx.patient_id,
+                doctor_id=rx.doctor_id,
+                notes=rx.notes,
+                items=[
+                    PrescriptionItemResponse(
+                        id=item.id,
+                        medication_name=item.medication_name,
+                        dosage=item.dosage,
+                        duration_days=item.duration_days,
+                        scheduled_times=[str(t) for t in item.scheduled_times] if item.scheduled_times else None,
+                        start_date=item.start_date,
+                        status=item.status,
+                    )
+                    for item in items
+                ],
+                created_at=rx.created_at,
+            ))
+
+        logger.info(f"Doctor {doctor_id} listed {len(responses)} prescriptions for patient {patient_id}")
+        return responses
