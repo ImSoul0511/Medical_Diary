@@ -6,6 +6,7 @@ export interface LoginRequest {
 export interface UserBrief {
   id: string;
   role: string;
+  email: string;
 }
 
 export interface LoginResponse {
@@ -17,6 +18,7 @@ export interface LoginResponse {
 export interface RefreshResponse {
   access_token: string;
   token_type: "bearer";
+  user: UserBrief;
 }
 
 export interface PasswordResetRequest {

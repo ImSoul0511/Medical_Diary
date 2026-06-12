@@ -87,6 +87,7 @@ async def refresh(
     return RefreshResponse(
         access_token=result.response.access_token,
         token_type=result.response.token_type,
+        user=result.response.user,
     )
 
 @router.post("/password-reset/request", response_model=MessageResponse, responses={400: _error_responses[400]})

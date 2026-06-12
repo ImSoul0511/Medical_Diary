@@ -178,8 +178,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
     refreshSessionPromise = (async () => {
       try {
         const response = await authApi.refresh();
+        const role = response.user.role as Role;
+        const user = toDisplayUser(response.user.id, role, response.user.email);
         set({
           accessToken: response.access_token,
+          currentUser: user,
+          selectedRole: role,
           isAuthenticated: true,
           isHydrated: true,
           error: null,
@@ -189,6 +193,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
         await resetAllDomainStores();
         set({
           accessToken: null,
+          currentUser: null,
           isAuthenticated: false,
           isHydrated: true,
           error: error?.message ?? "Session refresh failed.",

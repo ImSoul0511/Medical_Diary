@@ -19,6 +19,7 @@ class LoginRequest(BaseModel):
 class UserBrief(BaseModel):
     id: UUID
     role: str # user / doctor / admin 
+    email: EmailStr
 
 class LoginResponse(BaseModel):
     access_token: str
@@ -28,6 +29,7 @@ class LoginResponse(BaseModel):
 class RefreshResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    user: UserBrief
 
 class PasswordResetRequest(BaseModel):
     email: EmailStr

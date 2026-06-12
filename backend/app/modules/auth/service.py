@@ -59,7 +59,8 @@ class AuthService:
                     token_type="bearer",
                     user=UserBrief(
                         id=user_id,
-                        role=role
+                        role=role,
+                        email=data.email
                     )
                 ),
                 refresh_token=refresh_token,
@@ -92,6 +93,7 @@ class AuthService:
                     user=UserBrief(
                         id=user_id,
                         role=role,
+                        email=response.user.email,
                     )
                 ),
                 refresh_token=new_refresh_token,
