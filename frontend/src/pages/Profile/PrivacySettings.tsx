@@ -66,13 +66,98 @@ export function PrivacySettings() {
       showToast("Không thể xuất ảnh QR tại thời điểm này.");
       return;
     }
-    const link = document.createElement("a");
-    link.href = img.src;
-    link.download = `medical_diary_emergency_qr_${activeTokenIndex + 1}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast("Đã bắt đầu tải xuống ảnh QR.");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 360;
+    canvas.height = 480;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      showToast("Không thể khởi tạo canvas để xuất ảnh.");
+      return;
+    }
+
+    const qrImage = new Image();
+    qrImage.onload = () => {
+      // 1. Fill background (clean white)
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 360, 480);
+
+      // 2. Draw card frame
+      ctx.strokeStyle = "#3b82f6"; // Primary blue border to look professional
+      ctx.lineWidth = 5;
+      
+      // Draw rounded rectangle for the card frame
+      ctx.beginPath();
+      const r = 16;
+      const x = 12;
+      const y = 12;
+      const w = 336;
+      const h = 456;
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.stroke();
+
+      // 3. Draw Header Title "Medical Diary"
+      ctx.fillStyle = "#0f172a"; // Slate-900
+      ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("MEDICAL DIARY", 180, 50);
+
+      ctx.fillStyle = "#64748b"; // Slate-500
+      ctx.font = "500 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("Nhật ký Y tế", 180, 68);
+
+      // 4. Draw a subtle line under header
+      ctx.strokeStyle = "#f1f5f9"; // Slate-100
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(30, 85);
+      ctx.lineTo(330, 85);
+      ctx.stroke();
+
+      // 5. Draw the QR Image
+      ctx.drawImage(qrImage, 60, 105, 240, 240);
+
+      // 6. Draw Footer text
+      ctx.fillStyle = "#dc2626"; // Emergency Red
+      ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("QUÉT MÃ NÀY TRONG TRƯỜNG HỢP KHẨN CẤP", 180, 375);
+
+      ctx.fillStyle = "#ef4444"; // Red-500
+      ctx.font = "italic 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("Scan this if in emergency", 180, 395);
+
+      ctx.fillStyle = "#94a3b8"; // Slate-400
+      ctx.font = "10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("Hồ sơ sức khỏe cá nhân được bảo mật", 180, 435);
+
+      // 7. Trigger download
+      try {
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = `medical_diary_emergency_qr_${activeTokenIndex + 1}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast("Đã xuất ảnh QR thành công.");
+      } catch (err) {
+        showToast("Lỗi khi xuất ảnh từ canvas.");
+      }
+    };
+
+    qrImage.onerror = () => {
+      showToast("Không thể tải hình ảnh QR.");
+    };
+
+    qrImage.src = img.src;
   }
 
   useEffect(() => {
