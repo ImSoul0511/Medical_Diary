@@ -68,8 +68,8 @@ export function PrivacySettings() {
     }
 
     const canvas = document.createElement("canvas");
-    canvas.width = 360;
-    canvas.height = 480;
+    canvas.width = 400;
+    canvas.height = 540;
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       showToast("Không thể khởi tạo canvas để xuất ảnh.");
@@ -78,68 +78,118 @@ export function PrivacySettings() {
 
     const qrImage = new Image();
     qrImage.onload = () => {
-      // 1. Fill background (clean white)
+      // 1. Fill outer canvas background
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(0, 0, 400, 540);
+
+      // Helper function to draw rounded rectangles
+      const drawRoundedRect = (x: number, y: number, w: number, h: number, r: number) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      };
+
+      // 2. Draw card shadow
+      ctx.fillStyle = "rgba(15, 23, 42, 0.06)";
+      drawRoundedRect(18, 22, 364, 500, 20);
+      ctx.fill();
+
+      // 3. Draw card body
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, 360, 480);
+      drawRoundedRect(20, 20, 360, 500, 20);
+      ctx.fill();
 
-      // 2. Draw card frame
-      ctx.strokeStyle = "#3b82f6"; // Primary blue border to look professional
-      ctx.lineWidth = 5;
-      
-      // Draw rounded rectangle for the card frame
-      ctx.beginPath();
-      const r = 16;
-      const x = 12;
-      const y = 12;
-      const w = 336;
-      const h = 456;
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-      ctx.stroke();
-
-      // 3. Draw Header Title "Medical Diary"
-      ctx.fillStyle = "#0f172a"; // Slate-900
-      ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("MEDICAL DIARY", 180, 50);
-
-      ctx.fillStyle = "#64748b"; // Slate-500
-      ctx.font = "500 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText("Nhật ký Y tế", 180, 68);
-
-      // 4. Draw a subtle line under header
-      ctx.strokeStyle = "#f1f5f9"; // Slate-100
+      ctx.strokeStyle = "#e2e8f0";
       ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(30, 85);
-      ctx.lineTo(330, 85);
       ctx.stroke();
 
-      // 5. Draw the QR Image
-      ctx.drawImage(qrImage, 60, 105, 240, 240);
+      // 4. Draw Header Background (clipped to card's rounded corners)
+      ctx.save();
+      drawRoundedRect(20, 20, 360, 500, 20);
+      ctx.clip();
+      
+      const gradient = ctx.createLinearGradient(20, 20, 380, 100);
+      gradient.addColorStop(0, "#2563eb");
+      gradient.addColorStop(1, "#1d4ed8");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(20, 20, 360, 80);
+      ctx.restore();
 
-      // 6. Draw Footer text
-      ctx.fillStyle = "#dc2626"; // Emergency Red
-      ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText("QUÉT MÃ NÀY TRONG TRƯỜNG HỢP KHẨN CẤP", 180, 375);
+      // 5. Draw Medical Cross Icon inside Header
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(55, 60, 16, 0, Math.PI * 2);
+      ctx.fill();
 
-      ctx.fillStyle = "#ef4444"; // Red-500
-      ctx.font = "italic 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText("Scan this if in emergency", 180, 395);
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(52, 50, 6, 20); // vertical bar
+      ctx.fillRect(45, 57, 20, 6); // horizontal bar
 
-      ctx.fillStyle = "#94a3b8"; // Slate-400
+      // 6. Draw Header Texts
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 18px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("MEDICAL DIARY", 86, 54);
+
+      ctx.fillStyle = "#93c5fd";
+      ctx.font = "bold 9px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("HỒ SƠ Y TẾ KHẨN CẤP CÁ NHÂN", 86, 71);
+
+      // 7. Draw QR Wrapper Box (light slate backdrop)
+      ctx.fillStyle = "#f8fafc";
+      drawRoundedRect(70, 125, 260, 260, 16);
+      ctx.fill();
+      ctx.strokeStyle = "#f1f5f9";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 8. Draw the QR Image
+      ctx.drawImage(qrImage, 80, 135, 240, 240);
+
+      // 9. Draw Warning/Alert Box
+      ctx.fillStyle = "#fef2f2";
+      drawRoundedRect(40, 405, 320, 64, 12);
+      ctx.fill();
+      ctx.strokeStyle = "#fee2e2";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Warning exclamation mark circle
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(62, 437, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("!", 62, 442);
+
+      // Warning messages
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#991b1b";
+      ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("QUÉT MÃ NÀY TRONG TRƯỜNG HỢP KHẨN CẤP", 84, 431);
+
+      ctx.fillStyle = "#b91c1c";
+      ctx.font = "italic 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("Scan this QR code in case of emergency", 84, 449);
+
+      // 10. Security disclaimer text
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#94a3b8";
       ctx.font = "10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText("Hồ sơ sức khỏe cá nhân được bảo mật", 180, 435);
+      ctx.fillText("Thông tin y tế được mã hóa và bảo mật tuyệt đối", 200, 498);
 
-      // 7. Trigger download
+      // 11. Trigger download
       try {
         const link = document.createElement("a");
         link.href = canvas.toDataURL("image/png");
