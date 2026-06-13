@@ -158,7 +158,17 @@ async def register_doctor(
 
     # 2. Upload chứng chỉ lên Supabase Storage với tên file unique
     file_bytes = await certificate_file.read()
-    file_ext = certificate_file.filename.split('.')[-1] if '.' in certificate_file.filename else 'png'
+    
+    # Validation constraints (Remediation 8)
+    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+    if len(file_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File chứng chỉ quá lớn. Tối đa 5MB.")
+        
+    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "pdf"}
+    file_ext = certificate_file.filename.split('.')[-1].lower() if '.' in certificate_file.filename else ''
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Chỉ chấp nhận file định dạng PNG, JPG, JPEG hoặc PDF.")
+
     file_name = f"{uuid.uuid4()}.{file_ext}"
     file_path = f"certificates/{file_name}"
     
@@ -220,7 +230,24 @@ async def forgot_password(
     data: ForgotPasswordRequest,
     service: AuthService = Depends(_get_service)
 ) -> MessageResponse:
-    origin = request.headers.get("origin") or "http://localhost:5173"
+    origin = request.headers.get("origin")
+    
+    # Whitelist check for allowed origins (Remediation 7)
+    allowed_origins = {
+        "https://medical-diary-gamma.vercel.app",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    }
+    from app.core.config import settings
+    if settings.cors_origin_list:
+        for allowed in settings.cors_origin_list:
+            allowed_origins.add(allowed.strip().rstrip("/"))
+            
+    cleaned_origin = origin.strip().rstrip("/") if origin else ""
+    if cleaned_origin not in allowed_origins:
+        # Fallback to trusted production deployment
+        origin = "https://medical-diary-gamma.vercel.app"
+        
     redirect_url = f"{origin}/reset-password"
     return await service.forgot_password(data.email, redirect_url)
 

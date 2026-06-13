@@ -51,7 +51,7 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_regex(self) -> Optional[str]:
-        if not self.CORS_ORIGIN_REGEX:
+        if not self.DEBUG or not self.CORS_ORIGIN_REGEX:
             return None
         value = self.CORS_ORIGIN_REGEX.strip()
         return value or None

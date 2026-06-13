@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, EmailStr
 from uuid import UUID 
 from datetime import datetime, date
-from typing import List
+from typing import List, Literal
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -39,7 +39,7 @@ class RegisterRequest(BaseModel):
     phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=100)
-    gender: str
+    gender: Literal['male', 'female']
     date_of_birth: date
 
     model_config = {
@@ -60,7 +60,7 @@ class RegisterDoctorRequest(BaseModel):
     phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=100)
-    gender: str
+    gender: Literal['male', 'female']
     date_of_birth: date 
     cccd: str = Field(..., min_length=12, max_length=12, pattern=r"^\d{12}$")
     license_number: str 

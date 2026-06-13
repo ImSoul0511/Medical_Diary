@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
 
-from app.modules.users.models import Profile
+from app.modules.users.models import Profile, Doctor
 
 from app.modules.users.schemas import (
     UserProfileResponse,
@@ -90,31 +90,20 @@ class UsersService:
             if profile is None:
                 raise HTTPException(status_code=404, detail="Không tìm thấy hồ sơ người dùng.")
 
-            # Update doctor-specific fields if present
+            # Update doctor-specific fields if present using secure ORM attributes (Remediation 5)
             if "specialty" in update_data or "hospital" in update_data:
                 specialty_val = update_data.pop("specialty", None)
                 hospital_val = update_data.pop("hospital", None)
                 
                 doc_check = await self.db.execute(
-                    text("SELECT 1 FROM doctors WHERE id = :user_id"),
-                    {"user_id": user_id}
+                    select(Doctor).where(Doctor.id == user_id)
                 )
-                if doc_check.scalar():
-                    doc_updates = {}
+                doctor = doc_check.scalar_one_or_none()
+                if doctor:
                     if specialty_val is not None:
-                        doc_updates["specialty"] = specialty_val
+                        doctor.specialty = specialty_val
                     if hospital_val is not None:
-                        doc_updates["hospital"] = hospital_val
-                        
-                    if doc_updates:
-                        set_clauses = [f"{k} = :{k}" for k in doc_updates.keys()]
-                        query_str = f"""
-                            UPDATE doctors
-                            SET {', '.join(set_clauses)}
-                            WHERE id = :user_id
-                        """
-                        doc_updates["user_id"] = user_id
-                        await self.db.execute(text(query_str), doc_updates)
+                        doctor.hospital = hospital_val
 
             from sqlalchemy import func
             if "phone_number" in update_data:
@@ -131,8 +120,18 @@ class UsersService:
                 else:
                     profile.cccd_encrypted = None
 
+            # Prevent mass assignment of arbitrary fields (Remediation 4)
+            ALLOWED_PROFILE_FIELDS = {
+                "full_name",
+                "gender",
+                "date_of_birth",
+                "blood_type",
+                "allergies",
+                "emergency_contact",
+            }
             for key, value in update_data.items():
-                setattr(profile, key, value)
+                if key in ALLOWED_PROFILE_FIELDS:
+                    setattr(profile, key, value)
 
             await self.db.flush()
 

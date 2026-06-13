@@ -16,14 +16,10 @@ class RLSMiddleware(BaseHTTPMiddleware):
         
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.replace("Bearer ", "")
-            # DEBUG: In ra để kiểm tra
-            # print(f"DEBUG RLS: Header found: {auth_header[:20]}...")
-            # print(f"DEBUG RLS: Token extracted: {token[:20]}...")
             
             try:
                 # Xử lý key
                 raw_key = settings.JWT_SECRET.strip()
-                # print(f"DEBUG RLS: Raw Key Start: |{raw_key[:20]}|")
                 
                 # Loại bỏ dấu nháy đơn/kép bao quanh nếu có
                 if (raw_key.startswith("'") and raw_key.endswith("'")) or (raw_key.startswith('"') and raw_key.endswith('"')):
@@ -36,9 +32,7 @@ class RLSMiddleware(BaseHTTPMiddleware):
                         key = key_data["keys"][0]
                     elif isinstance(key_data, dict):
                         key = key_data
-                    # print(f"DEBUG RLS: Key parsed as JSON/JWK. KID: {key.get('kid') if isinstance(key, dict) else 'N/A'}")
                 except Exception as json_err:
-                    # print(f"DEBUG RLS: Key is NOT JSON, using as raw string. Error: {str(json_err)}")
                     pass 
 
                 # Giải mã JWT
