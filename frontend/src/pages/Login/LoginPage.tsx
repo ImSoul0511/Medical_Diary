@@ -231,10 +231,11 @@ export function LoginPage() {
         <Modal
           open={isForgotOpen}
           title="Khôi phục mật khẩu"
-          description="Nhập email của bạn để nhận liên kết đặt lại mật khẩu"
+          description={forgotSuccess ? undefined : "Nhập email của bạn để nhận liên kết đặt lại mật khẩu"}
           onClose={() => setIsForgotOpen(false)}
           cancelLabel="Đóng"
           size="sm"
+          showFooter={!forgotSuccess}
         >
           {forgotSuccess ? (
             <div className="rounded-card border border-green-100 bg-successBg p-4 text-green-900 text-sm">

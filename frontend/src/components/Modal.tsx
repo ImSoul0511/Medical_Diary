@@ -14,6 +14,7 @@ type ModalProps = {
   onConfirm?: () => void;
   onClose: () => void;
   size?: "sm" | "md" | "lg" | "xl";
+  showFooter?: boolean;
 };
 
 const sizeClasses = {
@@ -35,13 +36,14 @@ export function Modal({
   onConfirm,
   onClose,
   size = "md",
+  showFooter = true,
 }: ModalProps) {
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 transition-all duration-300">
       <div className={`w-full ${sizeClasses[size]} rounded-modal border border-border/60 bg-white shadow-soft-xl animate-scale-in overflow-hidden`}>
-        <div className="flex items-start justify-between border-b border-border/40 p-6">
+        <div className="flex items-start justify-between border-b border-border/40 py-4 px-6">
           <div>
             <h2 className="text-lg font-bold text-secondary tracking-tight">{title}</h2>
             {description ? (
@@ -57,17 +59,19 @@ export function Modal({
             <X className="h-4 w-4" />
           </button>
         </div>
-        {children ? <div className="p-6">{children}</div> : null}
-        <div className="flex justify-end gap-2 border-t border-border/40 p-5 bg-white/40">
-          <Button onClick={onClose} variant="outline">
-            {cancelLabel}
-          </Button>
-          {onConfirm ? (
-            <Button disabled={confirmDisabled} onClick={onConfirm} variant={confirmVariant}>
-              {confirmLabel}
+        {children ? <div className="pt-4 pb-5 px-6">{children}</div> : null}
+        {showFooter ? (
+          <div className="flex justify-end gap-2 border-t border-border/40 py-3.5 px-6 bg-white/40">
+            <Button onClick={onClose} variant="outline">
+              {cancelLabel}
             </Button>
-          ) : null}
-        </div>
+            {onConfirm ? (
+              <Button disabled={confirmDisabled} onClick={onConfirm} variant={confirmVariant}>
+                {confirmLabel}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );
