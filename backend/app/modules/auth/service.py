@@ -104,10 +104,10 @@ class AuthService:
             logger.warning(f"Refresh session failed: {e}")
             raise HTTPException(status_code=401, detail="Session expired")
 
-    async def request_password_reset(self, data: PasswordResetRequest) -> MessageResponse:
+    async def request_password_reset(self, data: PasswordResetRequest, redirect_url: str) -> MessageResponse:
         try:
-            self.supabase.auth.reset_password_for_email(data.email)
-            logger.info(f"Password reset email requested for: {data.email}")
+            self.supabase.auth.reset_password_for_email(data.email, {"redirect_to": redirect_url})
+            logger.info(f"Password reset email requested for: {data.email} with redirect: {redirect_url}")
             return MessageResponse(
                 message="Nếu email tồn tại, hệ thống đã gửi hướng dẫn đặt lại mật khẩu."
             )

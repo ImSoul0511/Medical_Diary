@@ -24,7 +24,7 @@ export const ROUTES = {
   profile: "/ho-so-benh-an",
   consent: "/quan-ly-cap-quyen",
   privateSettings: "/cai-dat-rieng-tu",
-  privacy: "/quan-ly-truy-cap-cong-khai",
+  publicSetting: "/quan-ly-truy-cap-cong-khai",
   emergency: "/cap-cuu/demo-token",
   doctorSearch: "/bac-si/tim-kiem",
   doctorPatientManagement: "/bac-si/quan-ly-benh-nhan",
@@ -57,7 +57,7 @@ export const patientNavigation: NavigationItem[] = [
   { icon: FileText, label: "Hồ sơ bệnh án", path: ROUTES.profile },
   { icon: Shield, label: "Quản lý cấp quyền", path: ROUTES.consent },
   { icon: Settings, label: "Cài đặt riêng tư", path: ROUTES.privateSettings },
-  { icon: Settings, label: "Quản lý truy cập công khai", path: ROUTES.privacy },
+  { icon: Settings, label: "Truy cập công khai", path: ROUTES.publicSetting },
 ];
 
 export const doctorNavigation: NavigationItem[] = [

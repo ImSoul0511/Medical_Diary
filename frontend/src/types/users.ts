@@ -18,6 +18,8 @@ export type UserProfile = {
   phoneNumber: string | null;
   cccd: string | null;
   privacySettings: PrivacySettings;
+  specialty?: string | null;
+  hospital?: string | null;
 };
 
 export type UserProfileForm = {
@@ -30,6 +32,8 @@ export type UserProfileForm = {
   emergencyContact: string | "";
   phoneNumber: string | "";
   cccd: string | "";
+  specialty?: string;
+  hospital?: string;
 }
 
 export type PrivateProfileForm = {
@@ -39,6 +43,8 @@ export type PrivateProfileForm = {
   dateOfBirth: string | "";
   phoneNumber: string | "";
   cccd: string | "";
+  specialty?: string;
+  hospital?: string;
 };
 export type AccessHistoryItem = {
   id: string;

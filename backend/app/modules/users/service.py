@@ -30,9 +30,11 @@ class UsersService:
                 SELECT p.id, au.email, p.full_name, p.gender, p.date_of_birth, p.blood_type, p.allergies,
                        p.emergency_contact, p.privacy_settings,
                        pgp_sym_decrypt(p.phone_encrypted::bytea, current_setting('app.encryption_key')) AS phone_number,
-                       pgp_sym_decrypt(p.cccd_encrypted::bytea, current_setting('app.encryption_key')) AS cccd
+                       pgp_sym_decrypt(p.cccd_encrypted::bytea, current_setting('app.encryption_key')) AS cccd,
+                       d.specialty, d.hospital
                 FROM profiles p
                 LEFT JOIN auth.users au ON au.id = p.id
+                LEFT JOIN doctors d ON d.id = p.id
                 WHERE p.id = :user_id AND p.deleted_at IS NULL
             """)
             result = await self.db.execute(query, {"user_id": user_id})
@@ -53,7 +55,9 @@ class UsersService:
                 emergency_contact=row.emergency_contact,
                 privacy_settings=row.privacy_settings,
                 phone_number=row.phone_number,
-                cccd=row.cccd
+                cccd=row.cccd,
+                specialty=row.specialty,
+                hospital=row.hospital
             )
         except HTTPException:
             raise
@@ -85,6 +89,32 @@ class UsersService:
 
             if profile is None:
                 raise HTTPException(status_code=404, detail="Không tìm thấy hồ sơ người dùng.")
+
+            # Update doctor-specific fields if present
+            if "specialty" in update_data or "hospital" in update_data:
+                specialty_val = update_data.pop("specialty", None)
+                hospital_val = update_data.pop("hospital", None)
+                
+                doc_check = await self.db.execute(
+                    text("SELECT 1 FROM doctors WHERE id = :user_id"),
+                    {"user_id": user_id}
+                )
+                if doc_check.scalar():
+                    doc_updates = {}
+                    if specialty_val is not None:
+                        doc_updates["specialty"] = specialty_val
+                    if hospital_val is not None:
+                        doc_updates["hospital"] = hospital_val
+                        
+                    if doc_updates:
+                        set_clauses = [f"{k} = :{k}" for k in doc_updates.keys()]
+                        query_str = f"""
+                            UPDATE doctors
+                            SET {', '.join(set_clauses)}
+                            WHERE id = :user_id
+                        """
+                        doc_updates["user_id"] = user_id
+                        await self.db.execute(text(query_str), doc_updates)
 
             from sqlalchemy import func
             if "phone_number" in update_data:
@@ -132,6 +162,8 @@ class UsersService:
             date_of_birth=data.date_of_birth,
             phone_number=data.phone_number,
             cccd=data.cccd,
+            specialty=data.specialty,
+            hospital=data.hospital,
         )
         logger.info(f"Private profile update verified for user: {user_id}")
         return await self.update_profile(user_id, payload)

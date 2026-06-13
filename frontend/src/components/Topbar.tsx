@@ -18,6 +18,54 @@ import { formatDate } from "../utils/date";
 import type { Role } from "../types/auth";
 import { Badge } from "./Badge";
 
+const scopeMap: Record<string, string> = {
+  blood_type: "Nhóm máu",
+  allergies: "Dị ứng",
+  emergency_contact: "Liên hệ khẩn cấp",
+  medical_records: "Hồ sơ bệnh án",
+  prescriptions: "Đơn thuốc",
+  diaries: "Nhật ký triệu chứng",
+  heart_rate: "Nhịp tim",
+  step_count: "Bước chân",
+  respiratory_rate: "Nhịp thở",
+  manual_health_records: "Chỉ số nhập tay",
+};
+
+function translateNotification(title: string, message: string) {
+  let translatedTitle = title;
+  if (title === "Yeu cau truy cap moi") {
+    translatedTitle = "Yêu cầu truy cập mới";
+  }
+
+  let translatedMessage = message;
+
+  const match = message.match(/^Bac si (.*) muon truy cap ho so cua ban\. Pham vi: (.*)\.$/);
+  if (match) {
+    const doctorName = match[1];
+    const scopesStr = match[2];
+    
+    const translatedScopes = scopesStr
+      .split(", ")
+      .map(s => {
+        const cleanScope = s.trim();
+        return scopeMap[cleanScope] || cleanScope;
+      })
+      .join(", ");
+
+    translatedMessage = `Bác sĩ ${doctorName} muốn truy cập hồ sơ của bạn. Phạm vi: ${translatedScopes}.`;
+  } else {
+    Object.entries(scopeMap).forEach(([enScope, viScope]) => {
+      translatedMessage = translatedMessage.replace(new RegExp(enScope, "g"), viScope);
+    });
+    translatedMessage = translatedMessage
+      .replace("Bac si", "Bác sĩ")
+      .replace("muon truy cap ho so cua ban", "muốn truy cập hồ sơ của bạn")
+      .replace("Pham vi", "Phạm vi");
+  }
+
+  return { title: translatedTitle, message: translatedMessage };
+}
+
 type TopbarProps = {
   role: Role;
   title: string;
@@ -98,6 +146,7 @@ export function Topbar({ role, title, description }: TopbarProps) {
               type="button"
               onClick={() => {
                 setQrOpen((v) => !v);
+                setOpen(false);
                 setActiveQrIndex(0);
               }}
             >
@@ -126,7 +175,7 @@ export function Topbar({ role, title, description }: TopbarProps) {
                       <div className="text-center py-4">
                         <p className="text-xs text-mutedForeground mb-3 font-medium">Chưa có mã QR hoạt động</p>
                         <Link
-                          to={ROUTES.privacy}
+                          to={ROUTES.publicSetting}
                           className="inline-flex h-9 items-center justify-center rounded-xl bg-gradient-to-r from-primary to-primaryDark px-4 text-xs font-semibold text-white transition hover:shadow-soft"
                           onClick={() => setQrOpen(false)}
                         >
@@ -186,7 +235,7 @@ export function Topbar({ role, title, description }: TopbarProps) {
                       </div>
 
                       <Link
-                        to={ROUTES.privacy}
+                        to={ROUTES.publicSetting}
                         className="mt-2 w-full text-center text-xs text-primary hover:underline font-bold"
                         onClick={() => setQrOpen(false)}
                       >
@@ -203,9 +252,12 @@ export function Topbar({ role, title, description }: TopbarProps) {
         <div className="relative">
           <button
             aria-label="Thông báo"
-            className="relative rounded-xl border border-border/50 bg-white/60 backdrop-blur-sm p-2 text-mutedForeground shadow-soft-sm hover:bg-white hover:shadow-soft transition-all duration-200"
+            className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/50 bg-white/60 backdrop-blur-sm text-mutedForeground shadow-soft-sm hover:bg-white hover:shadow-soft transition-all duration-200"
             type="button"
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => {
+              setOpen((v) => !v);
+              setQrOpen(false);
+            }}
           >
             <Bell className="h-4 w-4" />
             {unreadCount > 0 ? (
@@ -216,43 +268,49 @@ export function Topbar({ role, title, description }: TopbarProps) {
           </button>
 
           {open ? (
-            <div className="absolute right-0 mt-2.5 w-80 rounded-card border border-white/60 bg-white/80 backdrop-blur-glass p-4 shadow-soft-lg z-50 animate-scale-in">
+            <div className="absolute right-0 mt-2.5 w-80 rounded-card border border-border bg-white p-4 shadow-soft-lg z-50 animate-scale-in">
               <div className="mb-2.5 flex items-center justify-between border-b border-border/40 pb-2">
                 <strong className="text-sm font-bold text-secondary">Thông báo</strong>
                 <button className="text-xs text-primary font-bold hover:underline" onClick={() => { markAllLocalRead(); }} type="button">Đánh dấu tất cả</button>
               </div>
               <ul className="max-h-64 overflow-auto space-y-2">
                 {items.length === 0 ? <li className="text-xs text-mutedForeground font-medium py-3 text-center">Không có thông báo</li> : null}
-                {items.map((it) => (
-                  <li
-                    key={it.id}
-                    className="p-2 rounded-xl bg-white/40 border border-white/30 hover:bg-white/70 transition-colors flex flex-col gap-1 cursor-pointer"
-                    onClick={() => handleNotificationClick(it)}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className={`text-xs ${!it.isRead ? "font-bold text-secondary" : "text-mutedForeground font-medium"}`}>{it.title}</p>
-                      {!it.isRead ? (
-                        <button
-                          className="text-[10px] text-primary font-bold hover:underline shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void markAsRead(it.id);
-                          }}
-                          type="button"
-                        >
-                          Đọc
-                        </button>
-                      ) : null}
-                    </div>
-                    <p className="text-[11px] text-mutedForeground leading-relaxed">{it.message}</p>
-                  </li>
-                ))}
+                {items.map((it) => {
+                  const { title: tTitle, message: tMsg } = translateNotification(it.title || "", it.message || "");
+                  return (
+                    <li
+                      key={it.id}
+                      className="p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100/80 transition-colors flex flex-col gap-1.5 cursor-pointer"
+                      onClick={() => handleNotificationClick(it)}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={`text-xs ${!it.isRead ? "font-bold text-secondary" : "text-mutedForeground font-medium"}`}>{tTitle}</p>
+                        {!it.isRead ? (
+                          <button
+                            className="text-[10px] text-primary font-bold hover:underline shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void markAsRead(it.id);
+                            }}
+                            type="button"
+                          >
+                            Đọc
+                          </button>
+                        ) : null}
+                      </div>
+                      <p className="text-[11px] text-mutedForeground leading-relaxed">{tMsg}</p>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ) : null}
         </div>
         <div className="hidden items-center gap-2 pl-2 md:flex">
-          <Badge tone={role === "admin" ? "admin" : role === "doctor" ? "success" : "info"}>
+          <Badge
+            tone={role === "admin" ? "admin" : role === "doctor" ? "success" : "info"}
+            className="inline-flex h-9 items-center justify-center rounded-xl px-3.5 text-xs font-semibold leading-none shadow-soft-sm"
+          >
             {currentUser?.fullName ?? roleLabels[role]}
           </Badge>
         </div>

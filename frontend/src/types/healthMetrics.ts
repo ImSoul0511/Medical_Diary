@@ -28,7 +28,7 @@ export type HealthMetricChartPoint = {
     respiratoryRate: number | null;
 }
 
-export type MetricType = "blood_pressure" | "blood_glucose" | "spo2" | "body_temperature" | "weight";
+export type MetricType = "blood_pressure" | "blood_glucose" | "spo2" | "body_temperature" | "weight" | "height";
 
 // Alias for compatibility
 export type ManualMetricType = MetricType;

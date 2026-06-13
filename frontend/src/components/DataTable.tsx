@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { EmptyState } from "./EmptyState";
+import { cn } from "../utils/cn";
 
 export type DataTableColumn<T> = {
   key: string;
@@ -36,7 +37,7 @@ export function DataTable<T>({
           <thead className="bg-muted text-xs uppercase tracking-wide text-mutedForeground">
             <tr>
               {columns.map((column) => (
-                <th className="px-4 py-3 font-semibold" key={column.key}>
+                <th className={cn("px-4 py-3 font-semibold", column.className)} key={column.key}>
                   {column.header}
                 </th>
               ))}

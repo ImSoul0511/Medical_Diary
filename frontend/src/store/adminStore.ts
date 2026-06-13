@@ -59,7 +59,11 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     try {
       await adminApi.verifyDoctor(doctorId, mapDoctorVerifyFormToDto(form));
       set((state) => ({
-        pendingDoctors: state.pendingDoctors.filter((doctor) => doctor.id !== doctorId),
+        pendingDoctors: state.pendingDoctors.map((doctor) =>
+          doctor.id === doctorId
+            ? { ...doctor, status: form.action }
+            : doctor
+        ),
         verifyingDoctorId: null,
       }));
     } catch (error) {

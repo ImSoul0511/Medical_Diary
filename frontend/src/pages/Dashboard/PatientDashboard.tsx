@@ -78,7 +78,7 @@ export function PatientDashboard() {
               </h2>
             </div>
             <Link
-              to={ROUTES.privacy}
+              to={ROUTES.publicSetting}
               className="group flex flex-col items-center justify-center rounded-2xl border border-white/20 bg-white/10 p-3.5 hover:bg-white/20 hover:scale-[1.02] shadow-soft-sm transition-all duration-300"
               title="Quản lý mã QR cấp cứu"
             >
@@ -123,29 +123,27 @@ export function PatientDashboard() {
             </div>
           </Card>
 
-          <Card padding="lg" className="flex flex-col justify-between">
-            <div>
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-secondary">Thuốc hôm nay</h2>
-                  <p className="text-sm text-mutedForeground">Theo dõi và cập nhật lịch dùng thuốc.</p>
-                </div>
-                <Pill className="h-5 w-5 text-warning" />
+          <Card padding="lg" className="flex flex-col h-full">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-secondary">Thuốc hôm nay</h2>
+                <p className="text-sm text-mutedForeground">Theo dõi và cập nhật lịch dùng thuốc.</p>
               </div>
-
-              <div className="mt-6 flex flex-col items-center justify-center text-center p-4 bg-slate-50/80 rounded-xl border border-slate-100/50">
-                <span className="text-3xl font-black text-primary">{medicationProgress}</span>
-                <span className="text-xs font-semibold text-secondary mt-1">Liều thuốc đã uống hôm nay</span>
-                <p className="text-[11px] text-mutedForeground mt-2 max-w-[200px]">
-                  {prescriptionLogs.length > 0 
-                    ? "Nhấp vào nút bên dưới để mở nhật ký uống thuốc chi tiết và đánh dấu các liều đã dùng."
-                    : "Hiện tại bạn không có lịch hẹn dùng thuốc nào cho ngày hôm nay."
-                  }
-                </p>
-              </div>
+              <Pill className="h-5 w-5 text-warning" />
             </div>
 
-            <div className="mt-6">
+            <div className="mt-4 flex-1 flex flex-col items-center justify-center text-center py-8 px-4 bg-slate-50/80 rounded-xl border border-slate-100/50">
+              <span className="text-3.5xl font-black text-primary leading-none">{medicationProgress}</span>
+              <span className="text-xs font-semibold text-secondary mt-2">Liều thuốc đã uống hôm nay</span>
+              <p className="text-[11px] text-mutedForeground mt-2.5 max-w-[210px] leading-relaxed">
+                {prescriptionLogs.length > 0 
+                  ? "Nhấp vào nút bên dưới để mở nhật ký uống thuốc chi tiết và đánh dấu các liều đã dùng."
+                  : "Hiện tại bạn không có lịch hẹn dùng thuốc nào cho ngày hôm nay."
+                }
+              </p>
+            </div>
+
+            <div className="mt-4">
               <Link to={ROUTES.prescriptions} className="block w-full">
                 <Button className="w-full" variant="outline">
                   Xem nhật ký dùng thuốc

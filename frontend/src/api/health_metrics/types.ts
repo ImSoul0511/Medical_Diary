@@ -26,7 +26,8 @@ export type MetricType =
   | "blood_glucose"
   | "spo2"
   | "body_temperature"
-  | "weight";
+  | "weight"
+  | "height";
 
 export interface BloodPressureMetrics {
   systolic: number;

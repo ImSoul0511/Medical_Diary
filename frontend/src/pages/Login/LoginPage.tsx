@@ -46,6 +46,30 @@ export function LoginPage() {
     }
   }, [location.pathname, setSelectedRole]);
 
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const queryParams = new URLSearchParams(window.location.search);
+    
+    const authError = hashParams.get("error_description") || queryParams.get("error_description");
+    if (authError) {
+      const decodedError = decodeURIComponent(authError).replace(/\+/g, " ");
+      let friendlyError = decodedError;
+      if (decodedError.includes("Email link is invalid or has expired")) {
+        friendlyError = "Liên kết xác nhận email không hợp lệ hoặc đã hết hạn. Vui lòng gửi yêu cầu mới.";
+      }
+      setError(friendlyError);
+      window.history.replaceState(null, "", window.location.pathname);
+      return;
+    }
+
+    const isRecovery = hashParams.get("type") === "recovery" || queryParams.get("type") === "recovery";
+    const hasToken = hashParams.has("access_token") || queryParams.has("access_token");
+
+    if (hasToken || isRecovery) {
+      navigate(`${ROUTES.resetPassword}${window.location.search}${window.location.hash}`, { replace: true });
+    }
+  }, [navigate]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -210,6 +234,7 @@ export function LoginPage() {
           description="Nhập email của bạn để nhận liên kết đặt lại mật khẩu"
           onClose={() => setIsForgotOpen(false)}
           cancelLabel="Đóng"
+          size="sm"
         >
           {forgotSuccess ? (
             <div className="rounded-card border border-green-100 bg-successBg p-4 text-green-900 text-sm">

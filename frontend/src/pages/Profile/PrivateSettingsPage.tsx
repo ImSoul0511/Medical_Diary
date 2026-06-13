@@ -39,6 +39,8 @@ export function PrivateSettingsPage() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [cccd, setCccd] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [hospital, setHospital] = useState("");
   const [sessionPassword, setSessionPassword] = useState("");
   const [sessionModal, setSessionModal] = useState<
     { mode: "selected"; session: AuthSession } | { mode: "all" } | null
@@ -111,6 +113,8 @@ export function PrivateSettingsPage() {
         dateOfBirth,
         phoneNumber,
         cccd,
+        specialty: role === "doctor" ? specialty : undefined,
+        hospital: role === "doctor" ? hospital : undefined,
       });
       showToast("Đã cập nhật thông tin riêng tư.");
       setIsEditing(false);
@@ -134,6 +138,8 @@ export function PrivateSettingsPage() {
     setDateOfBirth(profile.dateOfBirth ?? "");
     setPhoneNumber(profile.phoneNumber ?? "");
     setCccd(profile.cccd ?? "");
+    setSpecialty(profile.specialty ?? "");
+    setHospital(profile.hospital ?? "");
   }, [profile]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -260,6 +266,26 @@ export function PrivateSettingsPage() {
               pattern="[0-9]{12}"
               value={cccd}
             />
+            {role === "doctor" ? (
+              <>
+                <FormInput
+                  disabled={!isEditing}
+                  className="disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  label="Chuyên khoa"
+                  onChange={(event) => setSpecialty(event.target.value)}
+                  required
+                  value={specialty}
+                />
+                <FormInput
+                  disabled={!isEditing}
+                  className="disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  label="Bệnh viện"
+                  onChange={(event) => setHospital(event.target.value)}
+                  required
+                  value={hospital}
+                />
+              </>
+            ) : null}
             {profileError ? <p className="text-sm text-emergency sm:col-span-2">{profileError}</p> : null}
             <div className="flex flex-wrap gap-2 sm:col-span-2">
               {isEditing ? (
@@ -277,6 +303,8 @@ export function PrivateSettingsPage() {
                         setDateOfBirth(profile.dateOfBirth ?? "");
                         setPhoneNumber(profile.phoneNumber ?? "");
                         setCccd(profile.cccd ?? "");
+                        setSpecialty(profile.specialty ?? "");
+                        setHospital(profile.hospital ?? "");
                       }
                     }}
                     type="button"
@@ -305,27 +333,6 @@ export function PrivateSettingsPage() {
               </Button>
             </div>
           </form>
-        </Card>
-
-        <Card padding="lg">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-card bg-muted p-4">
-              <p className="text-xs text-mutedForeground">Giới tính</p>
-              <p className="mt-1 font-semibold text-secondary">{formatGender(profile?.gender)}</p>
-            </div>
-            <div className="rounded-card bg-muted p-4">
-              <p className="text-xs text-mutedForeground">Ngày sinh</p>
-              <p className="mt-1 font-semibold text-secondary">{profile?.dateOfBirth ? formatDate(profile.dateOfBirth) : "Chưa cập nhật"}</p>
-            </div>
-            <div className="rounded-card bg-muted p-4">
-              <p className="text-xs text-mutedForeground">Số điện thoại</p>
-              <p className="mt-1 font-semibold text-secondary">{profile?.phoneNumber ?? "Chưa cập nhật"}</p>
-            </div>
-            <div className="rounded-card bg-muted p-4">
-              <p className="text-xs text-mutedForeground">CCCD</p>
-              <p className="mt-1 font-semibold text-secondary">{profile?.cccd ?? "Chưa cập nhật"}</p>
-            </div>
-          </div>
         </Card>
 
         <section className="space-y-4">

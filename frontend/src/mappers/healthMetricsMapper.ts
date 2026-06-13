@@ -64,7 +64,8 @@ function asMetricType(value: unknown): MetricType {
     value === "blood_glucose" ||
     value === "spo2" ||
     value === "body_temperature" ||
-    value === "weight"
+    value === "weight" ||
+    value === "height"
   ) {
     return value;
   }
@@ -125,6 +126,11 @@ export function mapManualRecordFormToDto(
         value: parseNumber(form.value),
         height: parseOptionalPayloadNumber(form.height),
       });
+      break;
+    case "height":
+      metrics = {
+        value: parseNumber(form.value),
+      };
       break;
     default:
       metrics = {};

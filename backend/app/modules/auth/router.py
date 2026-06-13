@@ -97,7 +97,9 @@ async def request_password_reset(
     data: PasswordResetRequest,
     service: AuthService = Depends(_get_service)
 ) -> MessageResponse:
-    return await service.request_password_reset(data)
+    origin = request.headers.get("origin") or "http://localhost:5173"
+    redirect_url = f"{origin}/reset-password"
+    return await service.request_password_reset(data, redirect_url)
 
 @router.post("/register", response_model=MessageResponse, responses={400: _error_responses[400]})
 @limiter.limit("3/minute")

@@ -45,7 +45,7 @@ export function AppRouter() {
       <Route element={<ProfilePage />} path={ROUTES.profile} />
       <Route element={<ConsentManagement />} path={ROUTES.consent} />
       <Route element={<PrivateSettingsPage />} path={ROUTES.privateSettings} />
-      <Route element={<PrivacySettings />} path={ROUTES.privacy} />
+      <Route element={<PrivacySettings />} path={ROUTES.publicSetting} />
       <Route element={<EmergencyPublicView />} path="/cap-cuu/:token" />
       <Route element={<DoctorSearch />} path={ROUTES.doctorSearch} />
       <Route element={<DoctorPatientManagement />} path={ROUTES.doctorPatientManagement} />

@@ -40,6 +40,7 @@ type HealthMetricsStore = {
   loadManualMetrics: (filters?: ManualHealthRecordFilters) => Promise<ManualHealthRecord[]>;
   loadPatientManualMetrics: (patientId: string, filters?: ManualHealthRecordFilters) => Promise<ManualHealthRecord[]>;
   createManualMetric: (form: ManualHealthRecordForm) => Promise<ManualHealthRecord>;
+  deleteManualMetric: (id: string) => Promise<void>;
   setFilters: (filters: HealthMetricFilters) => void;
   clear: () => void;
 };
@@ -171,6 +172,20 @@ export const useHealthMetricsStore = create<HealthMetricsStore>((set, get) => ({
     } catch (error) {
       const message = getErrorMessage(error, "Failed to create manual health record.");
       set({ isCreatingManual: false, error: message });
+      throw error;
+    }
+  },
+  deleteManualMetric: async (id) => {
+    set({ isLoadingManual: true, error: null });
+    try {
+      await healthMetricsApi.deleteManual(id);
+      set((state) => ({
+        manualItems: state.manualItems.filter((item) => item.id !== id),
+        isLoadingManual: false,
+      }));
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to delete manual health record.");
+      set({ isLoadingManual: false, error: message });
       throw error;
     }
   },

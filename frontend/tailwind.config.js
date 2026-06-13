@@ -45,7 +45,7 @@ export default {
         sidebar: "0px",
       },
       fontFamily: {
-        sans: ["Inter", "Roboto", "system-ui", "sans-serif"],
+        sans: ["Inter", "Be Vietnam Pro", "Roboto", "system-ui", "sans-serif"],
       },
       boxShadow: {
         "soft-sm": "0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03)",

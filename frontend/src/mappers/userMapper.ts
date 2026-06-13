@@ -25,6 +25,8 @@ export type UserProfileDto = {
     show_allergies?: boolean;
     show_emergency_contact?: boolean;
   };
+  specialty?: string | null;
+  hospital?: string | null;
 };
 
 export function mapUserProfileDto(dto: unknown): UserProfile {
@@ -47,6 +49,8 @@ export function mapUserProfileDto(dto: unknown): UserProfile {
       showAllergies: privacy.show_allergies === true,
       showEmergencyContact: privacy.show_emergency_contact === true,
     },
+    specialty: asNullableString(source.specialty),
+    hospital: asNullableString(source.hospital),
   };
 }
 
@@ -59,6 +63,8 @@ export function mapPrivateProfileFormToDto(form: PrivateProfileForm): PrivatePro
       date_of_birth: emptyToNull(form.dateOfBirth),
       phone_number: emptyToNull(form.phoneNumber),
       cccd: emptyToNull(form.cccd),
+      specialty: emptyToNull(form.specialty),
+      hospital: emptyToNull(form.hospital),
     }),
   };
 }
@@ -74,6 +80,8 @@ export function mapUserProfileFormToDto(form: UserProfileForm) {
     emergency_contact: emptyToNull(form.emergencyContact),
     phone_number: emptyToNull(form.phoneNumber),
     cccd: emptyToNull(form.cccd),
+    specialty: emptyToNull(form.specialty),
+    hospital: emptyToNull(form.hospital),
   });
 }
 

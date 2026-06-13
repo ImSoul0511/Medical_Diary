@@ -355,3 +355,23 @@ class HealthMetricsService:
         for row in rows:
             responses.append(await self._to_manual_response(row))
         return responses
+
+    async def delete_manual(self, user_id: UUID, record_id: UUID) -> None:
+        """Xóa (soft delete) bản ghi chỉ số sức khỏe nhập tay."""
+        stmt = (
+            select(ManualHealthRecord)
+            .where(
+                ManualHealthRecord.id == record_id,
+                ManualHealthRecord.user_id == user_id,
+                ManualHealthRecord.deleted_at.is_(None),
+            )
+        )
+        result = await self.db.execute(stmt)
+        record = result.scalar_one_or_none()
+        if not record:
+            raise HTTPException(status_code=404, detail="Không tìm thấy bản ghi chỉ số sức khỏe nhập tay.")
+
+        record.deleted_at = datetime.utcnow()
+        await self.db.flush()
+        logger.info(f"Manual health record {record_id} soft deleted by user {user_id}")
+

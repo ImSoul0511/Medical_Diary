@@ -40,4 +40,8 @@ export const healthMetricsApi = {
     );
     return response.data;
   },
+
+  deleteManual: async (id: string): Promise<void> => {
+    await apiClient.delete(`/health-metrics/manual/${id}`);
+  },
 };

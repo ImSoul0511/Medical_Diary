@@ -95,7 +95,7 @@ export function PrivacySettings() {
   const currentToken = activeTokens[activeTokenIndex];
 
   return (
-    <AppShell role="user" title="Quản lý truy cập công khai">
+    <AppShell role="user" title="Truy cập công khai">
       <div className="grid gap-6 xl:grid-cols-[350px_1fr]">
         {/* Cột trái: Hồ sơ cấp cứu chung */}
         <div className="space-y-6">
@@ -331,7 +331,7 @@ export function PrivacySettings() {
                             <Eye className="h-3.5 w-3.5" />
                             Xem trang công khai
                           </a>
-                          
+
                           <button
                             onClick={() => {
                               const bypassUrl = `${window.location.origin}/cap-cuu/${currentToken.token}`;

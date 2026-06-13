@@ -245,12 +245,26 @@ class DoctorService:
         await self.db.flush()
 
         # Tao thong bao trong DB de Supabase Realtime phat song tuc thi toi benh nhan
-        scope_desc = ", ".join(data.requested_scope)
+        scope_map = {
+            "blood_type": "Nhóm máu",
+            "allergies": "Dị ứng",
+            "emergency_contact": "Liên hệ khẩn cấp",
+            "medical_records": "Hồ sơ bệnh án",
+            "prescriptions": "Đơn thuốc",
+            "diaries": "Nhật ký triệu chứng",
+            "heart_rate": "Nhịp tim",
+            "step_count": "Bước chân",
+            "respiratory_rate": "Nhịp thở",
+            "manual_health_records": "Chỉ số nhập tay",
+        }
+        translated_scopes = [scope_map.get(s, s) for s in data.requested_scope]
+        scope_desc = ", ".join(translated_scopes)
+
         notif = Notification(
             user_id=data.patient_id,
             type="access_request",
-            title="Yeu cau truy cap moi",
-            message=f"Bac si {doctor_name} muon truy cap ho so cua ban. Pham vi: {scope_desc}.",
+            title="Yêu cầu truy cập mới",
+            message=f"Bác sĩ {doctor_name} muốn truy cập hồ sơ của bạn. Phạm vi: {scope_desc}.",
             reference_id=consent_request.id,
             is_read=False,
         )
@@ -259,15 +273,15 @@ class DoctorService:
 
         # Gui email thong bao bo sung (luon gui bat ke user online hay offline)
         if email:
-            subject = "[Medical Diary] Yeu cau truy cap ho so suc khoe moi"
+            subject = "[Medical Diary] Yêu cầu truy cập hồ sơ sức khỏe mới"
             body = (
-                f"Xin chao,\n\n"
-                f"Bac si {doctor_name} vua gui mot yeu cau truy cap vao ho so suc khoe cua ban.\n"
-                f"- Pham vi yeu cau: {scope_desc}\n"
-                f"- Ly do: {data.reason or 'Khong duoc cung cap'}\n\n"
-                f"Vui long dang nhap vao ung dung Medical Diary de phan hoi (Phe duyet hoac Tu choi) yeu cau nay.\n\n"
-                f"Tran trong,\n"
-                f"Doi ngu Medical Diary."
+                f"Xin chào,\n\n"
+                f"Bác sĩ {doctor_name} vừa gửi một yêu cầu truy cập vào hồ sơ sức khỏe của bạn.\n"
+                f"- Phạm vi yêu cầu: {scope_desc}\n"
+                f"- Lý do: {data.reason or 'Không được cung cấp'}\n\n"
+                f"Vui lòng đăng nhập vào ứng dụng Medical Diary để phản hồi (Phê duyệt hoặc Từ chối) yêu cầu này.\n\n"
+                f"Trân trọng,\n"
+                f"Đội ngũ Medical Diary."
             )
             background_tasks.add_task(send_email_sync, email, subject, body)
 

@@ -124,21 +124,6 @@ export function Sidebar({ role }: SidebarProps) {
       </nav>
 
       <div className="border-t border-white/5 p-3">
-        <div className="mb-2 flex items-center gap-3 rounded-2xl bg-white/8 p-3 shadow-soft-sm border border-white/5">
-          <div
-            className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold shadow-soft-sm",
-              currentRoleTheme === "admin" && "bg-adminPrimary",
-              currentRoleTheme === "doctor" && "bg-accent",
-            )}
-          >
-            {currentUser?.initials ?? "MD"}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold">{currentUser?.fullName ?? "Khách"}</p>
-            <p className="truncate text-[10px] text-slate-400 font-medium">{currentUser?.subtitle ?? roleLabels[role]}</p>
-          </div>
-        </div>
         <Button
           className="w-full justify-start text-slate-300 hover:text-white"
           onClick={() => void handleLogout()}

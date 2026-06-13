@@ -53,6 +53,8 @@ function profileToForm(profile: UserProfile): UserProfileForm {
     emergencyContact: profile.emergencyContact ?? "",
     phoneNumber: profile.phoneNumber ?? "",
     cccd: profile.cccd ?? "",
+    specialty: profile.specialty ?? "",
+    hospital: profile.hospital ?? "",
   };
 }
 

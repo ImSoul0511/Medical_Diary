@@ -13,6 +13,14 @@ type ModalProps = {
   confirmDisabled?: boolean;
   onConfirm?: () => void;
   onClose: () => void;
+  size?: "sm" | "md" | "lg" | "xl";
+};
+
+const sizeClasses = {
+  sm: "max-w-md",
+  md: "max-w-lg",
+  lg: "max-w-2xl",
+  xl: "max-w-4xl",
 };
 
 export function Modal({
@@ -26,12 +34,13 @@ export function Modal({
   confirmDisabled = false,
   onConfirm,
   onClose,
+  size = "md",
 }: ModalProps) {
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 transition-all duration-300">
-      <div className="w-full max-w-lg rounded-modal border border-border/60 bg-white shadow-soft-xl animate-scale-in overflow-hidden">
+      <div className={`w-full ${sizeClasses[size]} rounded-modal border border-border/60 bg-white shadow-soft-xl animate-scale-in overflow-hidden`}>
         <div className="flex items-start justify-between border-b border-border/40 p-6">
           <div>
             <h2 className="text-lg font-bold text-secondary tracking-tight">{title}</h2>

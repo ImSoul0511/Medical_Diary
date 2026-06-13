@@ -6,6 +6,7 @@ type FormInputProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
   helperText?: string;
   icon?: ReactNode;
+  labelClassName?: string;
 };
 
 export function FormInput({
@@ -15,13 +16,14 @@ export function FormInput({
   icon,
   className,
   id,
+  labelClassName,
   ...props
 }: FormInputProps) {
   const inputId = id ?? props.name ?? label;
 
   return (
     <label className="block" htmlFor={inputId}>
-      <span className="mb-1.5 block text-sm font-medium text-secondary">{label}</span>
+      <span className={cn("mb-1.5 block text-sm font-medium text-secondary", labelClassName)}>{label}</span>
       <span className="relative block">
         {icon ? (
           <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-mutedForeground transition-colors">

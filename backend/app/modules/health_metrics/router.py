@@ -114,3 +114,19 @@ async def list_manual_metrics(
     if role != "user":
         raise HTTPException(status_code=400, detail="Bác sĩ phải cung cấp patient_id.")
     return await service.list_own_manual(UUID(current_user["sub"]), metric_type, start, end)
+
+
+@router.delete(
+    "/manual/{record_id}",
+    status_code=204,
+    responses={401: _error_responses[401], 403: _error_responses[403], 404: _error_responses[404]},
+    summary="Xóa bản ghi chỉ số sức khỏe nhập tay",
+    description="Xóa (soft delete) bản ghi chỉ số sức khỏe nhập tay của user.",
+)
+async def delete_manual_metric(
+    record_id: UUID,
+    service: HealthMetricsService = Depends(_get_service),
+    current_user: dict = Depends(require_role(["user"])),
+):
+    await service.delete_manual(UUID(current_user["sub"]), record_id)
+

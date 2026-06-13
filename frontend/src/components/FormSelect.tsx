@@ -18,6 +18,7 @@ type FormSelectProps = {
   className?: string;
   id?: string;
   disabled?: boolean;
+  labelClassName?: string;
 };
 
 export function FormSelect({
@@ -31,6 +32,7 @@ export function FormSelect({
   className,
   id,
   disabled,
+  labelClassName,
 }: FormSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,7 +52,7 @@ export function FormSelect({
 
   return (
     <div className="relative block" ref={containerRef} id={selectId}>
-      <span className="mb-1.5 block text-sm font-medium text-secondary">{label}</span>
+      <span className={cn("mb-1.5 block text-sm font-medium text-secondary", labelClassName)}>{label}</span>
       <button
         type="button"
         disabled={disabled}

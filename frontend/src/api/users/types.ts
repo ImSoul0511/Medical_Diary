@@ -12,6 +12,8 @@ export interface UserProfileResponse {
     show_allergies: boolean;
     show_emergency_contact: boolean;
   };
+  specialty?: string | null;
+  hospital?: string | null;
 }
 
 export interface UserProfileUpdateRequest {
@@ -21,6 +23,8 @@ export interface UserProfileUpdateRequest {
   blood_type?: string | null;
   allergies?: string | null;
   emergency_contact?: string | null;
+  specialty?: string | null;
+  hospital?: string | null;
 }
 
 export interface PrivateProfileUpdateRequest {
@@ -30,6 +34,8 @@ export interface PrivateProfileUpdateRequest {
   date_of_birth?: string | null;
   phone_number?: string | null;
   cccd?: string | null;
+  specialty?: string | null;
+  hospital?: string | null;
 }
 
 export interface PrivacyUpdateRequest {

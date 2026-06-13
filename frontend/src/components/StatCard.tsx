@@ -35,7 +35,7 @@ export function StatCard({
     <Card>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium text-mutedForeground">{label}</p>
+          <p className="text-sm font-semibold text-secondary">{label}</p>
           <div className="mt-1.5 flex items-baseline gap-1">
             <span className="text-2xl font-bold text-secondary tracking-tight">{value}</span>
             {unit ? <span className="text-xs text-mutedForeground font-medium">{unit}</span> : null}

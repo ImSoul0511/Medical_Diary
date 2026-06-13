@@ -15,6 +15,8 @@ class UserProfileResponse(BaseModel):
     privacy_settings: dict
     phone_number: Optional[str] = None
     cccd: Optional[str] = None
+    specialty: Optional[str] = None
+    hospital: Optional[str] = None
 
 class UserProfileUpdateRequest(BaseModel):
     password: Optional[str] = Field(None)
@@ -26,6 +28,8 @@ class UserProfileUpdateRequest(BaseModel):
     emergency_contact: Optional[str] = Field(None, max_length=20)
     phone_number: Optional[str] = Field(None, max_length=20)
     cccd: Optional[str] = Field(None, min_length=12, max_length=12, pattern=r"^\d{12}$")
+    specialty: Optional[str] = Field(None, min_length=2, max_length=100)
+    hospital: Optional[str] = Field(None, min_length=2, max_length=200)
 
     model_config = {
         "json_schema_extra": {
@@ -47,6 +51,8 @@ class PrivateProfileUpdateRequest(BaseModel):
     date_of_birth: Optional[date] = None
     phone_number: Optional[str] = Field(None, max_length=20)
     cccd: Optional[str] = Field(None, min_length=12, max_length=12, pattern=r"^\d{12}$")
+    specialty: Optional[str] = Field(None, min_length=2, max_length=100)
+    hospital: Optional[str] = Field(None, min_length=2, max_length=200)
 
 class PrivacyUpdateRequest(BaseModel):
     show_blood_type: Optional[bool] = None

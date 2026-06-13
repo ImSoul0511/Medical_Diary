@@ -17,6 +17,7 @@ export function AdminDoctorApproval() {
   const rows = useAdminStore((state) => state.pendingDoctors);
   const loadPendingDoctors = useAdminStore((state) => state.loadPendingDoctors);
   const verifyDoctor = useAdminStore((state) => state.verifyDoctor);
+  const verifyingDoctorId = useAdminStore((state) => state.verifyingDoctorId);
   const error = useAdminStore((state) => state.error);
 
   useEffect(() => {
@@ -47,12 +48,28 @@ export function AdminDoctorApproval() {
       header: "Thao tác",
       render: (row) => (
         <div className="flex gap-2">
-          <Button onClick={() => updateStatus(row.id, "approved")} size="sm" variant="success">
-            <Check className="h-4 w-4" />
-          </Button>
-          <Button onClick={() => updateStatus(row.id, "rejected")} size="sm" variant="danger">
-            <X className="h-4 w-4" />
-          </Button>
+          {isPending(row.status) ? (
+            <>
+              <Button
+                onClick={() => updateStatus(row.id, "approved")}
+                size="sm"
+                variant="success"
+                disabled={verifyingDoctorId === row.id}
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => updateStatus(row.id, "rejected")}
+                size="sm"
+                variant="danger"
+                disabled={verifyingDoctorId === row.id}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <span className="text-xs text-mutedForeground italic font-medium">Đã xử lý</span>
+          )}
         </div>
       ),
     },

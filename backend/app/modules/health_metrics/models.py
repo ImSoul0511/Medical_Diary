@@ -71,7 +71,7 @@ class ManualHealthRecord(Base):
     metric_type = Column(
         String(30),
         CheckConstraint(
-            "metric_type IN ('blood_pressure', 'blood_glucose', 'spo2', 'body_temperature', 'weight')",
+            "metric_type IN ('blood_pressure', 'blood_glucose', 'spo2', 'body_temperature', 'weight', 'height')",
             name="ck_mhr_metric_type",
         ),
         nullable=False,

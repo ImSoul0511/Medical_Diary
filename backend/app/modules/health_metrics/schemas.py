@@ -40,6 +40,7 @@ class MetricType(str, Enum):
     spo2 = "spo2"
     body_temperature = "body_temperature"
     weight = "weight"
+    height = "height"
 
 
 class BloodPressureMetrics(BaseModel):
@@ -66,12 +67,17 @@ class WeightMetrics(BaseModel):
     height: Optional[float] = Field(None, ge=30.0, le=300.0)
 
 
+class HeightMetrics(BaseModel):
+    value: float = Field(..., ge=30.0, le=300.0)
+
+
 METRICS_SCHEMA_MAP: dict[MetricType, type[BaseModel]] = {
     MetricType.blood_pressure: BloodPressureMetrics,
     MetricType.blood_glucose: BloodGlucoseMetrics,
     MetricType.spo2: SpO2Metrics,
     MetricType.body_temperature: BodyTemperatureMetrics,
     MetricType.weight: WeightMetrics,
+    MetricType.height: HeightMetrics,
 }
 
 

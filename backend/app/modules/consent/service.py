@@ -74,6 +74,23 @@ class ConsentService:
         consent_request.status = data.action
         consent_request.responded_at = now
 
+        # Get patient name
+        patient_stmt = select(Profile.full_name).where(Profile.id == patient_id)
+        patient_res = await self.db.execute(patient_stmt)
+        patient_name = patient_res.scalar() or "Bệnh nhân"
+
+        from app.modules.notifications.models import Notification
+        action_text = "được chấp nhận" if data.action == "approved" else "bị từ chối"
+        notif = Notification(
+            user_id=consent_request.doctor_id,
+            type="access_request",
+            title="Kết quả yêu cầu truy cập",
+            message=f"Yêu cầu truy cập hồ sơ sức khỏe gửi tới bệnh nhân {patient_name} đã {action_text}.",
+            reference_id=consent_request.id,
+            is_read=False,
+        )
+        self.db.add(notif)
+
         if data.action == "rejected":
             await self.db.flush()
             return MessageResponse(message="Access request rejected successfully")
@@ -144,6 +161,22 @@ class ConsentService:
 
         permission.status = "revoked"
         permission.revoked_at = datetime.now(timezone.utc)
+
+        # Get patient name
+        patient_stmt = select(Profile.full_name).where(Profile.id == patient_id)
+        patient_res = await self.db.execute(patient_stmt)
+        patient_name = patient_res.scalar() or "Bệnh nhân"
+
+        from app.modules.notifications.models import Notification
+        notif = Notification(
+            user_id=doctor_id,
+            type="access_request",
+            title="Quyền truy cập bị thu hồi",
+            message=f"Bệnh nhân {patient_name} đã thu hồi quyền truy cập hồ sơ sức khỏe của họ.",
+            reference_id=permission.id,
+            is_read=False,
+        )
+        self.db.add(notif)
 
         await self.db.flush()
         return MessageResponse(message="Access revoked successfully")
