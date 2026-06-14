@@ -13,7 +13,8 @@ from app.modules.users.schemas import (
     PrivateProfileUpdateRequest,
     PrivacyUpdateRequest,
     AccessHistoryItem,
-    DoctorPublicResponse
+    DoctorPublicResponse,
+    DependentResponse
 )
 from app.modules.users.service import UsersService
 
@@ -77,3 +78,10 @@ async def search_doctors(
     service: UsersService = Depends(_get_service)
 ) -> List[DoctorPublicResponse]:
     return await service.search_doctors(name, specialty)
+
+@router.get("/dependents", response_model=List[DependentResponse], responses={401: _error_responses[401]})
+async def get_my_dependents(
+    current_user: dict = Depends(require_role(["user"])),
+    service: UsersService = Depends(_get_service)
+) -> List[DependentResponse]:
+    return await service.get_dependents(current_user["sub"])

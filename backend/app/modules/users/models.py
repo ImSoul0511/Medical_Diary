@@ -109,3 +109,26 @@ class Doctor(Base):
 
     # Relationships
     profile = relationship("Profile", foreign_keys=[id], back_populates="doctor_profile")
+
+
+class FamilyMember(Base):
+    """Bảng family_members — Quản lý mối quan hệ người giám hộ và người phụ thuộc (trẻ em)."""
+
+    __tablename__ = "family_members"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    guardian_id = Column(
+        UUID(as_uuid=True), 
+        ForeignKey("profiles.id", ondelete="CASCADE"), 
+        nullable=False,
+        comment="Người giám hộ (cha/mẹ)"
+    )
+    dependent_id = Column(
+        UUID(as_uuid=True), 
+        ForeignKey("profiles.id", ondelete="CASCADE"), 
+        nullable=False, 
+        unique=True,
+        comment="Người phụ thuộc (trẻ em)"
+    )
+    relationship = Column(String(50), nullable=False, comment="Ví dụ: cha, mẹ, người giám hộ")
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))

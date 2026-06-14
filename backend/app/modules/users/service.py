@@ -15,7 +15,8 @@ from app.modules.users.schemas import (
     PrivateProfileUpdateRequest,
     PrivacyUpdateRequest,
     AccessHistoryItem,
-    DoctorPublicResponse
+    DoctorPublicResponse,
+    DependentResponse
 )
 
 logger = logging.getLogger("medical_diary")
@@ -422,3 +423,30 @@ class UsersService:
         except Exception as e:
             logger.error(f"Failed to search doctors: {e}")
             raise HTTPException(status_code=500, detail="Lỗi khi tìm kiếm bác sĩ.")
+
+    async def get_dependents(self, user_id: str) -> list[DependentResponse]:
+        try:
+            query = text("""
+                SELECT p.id, p.full_name, p.gender, p.date_of_birth, f.relationship
+                FROM family_members f
+                JOIN profiles p ON p.id = f.dependent_id
+                WHERE f.guardian_id = :user_id AND p.deleted_at IS NULL
+            """)
+            result = await self.db.execute(query, {"user_id": user_id})
+            rows = result.fetchall()
+
+            dependents = []
+            for row in rows:
+                dependents.append(DependentResponse(
+                    id=row.id,
+                    full_name=row.full_name,
+                    gender=row.gender,
+                    date_of_birth=row.date_of_birth,
+                    relationship=row.relationship
+                ))
+            
+            logger.info(f"Retrieved {len(dependents)} dependents for user: {user_id}")
+            return dependents
+        except Exception as e:
+            logger.error(f"Failed to get dependents for {user_id}: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi khi lấy danh sách người phụ thuộc.")

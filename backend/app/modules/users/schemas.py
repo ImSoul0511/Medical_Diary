@@ -81,3 +81,10 @@ class DoctorPublicResponse(BaseModel):
     full_name: str
     specialty: str
     hospital: str
+
+class DependentResponse(BaseModel):
+    id: UUID
+    full_name: str
+    gender: str
+    date_of_birth: Optional[date]
+    relationship: str
