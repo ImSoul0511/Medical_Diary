@@ -223,11 +223,27 @@ class EmergencyService:
             if token.show_blood_type and self._profile_allows_public_field(profile, "show_blood_type")
             else None
         )
-        allergies = (
-            profile.allergies
-            if token.show_allergies and self._profile_allows_public_field(profile, "show_allergies")
-            else None
-        )
+        
+        allergies = None
+        if token.show_allergies and self._profile_allows_public_field(profile, "show_allergies"):
+            from app.modules.allergies.models import Allergy
+            al_stmt = select(Allergy.allergen, Allergy.severity).where(Allergy.user_id == profile.id, Allergy.deleted_at.is_(None))
+            al_res = await self.db.execute(al_stmt)
+            al_list = al_res.all()
+            if al_list:
+                allergies = ", ".join([f"{a.allergen} ({a.severity})" if a.severity else a.allergen for a in al_list])
+            elif profile.allergies: # fallback
+                allergies = profile.allergies
+                
+        vaccines = None
+        if self._profile_allows_public_field(profile, "show_vaccines"):
+            from app.modules.vaccines.models import Vaccine
+            vac_stmt = select(Vaccine.vaccine_name, Vaccine.dose_number).where(Vaccine.user_id == profile.id, Vaccine.deleted_at.is_(None))
+            vac_res = await self.db.execute(vac_stmt)
+            vac_list = vac_res.all()
+            if vac_list:
+                vaccines = ", ".join([f"{v.vaccine_name} (Mũi {v.dose_number})" if v.dose_number else v.vaccine_name for v in vac_list])
+
         emergency_contact = (
             profile.emergency_contact
             if token.show_emergency_contact
@@ -248,6 +264,7 @@ class EmergencyService:
             full_name=profile.full_name,
             blood_type=blood_type,
             allergies=allergies,
+            vaccines=vaccines,
             emergency_contact=emergency_contact,
         )
 

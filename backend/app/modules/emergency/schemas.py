@@ -75,6 +75,7 @@ class EmergencyAccessResponse(BaseModel):
     full_name: str
     blood_type: Optional[str] = None
     allergies: Optional[str] = None
+    vaccines: Optional[str] = None
     emergency_contact: Optional[str] = None
 
 
