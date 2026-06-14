@@ -23,7 +23,7 @@ from app.core.database import Base
 
 # ─── Import TẤT CẢ models để Alembic nhận diện ─────────────────────────────
 # Mỗi khi thêm module mới có models.py, phải import ở đây.
-from app.modules.users.models import Profile, Doctor  # noqa: F401
+from app.modules.users.models import Profile, Doctor, FamilyMember  # noqa: F401
 from app.modules.consent.models import ConsentRequest, ConsentPermission  # noqa: F401
 from app.modules.health_metrics.models import HealthMetric  # noqa: F401
 from app.modules.diaries.models import Diary  # noqa: F401
@@ -32,6 +32,8 @@ from app.modules.prescriptions.models import Prescription, PrescriptionItem, Pre
 from app.modules.emergency.models import EmergencyToken, EmergencyAccessLog  # noqa: F401
 from app.modules.admin.models import DataAccessLog  # noqa: F401
 from app.modules.notifications.models import Notification  # noqa: F401
+from app.modules.allergies.models import Allergy  # noqa: F401
+from app.modules.vaccines.models import Vaccine  # noqa: F401
 
 # ─── Alembic Config ──────────────────────────────────────────────────────────
 config = context.config
