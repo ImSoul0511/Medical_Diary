@@ -27,6 +27,8 @@ from app.modules.users.router import router as users_router
 from app.modules.admin.router import router as admin_router
 from app.modules.emergency.router import router as emergency_router
 from app.modules.notifications.router import router as notifications_router
+from app.modules.allergies.router import router as allergies_router
+from app.modules.vaccines.router import router as vaccines_router
 
 # Cấu hình Logging
 logging.basicConfig(
@@ -99,3 +101,5 @@ app.include_router(users_router)
 app.include_router(admin_router)
 app.include_router(emergency_router)
 app.include_router(notifications_router)
+app.include_router(allergies_router)
+app.include_router(vaccines_router)
