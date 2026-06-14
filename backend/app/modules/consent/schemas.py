@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 ConsentScope = Literal[
     "blood_type",
     "allergies",
+    "vaccines",
     "emergency_contact",
     "medical_records",
     "prescriptions",
@@ -31,6 +32,7 @@ HEALTH_METRIC_SCOPES: tuple[ConsentScope, ...] = (
 PROFILE_SCOPES: tuple[ConsentScope, ...] = (
     "blood_type",
     "allergies",
+    "vaccines",
     "emergency_contact",
 )
 
@@ -74,6 +76,7 @@ class AccessRequestActionRequest(BaseModel):
                 "approved_scope": [
                     "blood_type",
                     "allergies",
+                    "vaccines",
                     "emergency_contact",
                     "medical_records",
                     "prescriptions",
