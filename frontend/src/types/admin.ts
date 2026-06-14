@@ -5,6 +5,7 @@ export type DoctorApproval = {
   fullName: string;
   email: string;
   specialty: string;
+  hospital: string | null;
   licenseNumber: string;
   certificateUrl: string | null;
   registeredAt: string;
@@ -12,7 +13,7 @@ export type DoctorApproval = {
 }
 
 export type DoctorVerifyForm = {
-  action: "approved" | "rejected";
+  action: "approved" | "rejected" | "pending_verification";
   note: string;
 }
 

@@ -7,8 +7,8 @@
 
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ROUTES } from "../constants/routes";
-import { AdminAuditLogs } from "../pages/Dashboard/AdminAuditLogs";
 import { AdminDoctorApproval } from "../pages/Dashboard/AdminDoctorApproval";
+import { AdminVerifiedDoctors } from "../pages/Dashboard/AdminVerifiedDoctors";
 import { DoctorPatientDetail } from "../pages/Dashboard/DoctorPatientDetail";
 import { DoctorPatientManagement } from "../pages/Dashboard/DoctorPatientManagement";
 import { DoctorPrescription } from "../pages/Dashboard/DoctorPrescription";
@@ -53,7 +53,7 @@ export function AppRouter() {
       <Route element={<PublicPatientProfile />} path="/bac-si/benh-nhan/:patientId/cong-khai" />
       <Route element={<DoctorPrescription />} path="/bac-si/tao-don-thuoc/:patientId" />
       <Route element={<AdminDoctorApproval />} path={ROUTES.adminDoctorApproval} />
-      <Route element={<AdminAuditLogs />} path={ROUTES.adminAuditLogs} />
+      <Route element={<AdminVerifiedDoctors />} path={ROUTES.adminVerifiedDoctors} />
       <Route element={<Navigate replace to={ROUTES.login} />} path="*" />
     </Routes>
   );

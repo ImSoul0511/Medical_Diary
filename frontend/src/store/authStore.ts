@@ -212,17 +212,17 @@ export const useAuthStore = create<AuthStore>((set) => ({
     } finally {
       refreshSessionPromise = null;
       await resetAllDomainStores();
-      set({
+      set((state) => ({
         currentUser: null,
         isAuthenticated: false,
-        selectedRole: "user",
+        selectedRole: state.selectedRole,
         accessToken: null,
         isHydrated: true,
         sessions: [],
         sessionError: null,
         isLoadingSessions: false,
         sessionMutationLoading: false,
-      });
+      }));
     }
   },
   loadSessions: async () => {
@@ -265,17 +265,17 @@ export const useAuthStore = create<AuthStore>((set) => ({
       }
       refreshSessionPromise = null;
       await resetAllDomainStores();
-      set({
+      set((state) => ({
         currentUser: null,
         isAuthenticated: false,
-        selectedRole: "user",
+        selectedRole: state.selectedRole,
         accessToken: null,
         isHydrated: true,
         sessions: [],
         isLoadingSessions: false,
         sessionMutationLoading: false,
         sessionError: null,
-      });
+      }));
     } catch (error) {
       const message = getErrorMessage(error, "Failed to revoke all sessions.");
       set({ sessionMutationLoading: false, sessionError: message });

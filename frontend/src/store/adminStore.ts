@@ -13,6 +13,7 @@ import { getErrorMessage } from "./storeUtils";
 
 type AdminStore = {
   pendingDoctors: DoctorApproval[];
+  doctors: DoctorApproval[];
   auditLogs: AuditLog[];
   auditFilters: AuditLogFilters;
   pagination: PaginationState;
@@ -21,6 +22,7 @@ type AdminStore = {
   verifyingDoctorId: string | null;
   error: string | null;
   loadPendingDoctors: () => Promise<DoctorApproval[]>;
+  loadDoctors: (status?: string) => Promise<DoctorApproval[]>;
   verifyDoctor: (doctorId: string, form: DoctorVerifyForm) => Promise<void>;
   loadAuditLogs: (filters?: Partial<AuditLogFilters>) => Promise<AuditLog[]>;
   setAuditFilters: (filters: Partial<AuditLogFilters>) => void;
@@ -35,6 +37,7 @@ const defaultAuditFilters: AuditLogFilters = {
 
 export const useAdminStore = create<AdminStore>((set, get) => ({
   pendingDoctors: [],
+  doctors: [],
   auditLogs: [],
   auditFilters: defaultAuditFilters,
   pagination: { page: 1, limit: 20, total: 0 },
@@ -54,18 +57,45 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
       throw error;
     }
   },
+  loadDoctors: async (status?: string) => {
+    set({ isLoadingDoctors: true, error: null });
+    try {
+      const doctors = (await adminApi.listDoctors(status)).map(mapDoctorApprovalDto);
+      const pendingDoctors = doctors.filter(
+        (doctor) => doctor.status === "pending_verification" || doctor.status === "pending",
+      );
+      set({ doctors, pendingDoctors, isLoadingDoctors: false });
+      return doctors;
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to load doctors.");
+      set({ isLoadingDoctors: false, error: message });
+      throw error;
+    }
+  },
   verifyDoctor: async (doctorId, form) => {
     set({ verifyingDoctorId: doctorId, error: null });
     try {
       await adminApi.verifyDoctor(doctorId, mapDoctorVerifyFormToDto(form));
-      set((state) => ({
-        pendingDoctors: state.pendingDoctors.map((doctor) =>
+      set((state) => {
+        const doctors = state.doctors.map((doctor) =>
           doctor.id === doctorId
             ? { ...doctor, status: form.action }
             : doctor
-        ),
-        verifyingDoctorId: null,
-      }));
+        );
+        const pendingDoctorsSource = doctors.length > 0 ? doctors : state.pendingDoctors.map((doctor) =>
+          doctor.id === doctorId
+            ? { ...doctor, status: form.action }
+            : doctor
+        );
+
+        return {
+          doctors,
+          pendingDoctors: pendingDoctorsSource.filter(
+            (doctor) => doctor.status === "pending_verification" || doctor.status === "pending",
+          ),
+          verifyingDoctorId: null,
+        };
+      });
     } catch (error) {
       const message = getErrorMessage(error, "Failed to verify doctor.");
       set({ verifyingDoctorId: null, error: message });
@@ -97,6 +127,7 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
   clear: () =>
     set({
       pendingDoctors: [],
+      doctors: [],
       auditLogs: [],
       auditFilters: defaultAuditFilters,
       pagination: { page: 1, limit: 20, total: 0 },

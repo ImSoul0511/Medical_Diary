@@ -19,6 +19,7 @@ export function mapDoctorApprovalDto(dto: unknown): DoctorApproval {
     fullName: asString(source.full_name),
     email: asString(source.email),
     specialty: asString(source.specialty),
+    hospital: asNullableString(source.hospital),
     licenseNumber: asString(source.license_number),
     certificateUrl: asNullableString(source.certificate_url),
     registeredAt: asString(source.registered_at),

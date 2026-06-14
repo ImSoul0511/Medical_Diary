@@ -36,6 +36,9 @@ const metricTypeOptions = [
   { value: "body_temperature", label: "Thân nhiệt" },
   { value: "weight", label: "Cân nặng" },
   { value: "height", label: "Chiều cao" },
+  { value: "heart_rate", label: "Nhịp tim" },
+  { value: "respiratory_rate", label: "Nhịp thở" },
+  { value: "step_count", label: "Số bước chân" },
 ];
 
 const mealContextOptions = [
@@ -163,6 +166,8 @@ export function HealthMetricsPage() {
   const manualItems = useHealthMetricsStore((state) => state.manualItems);
   const loadMine = useHealthMetricsStore((state) => state.loadMine);
   const loadManualMetrics = useHealthMetricsStore((state) => state.loadManualMetrics);
+  const createMetric = useHealthMetricsStore((state) => state.createMetric);
+  const isCreating = useHealthMetricsStore((state) => state.isCreating);
   const createManualMetric = useHealthMetricsStore((state) => state.createManualMetric);
   const deleteManualMetric = useHealthMetricsStore((state) => state.deleteManualMetric);
   const isCreatingManual = useHealthMetricsStore((state) => state.isCreatingManual);
@@ -174,7 +179,7 @@ export function HealthMetricsPage() {
     setRecordToDelete(id);
   };
 
-  const [metricType, setMetricType] = useState<MetricType>("blood_pressure");
+  const [metricType, setMetricType] = useState<string>("blood_pressure");
   const [manualValue, setManualValue] = useState("");
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
@@ -314,8 +319,23 @@ export function HealthMetricsPage() {
 
   function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (metricType === "heart_rate" || metricType === "respiratory_rate" || metricType === "step_count") {
+      void createMetric({
+        heartRate: metricType === "heart_rate" ? manualValue : "",
+        stepCount: metricType === "step_count" ? manualValue : "",
+        respiratoryRate: metricType === "respiratory_rate" ? manualValue : "",
+        recordedAt: new Date(manualRecordedAt).toISOString(),
+      })
+        .then(() => {
+          setManualValue("");
+          setManualRecordedAt(nowInputValue());
+        })
+        .catch(() => undefined);
+      return;
+    }
+
     void createManualMetric({
-      metricType,
+      metricType: metricType as MetricType,
       value: manualValue,
       systolic,
       diastolic,
@@ -417,7 +437,7 @@ export function HealthMetricsPage() {
             <h2 className="text-lg font-semibold text-secondary">Chỉ số nhập tay</h2>
             <form className="mt-5 space-y-4" onSubmit={handleManualSubmit}>
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormSelect label="Loại chỉ số" labelClassName="text-xs" onChange={(value) => setMetricType(value as MetricType)} options={metricTypeOptions} value={metricType} />
+                <FormSelect label="Loại chỉ số" labelClassName="text-xs" onChange={(value) => setMetricType(value)} options={metricTypeOptions} value={metricType} />
                 <FormInput label="Thời điểm đo" labelClassName="text-xs" onChange={(event) => setManualRecordedAt(event.target.value)} required type="datetime-local" value={manualRecordedAt} />
               </div>
 
@@ -443,12 +463,25 @@ export function HealthMetricsPage() {
               {metricType === "height" ? (
                 <FormInput label="Chiều cao (cm)" labelClassName="text-xs" onChange={(event) => setManualValue(event.target.value)} required type="number" value={manualValue} />
               ) : null}
+              {metricType === "heart_rate" ? (
+                <FormInput label="Nhịp tim (bpm)" labelClassName="text-xs" onChange={(event) => setManualValue(event.target.value)} required type="number" value={manualValue} />
+              ) : null}
+              {metricType === "respiratory_rate" ? (
+                <FormInput label="Nhịp thở (lần/phút)" labelClassName="text-xs" onChange={(event) => setManualValue(event.target.value)} required type="number" value={manualValue} />
+              ) : null}
+              {metricType === "step_count" ? (
+                <FormInput label="Số bước chân" labelClassName="text-xs" onChange={(event) => setManualValue(event.target.value)} required type="number" value={manualValue} />
+              ) : null}
 
-              <FormInput label="Thiết bị" labelClassName="text-xs" onChange={(event) => setDeviceName(event.target.value)} value={deviceName} />
-              <FormInput label="Ghi chú" labelClassName="text-xs" onChange={(event) => setManualNotes(event.target.value)} value={manualNotes} />
+              {metricType !== "heart_rate" && metricType !== "respiratory_rate" && metricType !== "step_count" ? (
+                <>
+                  <FormInput label="Thiết bị" labelClassName="text-xs" onChange={(event) => setDeviceName(event.target.value)} value={deviceName} />
+                  <FormInput label="Ghi chú" labelClassName="text-xs" onChange={(event) => setManualNotes(event.target.value)} value={manualNotes} />
+                </>
+              ) : null}
               <div className="flex items-end pt-2">
-                <Button className="w-full" disabled={isCreatingManual} leftIcon={<Plus className="h-4 w-4" />} type="submit">
-                  Thêm chỉ số nhập tay
+                <Button className="w-full" disabled={isCreatingManual || isCreating} leftIcon={<Plus className="h-4 w-4" />} type="submit">
+                  Thêm chỉ số
                 </Button>
               </div>
             </form>

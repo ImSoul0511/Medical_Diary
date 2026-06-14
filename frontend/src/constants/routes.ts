@@ -31,7 +31,7 @@ export const ROUTES = {
   doctorPatient: "/bac-si/benh-nhan/demo-patient",
   doctorPrescription: "/bac-si/tao-don-thuoc/demo-patient",
   adminDoctorApproval: "/quan-tri/phe-duyet-bac-si",
-  adminAuditLogs: "/quan-tri/nhat-ky-kiem-toan",
+  adminVerifiedDoctors: "/quan-tri/bac-si-da-xac-minh",
   resetPassword: "/reset-password",
   prescriptions: "/don-thuoc",
 } as const;
@@ -67,6 +67,6 @@ export const doctorNavigation: NavigationItem[] = [
 ];
 
 export const adminNavigation: NavigationItem[] = [
-  { icon: UserCheck, label: "Phê duyệt bác sĩ", path: ROUTES.adminDoctorApproval },
-  { icon: ClipboardList, label: "Nhật ký kiểm toán", path: ROUTES.adminAuditLogs },
+  { icon: ClipboardList, label: "Duyệt hồ sơ bác sĩ", path: ROUTES.adminDoctorApproval },
+  { icon: UserCheck, label: "Bác sĩ đã xác minh", path: ROUTES.adminVerifiedDoctors },
 ];

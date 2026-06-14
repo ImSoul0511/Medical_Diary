@@ -42,6 +42,18 @@ async def list_pending_doctors(
 ) -> List[PendingDoctorResponse]:
     return await service.list_pending_doctors()
 
+@router.get(
+    "/doctors",
+    response_model=List[PendingDoctorResponse],
+    responses={401: _error_responses[401], 403: _error_responses[403]}
+)
+async def list_doctors(
+    status: Optional[str] = Query(None, description="Lọc theo trạng thái xác minh"),
+    current_user: dict = Depends(require_role(["admin"])),
+    service: AdminService = Depends(_get_service)
+) -> List[PendingDoctorResponse]:
+    return await service.list_doctors(status)
+
 @router.patch(
     "/doctors/{doctor_id}/verify",
     response_model=MessageResponse,

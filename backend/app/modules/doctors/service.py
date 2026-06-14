@@ -274,16 +274,33 @@ class DoctorService:
         # Gui email thong bao bo sung (luon gui bat ke user online hay offline)
         if email:
             subject = "[Medical Diary] Yêu cầu truy cập hồ sơ sức khỏe mới"
-            body = (
-                f"Xin chào,\n\n"
-                f"Bác sĩ {doctor_name} vừa gửi một yêu cầu truy cập vào hồ sơ sức khỏe của bạn.\n"
-                f"- Phạm vi yêu cầu: {scope_desc}\n"
-                f"- Lý do: {data.reason or 'Không được cung cấp'}\n\n"
-                f"Vui lòng đăng nhập vào ứng dụng Medical Diary để phản hồi (Phê duyệt hoặc Từ chối) yêu cầu này.\n\n"
-                f"Trân trọng,\n"
-                f"Đội ngũ Medical Diary."
-            )
-            background_tasks.add_task(send_email_sync, email, subject, body)
+            body = f"""
+<div style="font-family: Arial, sans-serif; background-color: #F8FAFC; padding: 40px 20px; color: #1E293B;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <div style="background-color: #0EA5E9; padding: 20px; text-align: center; color: #FFFFFF;">
+      <h1 style="margin: 0; font-size: 24px; font-weight: 600;">Medical Diary</h1>
+    </div>
+    <div style="padding: 30px;">
+      <h2 style="margin-top: 0; color: #1E293B; font-size: 20px;">Yêu cầu truy cập hồ sơ sức khỏe</h2>
+      <p style="font-size: 16px; line-height: 1.5; color: #64748B;">Xin chào,</p>
+      <p style="font-size: 16px; line-height: 1.5; color: #64748B;"><strong>Bác sĩ {doctor_name}</strong> vừa gửi một yêu cầu cấp quyền truy cập vào hồ sơ sức khỏe của bạn.</p>
+      
+      <div style="background-color: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 8px; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0 0 10px; font-size: 15px;"><strong>Phạm vi truy cập:</strong> {scope_desc}</p>
+        <p style="margin: 0; font-size: 15px;"><strong>Lý do:</strong> {data.reason or 'Không được cung cấp'}</p>
+      </div>
+
+      <p style="font-size: 16px; line-height: 1.5; color: #64748B;">Vui lòng đăng nhập vào ứng dụng Medical Diary để phản hồi (Phê duyệt hoặc Từ chối) yêu cầu này.</p>
+      
+      <p style="font-size: 16px; line-height: 1.5; color: #64748B; margin-top: 30px; margin-bottom: 0;">Trân trọng,<br><strong>Đội ngũ Medical Diary</strong></p>
+    </div>
+    <div style="background-color: #F1F5F9; padding: 20px; text-align: center; font-size: 13px; color: #94A3B8;">
+      <p style="margin: 0;">&copy; {datetime.now().year} Medical Diary. All rights reserved.</p>
+    </div>
+  </div>
+</div>
+"""
+            background_tasks.add_task(send_email_sync, email, subject, body, True)
 
         logger.info(
             f"Doctor {doctor_id} requested access to patient {data.patient_id} "

@@ -378,9 +378,8 @@ class PrescriptionsService:
             FROM prescription_logs pl
             JOIN prescription_items pi ON pi.id = pl.prescription_item_id
             WHERE pl.status = 'untaken'
-              AND pl.scheduled_date = CURRENT_DATE
-              AND pl.scheduled_time <= LOCALTIME
-              AND pl.scheduled_time >= LOCALTIME - INTERVAL '2 hours'
+              AND (pl.scheduled_date + pl.scheduled_time) <= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
+              AND (pl.scheduled_date + pl.scheduled_time) >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh' - INTERVAL '2 hours')
               AND NOT EXISTS (
                   SELECT 1 FROM notifications n
                   WHERE n.type = 'prescription_reminder'
@@ -409,16 +408,33 @@ class PrescriptionsService:
             date_str = row.scheduled_date.strftime('%d/%m/%Y') if row.scheduled_date else ""
 
             subject = "[Medical Diary] Nhắc nhở uống thuốc định kỳ"
-            body = (
-                f"Xin chào,\n\n"
-                f"Đã đến giờ uống thuốc theo đơn của bạn:\n"
-                f"- Tên thuốc: {row.medication_name}\n"
-                f"- Liều lượng: {row.dosage}\n"
-                f"- Giờ uống: {time_str} ngày {date_str}\n\n"
-                f"Vui lòng truy cập ứng dụng Medical Diary để cập nhật trạng thái uống thuốc của bạn.\n\n"
-                f"Trân trọng,\n"
-                f"Đội ngũ Medical Diary."
-            )
+            body = f"""
+<div style="font-family: Arial, sans-serif; background-color: #F8FAFC; padding: 40px 20px; color: #1E293B;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <div style="background-color: #14B8A6; padding: 20px; text-align: center; color: #FFFFFF;">
+      <h1 style="margin: 0; font-size: 24px; font-weight: 600;">Medical Diary</h1>
+    </div>
+    <div style="padding: 30px;">
+      <h2 style="margin-top: 0; color: #1E293B; font-size: 20px;">Nhắc nhở uống thuốc định kỳ</h2>
+      <p style="font-size: 16px; line-height: 1.5; color: #64748B;">Xin chào,</p>
+      <p style="font-size: 16px; line-height: 1.5; color: #64748B;">Đã đến giờ uống thuốc theo đơn của bạn. Việc dùng thuốc đúng giờ rất quan trọng cho quá trình điều trị.</p>
+      
+      <div style="background-color: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0 0 10px; font-size: 15px;"><strong>Tên thuốc:</strong> {row.medication_name}</p>
+        <p style="margin: 0 0 10px; font-size: 15px;"><strong>Liều lượng:</strong> {row.dosage}</p>
+        <p style="margin: 0; font-size: 15px;"><strong>Giờ uống:</strong> {time_str} ngày {date_str}</p>
+      </div>
+
+      <p style="font-size: 16px; line-height: 1.5; color: #64748B;">Vui lòng truy cập ứng dụng Medical Diary để cập nhật trạng thái uống thuốc của bạn.</p>
+      
+      <p style="font-size: 16px; line-height: 1.5; color: #64748B; margin-top: 30px; margin-bottom: 0;">Trân trọng,<br><strong>Đội ngũ Medical Diary</strong></p>
+    </div>
+    <div style="background-color: #F1F5F9; padding: 20px; text-align: center; font-size: 13px; color: #94A3B8;">
+      <p style="margin: 0;">&copy; {datetime.now(timezone.utc).year} Medical Diary. All rights reserved.</p>
+    </div>
+  </div>
+</div>
+"""
 
             # 3. Ghi nhận thông báo vào DB
             notif = Notification(
@@ -434,7 +450,7 @@ class PrescriptionsService:
             # 4. Gửi email thông qua helper dùng chung
             import asyncio
             from app.shared.email import send_email_sync
-            await asyncio.to_thread(send_email_sync, email, subject, body)
+            await asyncio.to_thread(send_email_sync, email, subject, body, True)
             logger.info(f"Email reminder processed for {email} (log: {row.log_id})")
 
             sent_count += 1

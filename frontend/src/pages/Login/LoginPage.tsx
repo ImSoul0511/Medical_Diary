@@ -39,12 +39,11 @@ export function LoginPage() {
   }, [clearError]);
 
   useEffect(() => {
-    if (location.pathname === ROUTES.doctorLogin) {
-      setSelectedRole("doctor");
-    } else {
-      setSelectedRole("user");
+    const expectedRole = location.pathname === ROUTES.doctorLogin ? "doctor" : "user";
+    if (selectedRole !== expectedRole) {
+      setSelectedRole(expectedRole);
     }
-  }, [location.pathname, setSelectedRole]);
+  }, [location.pathname, selectedRole, setSelectedRole]);
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));

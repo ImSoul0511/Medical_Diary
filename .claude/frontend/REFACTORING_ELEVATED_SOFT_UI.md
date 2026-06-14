@@ -1,3 +1,6 @@
+---
+trigger: always_on
+---
 # Elevated Soft UI — Refactoring Rules
 
 > **Audience:** AI coding agents performing UI refactoring on the Medical Diary frontend.

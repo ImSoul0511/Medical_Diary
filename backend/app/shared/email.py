@@ -6,7 +6,7 @@ from app.core.config import settings
 logger = logging.getLogger("medical_diary")
 
 
-def send_email_sync(email: str, subject: str, body: str) -> None:
+def send_email_sync(email: str, subject: str, body: str, is_html: bool = False) -> None:
     """
     Gửi email đồng bộ qua SMTP.
     Hàm này được thiết kế để chạy trong BackgroundTasks của FastAPI (tự động chạy trong thread pool riêng).
@@ -22,7 +22,7 @@ def send_email_sync(email: str, subject: str, body: str) -> None:
         return
 
     try:
-        msg = MIMEText(body, "plain", "utf-8")
+        msg = MIMEText(body, "html" if is_html else "plain", "utf-8")
         msg["Subject"] = subject
         msg["From"] = smtp_from
         msg["To"] = email

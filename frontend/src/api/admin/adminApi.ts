@@ -17,6 +17,13 @@ export const adminApi = {
     return response.data;
   },
 
+  listDoctors: async (status?: string): Promise<PendingDoctorResponse[]> => {
+    const response = await apiClient.get<PendingDoctorResponse[]>("/admin/doctors", {
+      params: status ? { status } : {},
+    });
+    return response.data;
+  },
+
   verifyDoctor: async (
     doctorId: string,
     data: DoctorVerifyRequest,

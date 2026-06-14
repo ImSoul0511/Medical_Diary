@@ -3,6 +3,7 @@ export interface PendingDoctorResponse {
   full_name: string;
   email: string;
   specialty: string;
+  hospital: string;
   license_number: string;
   certificate_url: string;
   registered_at: string;
@@ -10,7 +11,7 @@ export interface PendingDoctorResponse {
 }
 
 export interface DoctorVerifyRequest {
-  action: "approved" | "rejected";
+  action: "approved" | "rejected" | "pending_verification";
   notes?: string | null;
 }
 
