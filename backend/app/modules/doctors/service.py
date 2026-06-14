@@ -31,12 +31,29 @@ class DoctorService:
     async def search_patients(self, phone_number: str) -> list[PatientPublicResponse]:
         """Tìm bệnh nhân theo số điện thoại (giải mã pgcrypto). Chỉ trả về thông tin cơ bản."""
 
-        stmt = (
-            select(Profile)
+        from app.modules.users.models import FamilyMember
+
+        # Tìm ID của người giám hộ (người có SĐT khớp)
+        guardian_stmt = (
+            select(Profile.id)
             .where(
                 Profile.role == "user",
                 Profile.deleted_at.is_(None),
                 text("pgp_sym_decrypt(phone_encrypted::bytea, current_setting('app.encryption_key')) = :phone")
+            )
+        )
+
+        # Lấy Profile của chính người đó HOẶC các người phụ thuộc của người đó
+        stmt = (
+            select(Profile)
+            .outerjoin(FamilyMember, FamilyMember.dependent_id == Profile.id)
+            .where(
+                Profile.role == "user",
+                Profile.deleted_at.is_(None),
+                or_(
+                    Profile.id.in_(guardian_stmt),
+                    FamilyMember.guardian_id.in_(guardian_stmt)
+                )
             )
             .limit(20)
         )
