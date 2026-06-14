@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, EmailStr
 from uuid import UUID 
 from datetime import datetime, date
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -101,3 +101,32 @@ class ChangePasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     new_password: str = Field(..., min_length=8)
+
+class RegisterFamilyMemberRequest(BaseModel):
+    full_name: str = Field(..., min_length=2, max_length=100)
+    gender: Literal['male', 'female']
+    date_of_birth: date
+    relationship: str = Field(..., max_length=50)
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "full_name": "Nguyen Van B",
+                "gender": "male",
+                "date_of_birth": "2015-01-01",
+                "relationship": "con"
+            }
+        }
+    }
+
+class RegisterFamilyMemberResponse(BaseModel):
+    id: UUID
+    full_name: str
+    relationship: str
+
+class UpgradeDependentRequest(BaseModel):
+    dependent_id: UUID
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    phone_number: str = Field(..., pattern=r'^\+?[0-9]{10,15}$')
+    cccd: Optional[str] = Field(None, min_length=12, max_length=12, pattern=r"^\d{12}$")

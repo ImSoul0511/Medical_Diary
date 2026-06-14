@@ -19,7 +19,10 @@ from app.modules.auth.schemas import (
     RevokeAllRequest,
     ForgotPasswordRequest,
     ChangePasswordRequest,
-    ResetPasswordRequest
+    ResetPasswordRequest,
+    RegisterFamilyMemberRequest,
+    RegisterFamilyMemberResponse,
+    UpgradeDependentRequest
 )
 
 from app.modules.auth.service import AuthService
@@ -109,6 +112,26 @@ async def register(
     service: AuthService = Depends(_get_service)
 ) -> MessageResponse:
     return await service.register(data)
+
+@router.post("/register-family-member", response_model=RegisterFamilyMemberResponse, status_code=201, responses={400: _error_responses[400]})
+@limiter.limit("5/minute")
+async def register_family_member(
+    request: Request,
+    data: RegisterFamilyMemberRequest,
+    current_user: dict = Depends(get_current_user),
+    service: AuthService = Depends(_get_service)
+) -> RegisterFamilyMemberResponse:
+    return await service.register_family_member(data, current_user["sub"])
+
+@router.post("/upgrade-dependent", response_model=MessageResponse, responses={400: _error_responses[400]})
+@limiter.limit("5/minute")
+async def upgrade_dependent(
+    request: Request,
+    data: UpgradeDependentRequest,
+    current_user: dict = Depends(get_current_user),
+    service: AuthService = Depends(_get_service)
+) -> MessageResponse:
+    return await service.upgrade_dependent_account(data, current_user["sub"])
 
 @router.post("/register-doctor", response_model=RegisterDoctorResponse, status_code=201, responses={400: _error_responses[400]})
 @limiter.limit("3/minute")

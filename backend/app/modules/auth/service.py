@@ -18,7 +18,10 @@ from app.modules.auth.schemas import (
     UserBrief,
     ForgotPasswordRequest,
     ChangePasswordRequest,
-    ResetPasswordRequest
+    ResetPasswordRequest,
+    RegisterFamilyMemberRequest,
+    RegisterFamilyMemberResponse,
+    UpgradeDependentRequest
 )
 from app.shared.schemas import MessageResponse
 
@@ -154,6 +157,149 @@ class AuthService:
                     logger.error(f"Failed to rollback Supabase Auth user {user_id}: {rollback_err}")
             logger.error(f"Register failed: {e}")
             raise HTTPException(status_code=400, detail=f"Đăng ký thất bại: {str(e)}")
+
+    async def register_family_member(self, data: RegisterFamilyMemberRequest, guardian_id: str) -> RegisterFamilyMemberResponse:
+        try:
+            from datetime import date
+            today = date.today()
+            age = today.year - data.date_of_birth.year - ((today.month, today.day) < (data.date_of_birth.month, data.date_of_birth.day))
+            if age >= 15:
+                raise HTTPException(status_code=400, detail="Người phụ thuộc phải dưới 15 tuổi.")
+
+            import uuid
+            import secrets
+            virtual_email = f"{guardian_id}_child_{uuid.uuid4().hex[:8]}@dependent.local"
+            random_password = secrets.token_urlsafe(16)
+
+            from supabase import create_client
+            from app.core.config import settings
+            admin_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+            
+            user_response = admin_client.auth.admin.create_user({
+                "email": virtual_email,
+                "password": random_password,
+                "email_confirm": True
+            })
+            
+            user_id = user_response.user.id
+
+            query = text("""
+                INSERT INTO profiles (id, full_name, role, gender, date_of_birth)
+                VALUES (:id, :full_name, :role, :gender, :date_of_birth)
+            """)
+            await self.db.execute(query, {
+                "id": user_id, 
+                "full_name": data.full_name, 
+                "role": "user",
+                "gender": data.gender,
+                "date_of_birth": data.date_of_birth
+            })
+            
+            family_query = text("""
+                INSERT INTO family_members (id, guardian_id, dependent_id, relationship)
+                VALUES (:id, :guardian_id, :dependent_id, :relationship)
+            """)
+            await self.db.execute(family_query, {
+                "id": uuid.uuid4(),
+                "guardian_id": guardian_id,
+                "dependent_id": user_id,
+                "relationship": data.relationship
+            })
+
+            await self.db.flush() 
+
+            logger.info(f"Family member registered: {user_id} by guardian: {guardian_id}")
+            return RegisterFamilyMemberResponse(
+                id=user_id,
+                full_name=data.full_name,
+                relationship=data.relationship
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e: 
+            await self.db.rollback()
+            if 'user_id' in locals():
+                try:
+                    from supabase import create_client
+                    from app.core.config import settings
+                    admin_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+                    admin_client.auth.admin.delete_user(user_id)
+                except Exception as rollback_err:
+                    logger.error(f"Failed to rollback Supabase Auth virtual user {user_id}: {rollback_err}")
+            logger.error(f"Register family member failed: {e}")
+            raise HTTPException(status_code=400, detail=f"Đăng ký người phụ thuộc thất bại: {str(e)}")
+
+    async def upgrade_dependent_account(self, data: UpgradeDependentRequest, guardian_id: str) -> MessageResponse:
+        try:
+            # 1. Kiểm tra quyền giám hộ
+            check_query = text("""
+                SELECT id FROM family_members 
+                WHERE guardian_id = :guardian_id AND dependent_id = :dependent_id
+            """)
+            result = await self.db.execute(check_query, {
+                "guardian_id": guardian_id,
+                "dependent_id": str(data.dependent_id)
+            })
+            if not result.fetchone():
+                raise HTTPException(status_code=403, detail="Không có quyền truy cập người phụ thuộc này.")
+
+            # 2. Cập nhật Supabase Auth
+            from supabase import create_client
+            from app.core.config import settings
+            admin_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+            
+            admin_client.auth.admin.update_user_by_id(str(data.dependent_id), {
+                "email": data.email,
+                "password": data.password,
+                "email_confirm": True
+            })
+
+            # 3. Cập nhật Profiles
+            if data.cccd:
+                profile_query = text("""
+                    UPDATE profiles 
+                    SET phone_encrypted = pgp_sym_encrypt(:phone, current_setting('app.encryption_key')),
+                        cccd_encrypted = pgp_sym_encrypt(:cccd, current_setting('app.encryption_key')),
+                        updated_at = now()
+                    WHERE id = :dependent_id
+                """)
+                await self.db.execute(profile_query, {
+                    "dependent_id": str(data.dependent_id),
+                    "phone": data.phone_number,
+                    "cccd": data.cccd
+                })
+            else:
+                profile_query = text("""
+                    UPDATE profiles 
+                    SET phone_encrypted = pgp_sym_encrypt(:phone, current_setting('app.encryption_key')),
+                        updated_at = now()
+                    WHERE id = :dependent_id
+                """)
+                await self.db.execute(profile_query, {
+                    "dependent_id": str(data.dependent_id),
+                    "phone": data.phone_number
+                })
+
+            # 4. Xóa liên kết giám hộ (Tách hoàn toàn)
+            delete_query = text("""
+                DELETE FROM family_members 
+                WHERE dependent_id = :dependent_id
+            """)
+            await self.db.execute(delete_query, {
+                "dependent_id": str(data.dependent_id)
+            })
+
+            await self.db.flush() 
+            logger.info(f"Dependent {data.dependent_id} upgraded to independent account by guardian {guardian_id}")
+            return MessageResponse(message="Nâng cấp tài khoản thành công. Tài khoản đã được tách độc lập.")
+
+        except HTTPException:
+            raise
+        except Exception as e: 
+            await self.db.rollback()
+            logger.error(f"Upgrade dependent failed: {e}")
+            raise HTTPException(status_code=400, detail=f"Nâng cấp tài khoản thất bại: {str(e)}")
 
     async def register_doctor(
         self, data: RegisterDoctorRequest, certificate_url: str
