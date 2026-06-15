@@ -41,6 +41,21 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+    from pydantic import field_validator
+
+    @field_validator("JWT_SECRET", "ENCRYPTION_KEY", mode="before")
+    @classmethod
+    def clean_keys(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        v = v.strip()
+        if (v.startswith("'") and v.endswith("'")) or (v.startswith('"') and v.endswith('"')):
+            v = v[1:-1]
+        if '\\"' in v:
+            v = v.replace('\\"', '"')
+        return v
+
+
     @property
     def cors_origin_list(self) -> List[str]:
         return [

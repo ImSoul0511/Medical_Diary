@@ -28,7 +28,12 @@ type QueueEntry = {
   reject: (error: unknown) => void;
 };
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:8000";
+const getApiBaseUrl = (): string => {
+  const url = (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:8000";
+  return url.endsWith("/") ? url.slice(0, -1) : url;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 let isRefreshing = false;
 let failedQueue: QueueEntry[] = [];

@@ -18,13 +18,8 @@ class RLSMiddleware(BaseHTTPMiddleware):
             token = auth_header.replace("Bearer ", "")
             
             try:
-                # Xử lý key
-                raw_key = settings.JWT_SECRET.strip()
-                
-                # Loại bỏ dấu nháy đơn/kép bao quanh nếu có
-                if (raw_key.startswith("'") and raw_key.endswith("'")) or (raw_key.startswith('"') and raw_key.endswith('"')):
-                    raw_key = raw_key[1:-1]
-                
+                # Xử lý key (đã được làm sạch tại config.py)
+                raw_key = settings.JWT_SECRET
                 key = raw_key
                 try:
                     key_data = json.loads(raw_key)
