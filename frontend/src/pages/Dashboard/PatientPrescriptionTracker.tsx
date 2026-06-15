@@ -59,7 +59,7 @@ export function PatientPrescriptionTracker() {
       group = {
         prescriptionId,
         scheduledTime: time,
-        doctorName,
+        doctorName: doctorName || undefined,
         status: "taken",
         logs: [],
       };
