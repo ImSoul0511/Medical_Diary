@@ -256,6 +256,7 @@ class DoctorService:
             "step_count": "Bước chân",
             "respiratory_rate": "Nhịp thở",
             "manual_health_records": "Chỉ số nhập tay",
+            "patient_documents": "Tài liệu y tế cá nhân",
         }
         translated_scopes = [scope_map.get(s, s) for s in data.requested_scope]
         scope_desc = ", ".join(translated_scopes)

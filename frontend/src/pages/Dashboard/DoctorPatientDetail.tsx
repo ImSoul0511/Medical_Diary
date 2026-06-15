@@ -88,7 +88,7 @@ export function DoctorPatientDetail() {
         manual_health_records: false,
         patient_documents: false,
       };
-      
+
       const relationScopes = relation?.scopes || [];
       if (relationScopes.length > 0) {
         relationScopes.forEach((s: string) => {
@@ -317,10 +317,10 @@ export function DoctorPatientDetail() {
       <div className="space-y-6">
         <Link
           className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-          to="/bac-si/tim-kiem"
+          to="/bac-si/quan-ly-benh-nhan"
         >
           <ArrowLeft className="h-4 w-4" />
-          Quay lại tìm kiếm
+          Quay lại
         </Link>
 
         <Card padding="lg">
@@ -624,7 +624,7 @@ export function DoctorPatientDetail() {
                   {isUploadingAttachment ? "Đang tải lên..." : "Chọn tệp đính kèm"}
                 </label>
               </div>
-              
+
               {uploadedFiles.length > 0 ? (
                 <div className="mt-2 space-y-1.5 max-h-32 overflow-y-auto border border-border/40 rounded-card p-2.5 bg-slate-50/50">
                   {uploadedFiles.map((file, idx) => (
@@ -696,7 +696,7 @@ export function DoctorPatientDetail() {
                 ))}
               </div>
             </div>
-            
+
             <label className="block">
               <span className="block text-sm font-semibold text-secondary mb-1.5">Lý do yêu cầu</span>
               <textarea

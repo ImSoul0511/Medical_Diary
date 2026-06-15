@@ -30,13 +30,74 @@ export function PatientPrescriptionTracker() {
     return null;
   };
 
+  const [updatingGroupId, setUpdatingGroupId] = useState<string | null>(null);
+
   const sortedLogs = [...todayLogs].sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
 
-  const filteredLogs = sortedLogs.filter((log) => {
-    if (filter === "taken") return log.status === "taken";
-    if (filter === "pending") return log.status !== "taken";
+  // Group logs by prescriptionId and scheduledTime
+  interface GroupedLog {
+    prescriptionId: string;
+    scheduledTime: string;
+    doctorName?: string;
+    status: "taken" | "pending";
+    logs: typeof todayLogs;
+  }
+
+  const groupedLogs: GroupedLog[] = [];
+
+  sortedLogs.forEach((log) => {
+    const details = getMedicationItem(log.prescriptionItemId);
+    const prescriptionId = details?.rx.id || "unknown";
+    const doctorName = details?.rx.doctorName;
+    const time = log.scheduledTime;
+
+    let group = groupedLogs.find(
+      (g) => g.prescriptionId === prescriptionId && g.scheduledTime === time
+    );
+
+    if (!group) {
+      group = {
+        prescriptionId,
+        scheduledTime: time,
+        doctorName,
+        status: "taken",
+        logs: [],
+      };
+      groupedLogs.push(group);
+    }
+    group.logs.push(log);
+  });
+
+  // Update status of each group (taken only if all logs in it are taken)
+  groupedLogs.forEach((group) => {
+    const allTaken = group.logs.every((l) => l.status === "taken");
+    group.status = allTaken ? "taken" : "pending";
+  });
+
+  // Sort grouped logs chronologically by scheduledTime
+  groupedLogs.sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
+
+  // Filter groups
+  const filteredGroups = groupedLogs.filter((group) => {
+    if (filter === "taken") return group.status === "taken";
+    if (filter === "pending") return group.status === "pending";
     return true;
   });
+
+  const handleToggleGroupStatus = async (group: GroupedLog) => {
+    const groupId = `${group.prescriptionId}_${group.scheduledTime}`;
+    setUpdatingGroupId(groupId);
+    const newStatus = group.status === "taken" ? "untaken" : "taken";
+    try {
+      await Promise.all(
+        group.logs.map((log) => updateLogStatus(log.id, newStatus))
+      );
+    } catch (err) {
+      console.error("Failed to update group status:", err);
+    } finally {
+      setUpdatingGroupId(null);
+    }
+  };
 
   const takenCount = todayLogs.filter((log) => log.status === "taken").length;
   const totalCount = todayLogs.length;
@@ -120,20 +181,21 @@ export function PatientPrescriptionTracker() {
               <Card className="flex items-center justify-center py-12">
                 <p className="text-sm text-mutedForeground animate-pulse">Đang tải lịch uống thuốc...</p>
               </Card>
-            ) : filteredLogs.length === 0 ? (
+            ) : filteredGroups.length === 0 ? (
               <Card className="flex flex-col items-center justify-center py-12 text-center text-mutedForeground">
                 <Pill className="h-8 w-8 text-slate-300 mb-2" />
                 <p className="text-sm font-medium">Không có lịch uống thuốc nào phù hợp.</p>
               </Card>
             ) : (
               <div className="space-y-3">
-                {filteredLogs.map((log) => {
-                  const details = getMedicationItem(log.prescriptionItemId);
-                  const isTaken = log.status === "taken";
+                {filteredGroups.map((group) => {
+                  const groupId = `${group.prescriptionId}_${group.scheduledTime}`;
+                  const isUpdatingThisGroup = updatingGroupId === groupId;
+                  const isTaken = group.status === "taken";
 
                   return (
                     <Card
-                      key={log.id}
+                      key={groupId}
                       padding="md"
                       className={`transition-all duration-200 border-l-4 ${isTaken ? "border-l-success bg-successBg/10" : "border-l-warning bg-warningBg/10"}`}
                     >
@@ -142,38 +204,57 @@ export function PatientPrescriptionTracker() {
                           <div className={`mt-0.5 h-8 w-8 rounded-lg flex items-center justify-center ${isTaken ? "bg-success/10 text-success" : "bg-warning/10 text-pending"}`}>
                             <Clock className="h-4.5 w-4.5" />
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-semibold text-secondary">
-                                {log.scheduledTime}
+                                {group.scheduledTime}
                               </span>
                               <Badge tone={isTaken ? "success" : "pending"}>
                                 {isTaken ? "Đã uống" : "Chưa uống"}
                               </Badge>
                             </div>
-                            <h4 className="font-bold text-secondary text-base mt-1">
-                              {details?.item.medicationName ?? "Thuốc điều trị"}
-                            </h4>
-                            <p className="text-xs text-mutedForeground mt-0.5 font-medium">
-                              Liều lượng: {details?.item.dosage}
-                            </p>
-                            {details?.rx.doctorName && (
-                              <p className="text-[10px] text-mutedForeground mt-1 flex items-center gap-1 font-sans">
-                                <User className="h-3 w-3" /> Chỉ định bởi Bác sĩ: <span className="font-medium text-secondary">{details.rx.doctorName}</span>
+
+                            {/* List of medications in the group */}
+                            <div className="mt-2.5 space-y-2">
+                              {group.logs.map((log) => {
+                                const details = getMedicationItem(log.prescriptionItemId);
+                                return (
+                                  <div key={log.id} className="border-l-2 border-primary/20 pl-2.5 py-0.5">
+                                    <h4 className="font-bold text-secondary text-sm">
+                                      {details?.item.medicationName ?? "Thuốc điều trị"}
+                                    </h4>
+                                    <p className="text-xs text-mutedForeground mt-0.5 font-medium">
+                                      Liều lượng: {details?.item.dosage}
+                                    </p>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {group.doctorName && (
+                              <p className="text-[10px] text-mutedForeground mt-3 flex items-center gap-1 font-sans">
+                                <User className="h-3 w-3" /> Chỉ định bởi Bác sĩ: <span className="font-medium text-secondary">{group.doctorName}</span>
                               </p>
                             )}
                           </div>
                         </div>
                         <Button
-                          onClick={() => {
-                            void updateLogStatus(log.id, isTaken ? "untaken" : "taken");
-                          }}
+                          onClick={() => handleToggleGroupStatus(group)}
+                          disabled={isUpdatingThisGroup}
                           size="sm"
                           variant={isTaken ? "outline" : "success"}
                           className="flex-shrink-0"
-                          leftIcon={isTaken ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
+                          leftIcon={
+                            isUpdatingThisGroup ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            ) : isTaken ? (
+                              <CheckCircle2 className="h-4 w-4" />
+                            ) : (
+                              <Circle className="h-4 w-4" />
+                            )
+                          }
                         >
-                          {isTaken ? "Đã uống" : "Đánh dấu uống"}
+                          {isUpdatingThisGroup ? "Đang lưu..." : isTaken ? "Đã uống" : "Đánh dấu uống"}
                         </Button>
                       </div>
                     </Card>
