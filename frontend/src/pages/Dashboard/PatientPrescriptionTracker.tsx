@@ -103,6 +103,10 @@ export function PatientPrescriptionTracker() {
   const totalCount = todayLogs.length;
   const progressPercent = totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 0;
 
+  const radius = 24;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+
   return (
     <AppShell role="user" title="Đơn thuốc & Lịch uống thuốc">
       <div className="space-y-6">
@@ -128,9 +132,29 @@ export function PatientPrescriptionTracker() {
                     Đã uống {takenCount} / {totalCount} liều ({progressPercent}%)
                   </p>
                 </div>
-                <div className="relative h-14 w-14 flex items-center justify-center rounded-full border-4 border-slate-200">
-                  <div className="absolute inset-0 rounded-full border-4 border-primary" style={{ clipPath: `polygon(50% 50%, -50% -50%, ${progressPercent >= 25 ? "150% -50%" : "50% -50%"}, ${progressPercent >= 50 ? "150% 150%" : "50% -50%"}, ${progressPercent >= 75 ? "-50% 150%" : "50% -50%"}, ${progressPercent >= 100 ? "-50% -50%" : "50% -50%"})` }} />
-                  <span className="text-xs font-bold text-primary">{progressPercent}%</span>
+                <div className="relative h-14 w-14 flex items-center justify-center">
+                  <svg className="absolute inset-0 h-full w-full transform -rotate-90" viewBox="0 0 56 56">
+                    <circle
+                      cx="28"
+                      cy="28"
+                      r={radius}
+                      className="text-slate-200 stroke-current"
+                      strokeWidth="4"
+                      fill="transparent"
+                    />
+                    <circle
+                      cx="28"
+                      cy="28"
+                      r={radius}
+                      className="text-primary stroke-current transition-all duration-300"
+                      strokeWidth="4"
+                      fill="transparent"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={strokeDashoffset}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="text-xs font-bold text-primary relative z-10">{progressPercent}%</span>
                 </div>
               </div>
             ) : (
