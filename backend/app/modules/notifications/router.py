@@ -45,3 +45,18 @@ async def mark_as_read(
     current_user: dict = Depends(get_current_user),
 ) -> MessageResponse:
     return await service.mark_as_read(UUID(current_user["sub"]), id)
+
+
+@router.post(
+    "/read-all",
+    response_model=MessageResponse,
+    responses={401: _error_responses[401]},
+    summary="Đánh dấu tất cả thông báo đã đọc",
+    description="Đánh dấu tất cả thông báo của người dùng hiện tại là đã đọc.",
+)
+async def mark_all_as_read(
+    service: NotificationsService = Depends(_get_service),
+    current_user: dict = Depends(get_current_user),
+) -> MessageResponse:
+    return await service.mark_all_as_read(UUID(current_user["sub"]))
+

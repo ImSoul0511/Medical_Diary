@@ -27,7 +27,7 @@ from app.modules.users.models import Profile, Doctor  # noqa: F401
 from app.modules.consent.models import ConsentRequest, ConsentPermission  # noqa: F401
 from app.modules.health_metrics.models import HealthMetric  # noqa: F401
 from app.modules.diaries.models import Diary  # noqa: F401
-from app.modules.medical_records.models import MedicalRecord  # noqa: F401
+from app.modules.medical_records.models import MedicalRecord, PatientDocument  # noqa: F401
 from app.modules.prescriptions.models import Prescription, PrescriptionItem, PrescriptionLog  # noqa: F401
 from app.modules.emergency.models import EmergencyToken, EmergencyAccessLog  # noqa: F401
 from app.modules.admin.models import DataAccessLog  # noqa: F401

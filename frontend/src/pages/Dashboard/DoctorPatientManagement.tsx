@@ -1,11 +1,12 @@
-import { useEffect } from "react";
-import { Eye, RefreshCw, ShieldPlus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Eye, RefreshCw, ShieldPlus, UserMinus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { DataTable, type DataTableColumn } from "../../components/DataTable";
+import { Modal } from "../../components/Modal";
 import { consentScopeLabels } from "../../constants/consentScopes";
 import { useDoctorStore } from "../../store/doctorStore";
 import { useUiStore } from "../../store/uiStore";
@@ -19,6 +20,7 @@ export function DoctorPatientManagement() {
   const managedPatients = useDoctorStore((state) => state.managedPatients);
   const loadManagedPatients = useDoctorStore((state) => state.loadManagedPatients);
   const requestAccess = useDoctorStore((state) => state.requestAccess);
+  const unfollowPatient = useDoctorStore((state) => state.unfollowPatient);
   const isLoading = useDoctorStore((state) => state.isLoadingManagedPatients);
   const error = useDoctorStore((state) => state.error);
 
@@ -38,10 +40,26 @@ export function DoctorPatientManagement() {
         "diaries",
         ...HEALTH_METRIC_CONSENT_SCOPES,
         "manual_health_records",
+        "patient_documents",
       ],
       reason: "Cần gia hạn quyền truy cập để tiếp tục theo dõi và điều trị.",
     })
       .then(() => showToast("Đã gửi yêu cầu gia hạn quyền."))
+      .catch(() => undefined);
+  }
+
+  const [unfollowPatientId, setUnfollowPatientId] = useState<string | null>(null);
+
+  function handleUnfollow(patientId: string) {
+    setUnfollowPatientId(patientId);
+  }
+
+  function confirmUnfollow() {
+    if (!unfollowPatientId) return;
+    const patientId = unfollowPatientId;
+    setUnfollowPatientId(null);
+    void unfollowPatient(patientId)
+      .then(() => showToast("Đã hủy theo dõi bệnh nhân thành công."))
       .catch(() => undefined);
   }
 
@@ -117,6 +135,9 @@ export function DoctorPatientManagement() {
               Xin lại
             </Button>
           ) : null}
+          <Button leftIcon={<UserMinus className="h-4 w-4" />} onClick={() => handleUnfollow(row.patientId)} size="sm" variant="danger">
+            Hủy theo dõi
+          </Button>
         </div>
       ),
     },
@@ -145,6 +166,18 @@ export function DoctorPatientManagement() {
           rows={managedPatients}
         />
       </div>
+      <Modal
+        open={unfollowPatientId !== null}
+        title="Hủy theo dõi bệnh nhân"
+        confirmLabel="Hủy theo dõi"
+        confirmVariant="danger"
+        onConfirm={confirmUnfollow}
+        onClose={() => setUnfollowPatientId(null)}
+      >
+        <p className="text-sm text-secondary">
+          Bạn có chắc chắn muốn hủy theo dõi bệnh nhân này? Mọi quyền truy cập dữ liệu và yêu cầu chờ duyệt liên quan sẽ bị hủy bỏ.
+        </p>
+      </Modal>
     </AppShell>
   );
 }

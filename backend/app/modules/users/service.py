@@ -31,7 +31,7 @@ class UsersService:
                        p.emergency_contact, p.privacy_settings,
                        pgp_sym_decrypt(p.phone_encrypted::bytea, current_setting('app.encryption_key')) AS phone_number,
                        pgp_sym_decrypt(p.cccd_encrypted::bytea, current_setting('app.encryption_key')) AS cccd,
-                       d.specialty, d.hospital
+                       d.specialty, d.hospital, d.certificate_url, d.verification_status, d.verification_notes
                 FROM profiles p
                 LEFT JOIN auth.users au ON au.id = p.id
                 LEFT JOIN doctors d ON d.id = p.id
@@ -57,7 +57,10 @@ class UsersService:
                 phone_number=row.phone_number,
                 cccd=row.cccd,
                 specialty=row.specialty,
-                hospital=row.hospital
+                hospital=row.hospital,
+                certificate_url=row.certificate_url,
+                verification_status=row.verification_status,
+                verification_notes=row.verification_notes
             )
         except HTTPException:
             raise

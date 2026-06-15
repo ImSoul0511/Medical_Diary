@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Activity, ArrowLeft, HeartPulse, NotebookText, Pill, Plus, Droplets, Thermometer, Scale, Calendar } from "lucide-react";
+import { Activity, ArrowLeft, HeartPulse, NotebookText, Pill, Plus, Droplets, Thermometer, Scale, Calendar, FileText, ExternalLink, Upload, ShieldPlus } from "lucide-react";
 
 import {
   CartesianGrid,
@@ -19,6 +19,7 @@ import { DataTable, type DataTableColumn } from "../../components/DataTable";
 import { FormInput } from "../../components/FormInput";
 import { Modal } from "../../components/Modal";
 import { ROUTES } from "../../constants/routes";
+import { consentScopeLabels } from "../../constants/consentScopes";
 import { useDiaryStore } from "../../store/diaryStore";
 import { useDoctorStore } from "../../store/doctorStore";
 import { useHealthMetricsStore } from "../../store/healthMetricsStore";
@@ -26,7 +27,7 @@ import { useMedicalRecordStore } from "../../store/medicalRecordStore";
 import { usePrescriptionStore } from "../../store/prescriptionStore";
 import { useUiStore } from "../../store/uiStore";
 import type { DiaryEntry } from "../../types/diary";
-import type { MedicalRecord } from "../../types/medicalRecord";
+import type { MedicalRecord, PatientDocument } from "../../types/medicalRecord";
 import { formatDate, formatDateTime } from "../../utils/date";
 import { formatGender } from "../../utils/gender";
 import { manualMetricLabels, formatManualMetricValue } from "../HealthMetrics/HealthMetricsPage";
@@ -35,6 +36,12 @@ export function DoctorPatientDetail() {
   const { patientId = "" } = useParams();
   const patient = useDoctorStore((state) => state.selectedPatient);
   const loadPatientDetail = useDoctorStore((state) => state.loadPatientDetail);
+  const managedPatients = useDoctorStore((state) => state.managedPatients);
+  const relation = managedPatients.find((p) => p.patientId === patientId);
+  const requestAccess = useDoctorStore((state) => state.requestAccess);
+  const loadManagedPatients = useDoctorStore((state) => state.loadManagedPatients);
+  const hasDocumentAccess = relation?.scopes?.includes("patient_documents");
+
   const doctorError = useDoctorStore((state) => state.error);
   const healthMetrics = useHealthMetricsStore((state) => state.items);
   const loadPatientMetrics = useHealthMetricsStore((state) => state.loadPatientMetrics);
@@ -44,18 +51,57 @@ export function DoctorPatientDetail() {
   const loadPatientDiaries = useDiaryStore((state) => state.loadPatientDiaries);
   const medicalRecords = useMedicalRecordStore((state) => state.patientRecords);
   const loadPatientRecords = useMedicalRecordStore((state) => state.loadPatientRecords);
+  const patientDocuments = useMedicalRecordStore((state) => state.patientDocuments);
+  const loadPatientDocuments = useMedicalRecordStore((state) => state.loadPatientDocuments);
   const createRecord = useMedicalRecordStore((state) => state.createRecord);
   const isCreatingRecord = useMedicalRecordStore((state) => state.isCreating);
-  
+  const uploadAttachment = useMedicalRecordStore((state) => state.uploadAttachment);
+
   const prescriptions = usePrescriptionStore((state) => state.prescriptions);
   const loadPatientPrescriptions = usePrescriptionStore((state) => state.loadPatientPrescriptions);
   const deletePrescription = usePrescriptionStore((state) => state.deletePrescription);
 
   const showToast = useUiStore((state) => state.showToast);
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const [deletePrescriptionId, setDeletePrescriptionId] = useState<string | null>(null);
   const [diagnosis, setDiagnosis] = useState("");
   const [recordNotes, setRecordNotes] = useState("");
-  const [attachments, setAttachments] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; url: string }[]>([]);
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
+
+  const [scopes, setScopes] = useState<Record<string, boolean>>({});
+  const [reason, setReason] = useState("");
+  const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (patient) {
+      const initialScopes: Record<string, boolean> = {
+        blood_type: false,
+        allergies: false,
+        emergency_contact: false,
+        medical_records: false,
+        prescriptions: false,
+        diaries: false,
+        heart_rate: false,
+        step_count: false,
+        respiratory_rate: false,
+        manual_health_records: false,
+        patient_documents: false,
+      };
+      
+      const relationScopes = relation?.scopes || [];
+      if (relationScopes.length > 0) {
+        relationScopes.forEach((s: string) => {
+          initialScopes[s] = true;
+        });
+      } else {
+        Object.keys(initialScopes).forEach((key) => {
+          initialScopes[key] = true;
+        });
+      }
+      setScopes(initialScopes);
+    }
+  }, [patient, relation]);
   const chartData = healthMetrics.map((metric) => ({
     day: formatDate(metric.recordedAt, "dd/MM"),
     heartRate: metric.heartRate,
@@ -75,17 +121,27 @@ export function DoctorPatientDetail() {
     void loadPatientManual(patientId).catch(() => undefined);
     void loadPatientDiaries(patientId).catch(() => undefined);
     void loadPatientRecords(patientId).catch(() => undefined);
+    if (hasDocumentAccess) {
+      void loadPatientDocuments(patientId).catch(() => undefined);
+    }
     void loadPatientPrescriptions(patientId).catch(() => undefined);
-  }, [loadPatientDetail, loadPatientDiaries, loadPatientMetrics, loadPatientManual, loadPatientRecords, loadPatientPrescriptions, patientId]);
+  }, [
+    loadPatientDetail,
+    loadPatientDiaries,
+    loadPatientMetrics,
+    loadPatientManual,
+    loadPatientRecords,
+    loadPatientDocuments,
+    loadPatientPrescriptions,
+    patientId,
+    hasDocumentAccess,
+  ]);
 
   function handleCreateRecord(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!patientId) return;
 
-    const attachmentList = attachments
-      .split(/\r?\n/)
-      .map((value) => value.trim())
-      .filter(Boolean);
+    const attachmentList = uploadedFiles.map((file) => file.url);
 
     void createRecord({
       patientId,
@@ -96,15 +152,63 @@ export function DoctorPatientDetail() {
       .then(() => {
         setDiagnosis("");
         setRecordNotes("");
-        setAttachments("");
+        setUploadedFiles([]);
         setIsRecordModalOpen(false);
         showToast("Đã tạo hồ sơ bệnh án.");
       })
       .catch(() => undefined);
   }
 
+  async function handleAttachmentUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    if (!patientId || !event.target.files || event.target.files.length === 0) return;
+    const file = event.target.files[0];
+    setIsUploadingAttachment(true);
+    try {
+      const doc = await uploadAttachment(patientId, file);
+      if (doc.downloadUrl) {
+        setUploadedFiles((prev) => [...prev, { name: doc.fileName, url: doc.downloadUrl! }]);
+        showToast("Đã tải tài liệu đính kèm lên thành công.");
+      } else {
+        showToast("Lỗi: Không lấy được đường dẫn tải xuống tài liệu.");
+      }
+    } catch (err: any) {
+      showToast(err?.message ?? "Tải tài liệu lên thất bại.");
+    } finally {
+      setIsUploadingAttachment(false);
+      event.target.value = "";
+    }
+  }
+
+  function submitPermissionRequest() {
+    if (!patientId) return;
+    const requestedScopes = Object.keys(scopes).filter((key) => scopes[key]);
+    if (requestedScopes.length === 0) {
+      showToast("Vui lòng chọn ít nhất một quyền truy cập.");
+      return;
+    }
+
+    void requestAccess({
+      patientId,
+      requestedScopes: requestedScopes as any,
+      reason: reason.trim() || "Yêu cầu / Điều chỉnh quyền truy cập thông tin bệnh án và chỉ số sức khỏe.",
+    })
+      .then(() => {
+        showToast("Đã gửi yêu cầu cấp/điều chỉnh quyền thành công.");
+        setIsPermissionModalOpen(false);
+        setReason("");
+        void loadManagedPatients().catch(() => undefined);
+      })
+      .catch(() => undefined);
+  }
+
   function handleDeletePrescription(prescriptionId: string) {
-    if (!window.confirm("Bạn có chắc chắn muốn hủy đơn thuốc này?")) return;
+    setDeletePrescriptionId(prescriptionId);
+  }
+
+  function confirmDeletePrescription() {
+    if (!deletePrescriptionId) return;
+    const prescriptionId = deletePrescriptionId;
+    setDeletePrescriptionId(null);
     void deletePrescription(prescriptionId)
       .then(() => {
         showToast("Đã hủy đơn thuốc thành công.");
@@ -114,6 +218,58 @@ export function DoctorPatientDetail() {
       })
       .catch(() => undefined);
   }
+
+  function formatBytes(bytes: number, decimals = 2) {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+  }
+
+  const documentColumns: DataTableColumn<PatientDocument>[] = [
+    {
+      key: "fileName",
+      header: "Tên tài liệu",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-primary shrink-0" />
+          <span className="font-medium text-secondary break-all">{row.fileName}</span>
+        </div>
+      ),
+    },
+    {
+      key: "fileSize",
+      header: "Dung lượng",
+      render: (row) => formatBytes(row.fileSize),
+    },
+    {
+      key: "createdAt",
+      header: "Ngày tải lên",
+      render: (row) => formatDate(row.createdAt),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "text-right",
+      render: (row) => (
+        <div className="flex justify-end">
+          {row.downloadUrl ? (
+            <a
+              href={row.downloadUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-input border border-border px-2.5 text-xs font-medium text-secondary hover:bg-muted transition-colors"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Xem / Tải về
+            </a>
+          ) : null}
+        </div>
+      ),
+    },
+  ];
 
   const diaryColumns: DataTableColumn<DiaryEntry>[] = [
     { key: "time", header: "Thời gian", render: (row) => formatDateTime(row.createdAt) },
@@ -126,9 +282,34 @@ export function DoctorPatientDetail() {
   ];
 
   const recordColumns: DataTableColumn<MedicalRecord>[] = [
-    { key: "diagnosis", header: "Hồ sơ", render: (row) => row.diagnosis },
+    {
+      key: "diagnosis",
+      header: "Hồ sơ / Chẩn đoán",
+      render: (row) => (
+        <div className="space-y-1 py-1">
+          <p className="font-semibold text-secondary">{row.diagnosis}</p>
+          {row.notes ? <p className="text-xs text-mutedForeground">{row.notes}</p> : null}
+          {row.attachments && row.attachments.length > 0 ? (
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {row.attachments.map((url, idx) => (
+                <a
+                  key={idx}
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded bg-slate-100 hover:bg-slate-200 px-2 py-0.5 text-[11px] font-medium text-secondary transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3 text-mutedForeground" />
+                  Đính kèm {idx + 1}
+                </a>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ),
+    },
     { key: "doctor", header: "Bác sĩ", render: (row) => row.doctorName ?? "Không rõ" },
-    { key: "date", header: "Ngày", render: (row) => formatDate(row.createdAt) },
+    { key: "date", header: "Ngày tạo", render: (row) => formatDate(row.createdAt) },
   ];
 
   return (
@@ -143,7 +324,7 @@ export function DoctorPatientDetail() {
         </Link>
 
         <Card padding="lg">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-4">
             <div>
               <Badge tone={patient ? "success" : "pending"}>
                 {patient ? "Đã cấp quyền" : "Đang chờ dữ liệu"}
@@ -157,7 +338,8 @@ export function DoctorPatientDetail() {
                   : doctorError ?? "Chọn bệnh nhân từ trang tìm kiếm."}
               </p>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
+
+            <div className="border-t border-border mt-2 pt-4 flex flex-col gap-2.5 sm:flex-row">
               <Button
                 disabled={!patientId || isCreatingRecord}
                 leftIcon={<Plus className="h-4 w-4" />}
@@ -172,6 +354,14 @@ export function DoctorPatientDetail() {
                 <Pill className="h-4 w-4" />
                 Tạo đơn thuốc
               </Link>
+              <Button
+                disabled={!patientId}
+                leftIcon={<ShieldPlus className="h-4 w-4" />}
+                onClick={() => setIsPermissionModalOpen(true)}
+                variant="outline"
+              >
+                Yêu cầu / Điều chỉnh quyền
+              </Button>
             </div>
           </div>
         </Card>
@@ -303,7 +493,7 @@ export function DoctorPatientDetail() {
               Tạo đơn thuốc mới
             </Link>
           </div>
-          
+
           {prescriptions.length === 0 ? (
             <Card padding="md">
               <p className="text-sm text-mutedForeground italic text-center py-4">Bệnh nhân chưa có đơn thuốc nào.</p>
@@ -372,11 +562,33 @@ export function DoctorPatientDetail() {
           <DataTable columns={recordColumns} getRowKey={(row) => row.id} rows={medicalRecords} />
         </section>
 
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold text-secondary">Tài liệu y tế cá nhân</h2>
+          </div>
+          {hasDocumentAccess ? (
+            <DataTable
+              columns={documentColumns}
+              getRowKey={(row) => row.id}
+              rows={patientDocuments}
+              emptyTitle="Không có tài liệu cá nhân"
+              emptyDescription="Bệnh nhân chưa tải lên tài liệu y tế cá nhân nào."
+            />
+          ) : (
+            <Card padding="md" className="border-warningBg/30 bg-warningBg/10 text-orange-800">
+              <p className="text-sm font-medium">Bạn chưa được cấp quyền xem Tài liệu y tế cá nhân của bệnh nhân này.</p>
+              <p className="text-xs text-mutedForeground mt-1">Vui lòng yêu cầu cấp thêm scope "Tài liệu y tế cá nhân" trong phần danh sách bệnh nhân.</p>
+            </Card>
+          )}
+        </section>
+
         <Modal
           confirmLabel="Create"
           onClose={() => setIsRecordModalOpen(false)}
           open={isRecordModalOpen}
           title="Thêm hồ sơ bệnh án"
+          showFooter={false}
         >
           <form className="space-y-4" id="create-record-form" onSubmit={handleCreateRecord}>
             <FormInput
@@ -393,21 +605,108 @@ export function DoctorPatientDetail() {
                 value={recordNotes}
               />
             </label>
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-secondary font-medium">URL đính kèm</span>
-              <textarea
-                className="min-h-20 w-full rounded-input border border-border/50 bg-white px-3 py-2 text-sm text-secondary outline-none transition-all duration-200 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
-                onChange={(event) => setAttachments(event.target.value)}
-                placeholder="Mỗi dòng một URL"
-                value={attachments}
-              />
-            </label>
-            <div className="flex justify-end">
+            <div className="space-y-2">
+              <span className="block text-sm font-medium text-secondary">Tài liệu đính kèm</span>
+              <div className="flex items-center gap-3">
+                <input
+                  id="doctor-attachment-upload"
+                  type="file"
+                  onChange={handleAttachmentUpload}
+                  className="hidden"
+                  accept=".pdf,image/*,.doc,.docx"
+                  disabled={isUploadingAttachment}
+                />
+                <label
+                  htmlFor="doctor-attachment-upload"
+                  className={`inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-input border border-border bg-white px-4 text-sm font-medium text-secondary hover:bg-muted transition-colors shadow-soft-sm ${isUploadingAttachment ? "opacity-50 pointer-events-none" : ""}`}
+                >
+                  <Upload className="h-4 w-4 text-mutedForeground" />
+                  {isUploadingAttachment ? "Đang tải lên..." : "Chọn tệp đính kèm"}
+                </label>
+              </div>
+              
+              {uploadedFiles.length > 0 ? (
+                <div className="mt-2 space-y-1.5 max-h-32 overflow-y-auto border border-border/40 rounded-card p-2.5 bg-slate-50/50">
+                  {uploadedFiles.map((file, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2 text-xs p-1 hover:bg-muted/40 rounded transition-colors">
+                      <span className="truncate font-medium text-secondary max-w-[200px]">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setUploadedFiles((prev) => prev.filter((_, i) => i !== idx))}
+                        className="text-emergency hover:underline font-medium"
+                      >
+                        Gỡ bỏ
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                disabled={isCreatingRecord}
+                type="button"
+                onClick={() => setIsRecordModalOpen(false)}
+                variant="outline"
+              >
+                Hủy
+              </Button>
               <Button disabled={isCreatingRecord} type="submit">
                 Tạo hồ sơ
               </Button>
             </div>
           </form>
+        </Modal>
+
+        <Modal
+          open={deletePrescriptionId !== null}
+          title="Hủy đơn thuốc"
+          confirmLabel="Hủy đơn"
+          confirmVariant="danger"
+          onConfirm={confirmDeletePrescription}
+          onClose={() => setDeletePrescriptionId(null)}
+        >
+          <p className="text-sm text-secondary">
+            Bạn có chắc chắn muốn hủy đơn thuốc này?
+          </p>
+        </Modal>
+
+        <Modal
+          open={isPermissionModalOpen}
+          title={`Yêu cầu / Điều chỉnh quyền: ${patient?.fullName}`}
+          confirmLabel="Gửi yêu cầu"
+          confirmVariant="success"
+          onConfirm={submitPermissionRequest}
+          onClose={() => setIsPermissionModalOpen(false)}
+        >
+          <div className="space-y-4">
+            <div>
+              <span className="block text-sm font-semibold text-secondary mb-2">Chọn các phạm vi quyền muốn yêu cầu:</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto border border-border/40 rounded-card p-3 bg-slate-50/50">
+                {Object.keys(scopes).map((scopeKey) => (
+                  <label key={scopeKey} className="flex items-center gap-2 text-sm text-secondary hover:bg-muted/40 p-1.5 rounded-lg cursor-pointer transition-colors">
+                    <input
+                      type="checkbox"
+                      className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                      checked={scopes[scopeKey]}
+                      onChange={(e) => setScopes((prev) => ({ ...prev, [scopeKey]: e.target.checked }))}
+                    />
+                    <span>{consentScopeLabels[scopeKey as keyof typeof consentScopeLabels] || scopeKey}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <label className="block">
+              <span className="block text-sm font-semibold text-secondary mb-1.5">Lý do yêu cầu</span>
+              <textarea
+                className="w-full min-h-20 rounded-input border border-border px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 text-secondary"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Nhập lý do gửi yêu cầu cấp quyền..."
+              />
+            </label>
+          </div>
         </Modal>
       </div>
     </AppShell>

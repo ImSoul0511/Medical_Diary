@@ -17,6 +17,8 @@ from app.modules.doctors.schemas import (
     RequestAccessResponse,
 )
 from app.modules.users.models import Profile
+from app.shared.schemas import MessageResponse
+
 
 logger = logging.getLogger("medical_diary")
 
@@ -183,19 +185,17 @@ class DoctorService:
     ) -> RequestAccessResponse:
         """Tạo bản ghi consent_requests (status=pending) và gửi email thông báo cho bệnh nhân."""
 
-        # Guard: kiểm tra đã có pending request chưa
+        # Ghi đè các yêu cầu pending cũ nếu có
         existing_stmt = select(ConsentRequest).where(
             ConsentRequest.doctor_id == doctor_id,
             ConsentRequest.patient_id == data.patient_id,
             ConsentRequest.status == "pending",
         )
         existing_result = await self.db.execute(existing_stmt)
-
-        if existing_result.scalar_one_or_none() is not None:
-            raise HTTPException(
-                status_code=409,
-                detail="Bạn đã gửi yêu cầu truy cập cho bệnh nhân này và đang chờ phê duyệt.",
-            )
+        existing_requests = existing_result.scalars().all()
+        for old_req in existing_requests:
+            await self.db.delete(old_req)
+        await self.db.flush()
 
         # Guard: Giới hạn số lượng yêu cầu gửi đến cùng 1 bệnh nhân trong 24 giờ (tối đa 3 lần)
         limit_time = datetime.now(timezone.utc) - timedelta(hours=24)
@@ -344,3 +344,45 @@ class DoctorService:
             allergies=profile.allergies if show_allergies else None,
             emergency_contact=profile.emergency_contact if show_emergency_contact else None,
         )
+
+    async def unfollow_patient(self, doctor_id: UUID, patient_id: UUID) -> MessageResponse:
+        """
+        Bác sĩ hủy theo dõi bệnh nhân.
+        - Thu hồi ConsentPermission đang active (nếu có).
+        - Hủy ConsentRequest đang pending (nếu có).
+        """
+        # 1. Thu hồi permission đang hoạt động
+        perm_stmt = select(ConsentPermission).where(
+            ConsentPermission.doctor_id == doctor_id,
+            ConsentPermission.patient_id == patient_id,
+            ConsentPermission.status == "active",
+        )
+        perm_res = await self.db.execute(perm_stmt)
+        permission = perm_res.scalar_one_or_none()
+
+        if permission:
+            permission.status = "revoked"
+            permission.revoked_at = datetime.now(timezone.utc)
+
+        # 2. Hủy các yêu cầu đang chờ duyệt (pending)
+        req_stmt = select(ConsentRequest).where(
+            ConsentRequest.doctor_id == doctor_id,
+            ConsentRequest.patient_id == patient_id,
+            ConsentRequest.status == "pending",
+        )
+        req_res = await self.db.execute(req_stmt)
+        requests = req_res.scalars().all()
+
+        for req in requests:
+            req.status = "rejected"
+            req.responded_at = datetime.now(timezone.utc)
+
+        if not permission and not requests:
+            raise HTTPException(
+                status_code=404,
+                detail="Không tìm thấy liên kết hoặc yêu cầu chờ duyệt với bệnh nhân này.",
+            )
+
+        await self.db.flush()
+        return MessageResponse(message="Hủy theo dõi bệnh nhân thành công.")
+

@@ -34,4 +34,9 @@ export const doctorsApi = {
     const response = await apiClient.post<RequestAccessResponse>("/doctors/request-access", data);
     return response.data;
   },
+
+  unfollowPatient: async (patientId: string): Promise<{ message: string }> => {
+    const response = await apiClient.post<{ message: string }>(`/doctors/patients/${patientId}/unfollow`);
+    return response.data;
+  },
 };

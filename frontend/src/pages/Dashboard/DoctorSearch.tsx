@@ -46,6 +46,7 @@ export function DoctorSearch() {
     step_count: true,
     respiratory_rate: true,
     manual_health_records: true,
+    patient_documents: true,
   });
   const [reason, setReason] = useState("Cần xem thông tin y tế để hỗ trợ khám và điều trị.");
 
@@ -74,6 +75,7 @@ export function DoctorSearch() {
         step_count: false,
         respiratory_rate: false,
         manual_health_records: false,
+        patient_documents: false,
       };
       relation.scopes.forEach((s) => {
         newScopes[s] = true;
@@ -91,6 +93,7 @@ export function DoctorSearch() {
         step_count: true,
         respiratory_rate: true,
         manual_health_records: true,
+        patient_documents: true,
       });
     }
     setIsModalOpen(true);

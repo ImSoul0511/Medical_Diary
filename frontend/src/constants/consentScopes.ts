@@ -11,6 +11,7 @@ export const consentScopeLabels: Record<ConsentScope, string> = {
   step_count: "Bước chân",
   respiratory_rate: "Nhịp thở",
   manual_health_records: "Chỉ số nhập tay",
+  patient_documents: "Tài liệu y tế cá nhân",
 };
 
 export const consentScopeGroups = [
@@ -20,7 +21,7 @@ export const consentScopeGroups = [
   },
   {
     title: "Hồ sơ cá nhân",
-    scopes: ["medical_records", "prescriptions", "diaries"] satisfies ConsentScope[],
+    scopes: ["medical_records", "prescriptions", "diaries", "patient_documents"] satisfies ConsentScope[],
   },
   {
     title: "Chỉ số sức khỏe",

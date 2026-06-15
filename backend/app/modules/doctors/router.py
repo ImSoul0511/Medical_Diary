@@ -15,7 +15,7 @@ from app.modules.doctors.schemas import (
 from app.modules.doctors.service import DoctorService
 from app.modules.users.models import Doctor
 from app.shared.dependencies import require_role
-from app.shared.schemas import error_responses as _error_responses
+from app.shared.schemas import MessageResponse, error_responses as _error_responses
 from app.core.rate_limiter import limiter
 
 
@@ -136,3 +136,21 @@ async def request_access(
     current_user: dict = Depends(require_verified_doctor),
 ) -> RequestAccessResponse:
     return await service.request_access(UUID(current_user["sub"]), data, background_tasks)
+
+
+@router.post(
+    "/patients/{patient_id}/unfollow",
+    response_model=MessageResponse,
+    responses={
+        401: _error_responses[401],
+        403: _error_responses[403],
+        404: _error_responses[404],
+    },
+)
+async def unfollow_patient(
+    patient_id: UUID,
+    service: DoctorService = Depends(_get_service),
+    current_user: dict = Depends(require_verified_doctor),
+) -> MessageResponse:
+    return await service.unfollow_patient(UUID(current_user["sub"]), patient_id)
+

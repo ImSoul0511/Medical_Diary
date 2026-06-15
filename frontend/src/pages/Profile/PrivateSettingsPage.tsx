@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { KeyRound, MonitorSmartphone, RefreshCw, Save, ShieldX, Trash2, UserRound } from "lucide-react";
+import { KeyRound, MonitorSmartphone, RefreshCw, Save, ShieldX, Trash2, UserRound, FileText, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "../../components/AppShell";
 import { Button } from "../../components/Button";
@@ -208,6 +208,39 @@ export function PrivateSettingsPage() {
   return (
     <AppShell role={role} title="Cài đặt riêng tư">
       <div className="space-y-6">
+        {role === "doctor" && profile?.verificationStatus === "rejected" && (
+          <div className="rounded-card border border-red-200 bg-red-50 p-4 text-red-900 shadow-soft-sm flex items-start gap-3">
+            <div className="rounded-full bg-red-100 p-2 text-red-600 shrink-0">
+              <ShieldX className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-red-900">Tài khoản chưa được phê duyệt / Đã bị thu hồi</h3>
+              <p className="mt-1 text-sm text-red-700">
+                Tài khoản bác sĩ của bạn đã bị từ chối hoặc thu hồi quyền xác thực bởi Quản trị viên. Bạn sẽ không thể thực hiện tìm kiếm bệnh nhân, xem bệnh án hoặc kê đơn thuốc.
+              </p>
+              {profile.verificationNotes && (
+                <div className="mt-2.5 text-xs font-medium bg-red-100/50 p-2.5 rounded-input border border-red-200/50">
+                  <span className="font-bold text-red-800">Lý do từ chối/thu hồi:</span> {profile.verificationNotes}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {role === "doctor" && profile?.verificationStatus === "pending_verification" && (
+          <div className="rounded-card border border-amber-200 bg-amber-50 p-4 text-amber-900 shadow-soft-sm flex items-start gap-3">
+            <div className="rounded-full bg-amber-100 p-2 text-amber-600 shrink-0">
+              <KeyRound className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-amber-900">Tài khoản đang chờ phê duyệt</h3>
+              <p className="mt-1 text-sm text-amber-700">
+                Chứng chỉ hành nghề của bạn đang được Quản trị viên hệ thống kiểm tra và xác thực.
+              </p>
+            </div>
+          </div>
+        )}
+
         <Card padding="lg">
           <div className="mb-5 flex items-center gap-3">
             <div className="rounded-card bg-infoBg p-3 text-primary">
@@ -334,6 +367,72 @@ export function PrivateSettingsPage() {
             </div>
           </form>
         </Card>
+
+        {role === "doctor" && (
+          <Card padding="lg">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="rounded-card bg-accent/10 p-3 text-accent">
+                <FileText className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-secondary">Bằng cấp & Xác thực tài khoản</h2>
+                <p className="text-sm text-mutedForeground">Xem thông tin chứng chỉ hành nghề và trạng thái phê duyệt</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <span className="block text-xs font-semibold uppercase tracking-wider text-mutedForeground">Trạng thái xác thực</span>
+                <div className="mt-1.5 flex items-center gap-2">
+                  {profile?.verificationStatus === "approved" ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-successBg/20 px-3 py-1 text-sm font-semibold text-success">
+                      <span className="h-2 w-2 rounded-full bg-success" />
+                      Đã phê duyệt
+                    </span>
+                  ) : profile?.verificationStatus === "rejected" ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
+                      <span className="h-2 w-2 rounded-full bg-red-500" />
+                      Bị từ chối / Thu hồi
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
+                      <span className="h-2 w-2 rounded-full bg-amber-500" />
+                      Đang chờ duyệt
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <span className="block text-xs font-semibold uppercase tracking-wider text-mutedForeground">Tài liệu bằng cấp / Chứng chỉ</span>
+                <div className="mt-1.5">
+                  {profile?.certificateUrl ? (
+                    <a
+                      href={profile.certificateUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Xem chứng chỉ đã tải lên
+                    </a>
+                  ) : (
+                    <span className="text-sm text-mutedForeground italic">Chưa tải lên chứng chỉ</span>
+                  )}
+                </div>
+              </div>
+
+              {profile?.verificationNotes && (
+                <div className="sm:col-span-2 border-t border-border/40 pt-3 mt-1">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-mutedForeground">Ghi chú từ quản trị viên</span>
+                  <p className="mt-1 text-sm text-secondary bg-slate-50 border border-border/40 p-3 rounded-input font-medium italic">
+                    "{profile.verificationNotes}"
+                  </p>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
 
         <section className="space-y-4">
           <div className="flex items-center gap-2">

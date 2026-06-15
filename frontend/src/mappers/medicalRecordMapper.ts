@@ -1,6 +1,7 @@
-import type { MedicalRecord, MedicalRecordForm } from "../types/medicalRecord";
-import type { MedicalRecordCreateRequest } from "../api/medical_records/types";
+import type { MedicalRecord, MedicalRecordForm, PatientDocument } from "../types/medicalRecord";
+import type { MedicalRecordCreateRequest, PatientDocumentResponse } from "../api/medical_records/types";
 import { asArray, asNullableString, asRecord, asString, compactPayload, emptyToNull } from "./common";
+
 
 export function mapMedicalRecordDto(dto: unknown): MedicalRecord {
   const source = asRecord(dto);
@@ -28,3 +29,19 @@ export function mapMedicalRecordFormToDto(form: MedicalRecordForm): MedicalRecor
     attachments: form.attachments ?? [],
   };
 }
+
+export function mapPatientDocumentDto(dto: unknown): PatientDocument {
+  const source = asRecord(dto);
+
+  return {
+    id: asString(source.id),
+    patientId: asString(source.patient_id),
+    fileName: asString(source.file_name),
+    filePath: asString(source.file_path),
+    fileSize: Number(source.file_size),
+    mimeType: asNullableString(source.mime_type),
+    downloadUrl: asNullableString(source.download_url),
+    createdAt: asString(source.created_at),
+  };
+}
+

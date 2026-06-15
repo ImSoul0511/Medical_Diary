@@ -44,6 +44,19 @@ def get_supabase_client(request: Request = None) -> Client:
             )
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Database connection error: {str(e)}")
+
+
+def get_supabase_admin_client() -> Client:
+    """Tạo và trả về Supabase Client với Service Role Key để thao tác Admin (ví dụ: upload Storage)"""
+    try:
+        return create_client(
+            settings.SUPABASE_URL,
+            settings.SUPABASE_SERVICE_ROLE_KEY
+        )
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Database connection error: {str(e)}")
+
+
 def get_current_user(
     request: Request,
     _token: HTTPAuthorizationCredentials = Depends(security)

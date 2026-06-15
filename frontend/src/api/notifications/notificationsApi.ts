@@ -15,4 +15,9 @@ export const notificationsApi = {
     const response = await apiClient.patch<MessageResponse>(`/notifications/${id}/read`);
     return response.data;
   },
+
+  markAllAsRead: async (): Promise<MessageResponse> => {
+    const response = await apiClient.post<MessageResponse>("/notifications/read-all");
+    return response.data;
+  },
 };

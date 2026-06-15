@@ -35,3 +35,15 @@ class MedicalRecordResponse(BaseModel):
     notes: Optional[str] = None
     attachments: Optional[list[str]] = None  # list of URLs
     created_at: datetime
+
+
+class PatientDocumentResponse(BaseModel):
+    id: UUID
+    patient_id: UUID
+    file_name: str
+    file_path: str
+    file_size: int
+    mime_type: Optional[str] = None
+    download_url: Optional[str] = None
+    created_at: datetime
+

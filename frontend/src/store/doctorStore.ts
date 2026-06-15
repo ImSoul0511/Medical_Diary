@@ -35,6 +35,7 @@ type DoctorStore = {
   loadManagedPatients: () => Promise<ManagedPatient[]>;
   loadPatientDetail: (patientId: string) => Promise<PatientProfile>;
   requestAccess: (form: RequestAccessForm) => Promise<RequestAccessResult>;
+  unfollowPatient: (patientId: string) => Promise<void>;
   setSearchQuery: (query: string) => void;
   setSearchValidationError: (msg: string) => void;
   setRequestAccessDraft: (draft: RequestAccessForm | null) => void;
@@ -108,6 +109,18 @@ export const useDoctorStore = create<DoctorStore>((set) => ({
     } catch (error) {
       const message = getErrorMessage(error, "Failed to request access.");
       set({ isRequestingAccess: false, error: message });
+      throw error;
+    }
+  },
+  unfollowPatient: async (patientId) => {
+    set({ isLoadingManagedPatients: true, error: null });
+    try {
+      await doctorsApi.unfollowPatient(patientId);
+      const managedPatients = (await doctorsApi.listManagedPatients()).map(mapManagedPatientDto);
+      set({ managedPatients, isLoadingManagedPatients: false });
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to unfollow patient.");
+      set({ isLoadingManagedPatients: false, error: message });
       throw error;
     }
   },

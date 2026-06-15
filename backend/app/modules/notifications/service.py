@@ -110,3 +110,21 @@ class NotificationsService:
         
         logger.info(f"Marked notification {notification_id} as read for user {user_id}")
         return MessageResponse(message="Đã đánh dấu thông báo đã đọc thành công.")
+
+    async def mark_all_as_read(self, user_id: UUID) -> MessageResponse:
+        """Đánh dấu tất cả thông báo của user là đã đọc."""
+        from sqlalchemy import update
+        stmt = (
+            update(Notification)
+            .where(
+                Notification.user_id == user_id,
+                Notification.is_read == False
+            )
+            .values(is_read=True)
+        )
+        await self.db.execute(stmt)
+        await self.db.flush()
+        
+        logger.info(f"Marked all notifications as read for user {user_id}")
+        return MessageResponse(message="Đã đánh dấu tất cả thông báo là đã đọc.")
+

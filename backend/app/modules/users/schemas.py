@@ -17,6 +17,9 @@ class UserProfileResponse(BaseModel):
     cccd: Optional[str] = None
     specialty: Optional[str] = None
     hospital: Optional[str] = None
+    certificate_url: Optional[str] = None
+    verification_status: Optional[str] = None
+    verification_notes: Optional[str] = None
 
 class UserProfileUpdateRequest(BaseModel):
     password: Optional[str] = Field(None)

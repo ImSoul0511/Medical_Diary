@@ -8,6 +8,7 @@ import { DataTable, type DataTableColumn } from "../../components/DataTable";
 import { Modal } from "../../components/Modal";
 import { consentScopeLabels } from "../../constants/consentScopes";
 import { useConsent } from "../../hooks/useConsent";
+import { useUiStore } from "../../store/uiStore";
 import { useUserStore } from "../../store/userStore";
 import type { AccessHistoryItem } from "../../types/users";
 import { formatDate, formatDateTime } from "../../utils/date";
@@ -97,6 +98,7 @@ export function ConsentManagement() {
 
   const accessHistory = useUserStore((state) => state.accessHistory);
   const loadAccessHistory = useUserStore((state) => state.loadAccessHistory);
+  const showToast = useUiStore((state) => state.showToast);
 
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [targetRequest, setTargetRequest] = useState<any | null>(null);
@@ -116,7 +118,7 @@ export function ConsentManagement() {
     if (!targetRequest) return;
     const scopesToApprove = Object.keys(allowedScopes).filter((key) => allowedScopes[key]);
     if (scopesToApprove.length === 0) {
-      alert("Vui lòng chọn ít nhất một quyền truy cập để đồng ý.");
+      showToast("Vui lòng chọn ít nhất một quyền truy cập để đồng ý.");
       return;
     }
     void approveRequest(targetRequest.id, scopesToApprove as any)

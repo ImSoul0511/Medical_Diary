@@ -1,15 +1,22 @@
 import logging
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from app.modules.medical_records.models import MedicalRecord
-from app.modules.medical_records.schemas import MedicalRecordCreateRequest, MedicalRecordResponse
+from app.modules.medical_records.models import MedicalRecord, PatientDocument
+from app.modules.medical_records.schemas import (
+    MedicalRecordCreateRequest,
+    MedicalRecordResponse,
+    PatientDocumentResponse,
+)
 from app.modules.users.models import Doctor, Profile
 from app.shared.consent import check_consent
+from app.shared.dependencies import get_supabase_admin_client
+from app.shared.schemas import MessageResponse
+
 
 logger = logging.getLogger("medical_diary")
 
@@ -127,3 +134,162 @@ class MedicalRecordsService:
 
         logger.info(f"Doctor {doctor_id} listed {len(rows)} medical records for patient {patient_id}")
         return [self._to_response(row) for row in rows]
+
+    async def upload_document(
+        self,
+        patient_id: UUID,
+        file_name: str,
+        file_bytes: bytes,
+        mime_type: str,
+        file_size: int,
+    ) -> PatientDocumentResponse:
+        """Bệnh nhân tải lên tài liệu/file bệnh án cá nhân của mình."""
+        file_uuid = uuid4()
+        storage_path = f"{patient_id}/{file_uuid}_{file_name}"
+
+        try:
+            supabase = get_supabase_admin_client()
+            supabase.storage.from_("patient-files").upload(
+                file=file_bytes,
+                path=storage_path,
+                file_options={"content-type": mime_type}
+            )
+        except Exception as e:
+            logger.error(f"Failed to upload file to Supabase Storage: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Lỗi khi tải file lên kho lưu trữ: {str(e)}"
+            )
+
+        # Lưu thông tin vào database
+        doc = PatientDocument(
+            patient_id=patient_id,
+            file_name=file_name,
+            file_path=storage_path,
+            file_size=file_size,
+            mime_type=mime_type,
+        )
+        self.db.add(doc)
+        await self.db.flush()
+        await self.db.refresh(doc)
+
+        # Tạo signed URL cho response
+        try:
+            signed_res = supabase.storage.from_("patient-files").create_signed_url(
+                storage_path, 3600
+            )
+            download_url = signed_res.get("signedURL") or signed_res.get("signed_url")
+        except Exception:
+            download_url = None
+
+        return PatientDocumentResponse(
+            id=doc.id,
+            patient_id=doc.patient_id,
+            file_name=doc.file_name,
+            file_path=doc.file_path,
+            file_size=doc.file_size,
+            mime_type=doc.mime_type,
+            download_url=download_url,
+            created_at=doc.created_at,
+        )
+
+    async def list_own_documents(self, patient_id: UUID) -> list[PatientDocumentResponse]:
+        """Lấy danh sách file bệnh án tự tải lên của bệnh nhân."""
+        stmt = select(PatientDocument).where(PatientDocument.patient_id == patient_id).order_by(PatientDocument.created_at.desc())
+        result = await self.db.execute(stmt)
+        docs = result.scalars().all()
+
+        supabase = get_supabase_admin_client()
+        responses = []
+        for doc in docs:
+            try:
+                signed_res = supabase.storage.from_("patient-files").create_signed_url(
+                    doc.file_path, 3600
+                )
+                download_url = signed_res.get("signedURL") or signed_res.get("signed_url")
+            except Exception:
+                download_url = None
+
+            responses.append(
+                PatientDocumentResponse(
+                    id=doc.id,
+                    patient_id=doc.patient_id,
+                    file_name=doc.file_name,
+                    file_path=doc.file_path,
+                    file_size=doc.file_size,
+                    mime_type=doc.mime_type,
+                    download_url=download_url,
+                    created_at=doc.created_at,
+                )
+            )
+        return responses
+
+    async def list_patient_documents(self, doctor_id: UUID, patient_id: UUID) -> list[PatientDocumentResponse]:
+        """Bác sĩ xem danh sách file tự tải lên của bệnh nhân (cần scope patient_documents)."""
+        has_consent = await check_consent(
+            self.db,
+            str(doctor_id),
+            str(patient_id),
+            "patient_documents",
+        )
+        if not has_consent:
+            raise HTTPException(
+                status_code=403,
+                detail="Không có quyền truy cập tài liệu y tế cá nhân của bệnh nhân này.",
+            )
+
+        stmt = select(PatientDocument).where(PatientDocument.patient_id == patient_id).order_by(PatientDocument.created_at.desc())
+        result = await self.db.execute(stmt)
+        docs = result.scalars().all()
+
+        supabase = get_supabase_admin_client()
+        responses = []
+        for doc in docs:
+            try:
+                signed_res = supabase.storage.from_("patient-files").create_signed_url(
+                    doc.file_path, 3600
+                )
+                download_url = signed_res.get("signedURL") or signed_res.get("signed_url")
+            except Exception:
+                download_url = None
+
+            responses.append(
+                PatientDocumentResponse(
+                    id=doc.id,
+                    patient_id=doc.patient_id,
+                    file_name=doc.file_name,
+                    file_path=doc.file_path,
+                    file_size=doc.file_size,
+                    mime_type=doc.mime_type,
+                    download_url=download_url,
+                    created_at=doc.created_at,
+                )
+            )
+        return responses
+
+    async def delete_document(self, patient_id: UUID, document_id: UUID) -> MessageResponse:
+        """Xóa tài liệu của bệnh nhân."""
+        stmt = select(PatientDocument).where(
+            PatientDocument.id == document_id,
+            PatientDocument.patient_id == patient_id,
+        )
+        result = await self.db.execute(stmt)
+        doc = result.scalar_one_or_none()
+
+        if not doc:
+            raise HTTPException(
+                status_code=404,
+                detail="Không tìm thấy tài liệu này hoặc bạn không có quyền xóa.",
+            )
+
+        # Xóa trên Supabase Storage
+        try:
+            supabase = get_supabase_admin_client()
+            supabase.storage.from_("patient-files").remove([doc.file_path])
+        except Exception as e:
+            logger.error(f"Failed to remove file from Supabase Storage: {str(e)}")
+
+        await self.db.delete(doc)
+        await self.db.flush()
+        return MessageResponse(message="Xóa tài liệu thành công.")
+

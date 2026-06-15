@@ -13,7 +13,7 @@ type NotificationStore = {
   loadNotifications: () => Promise<Notification[]>;
   markAsRead: (id: string) => Promise<void>;
   receiveNotification: (notification: Notification) => void;
-  markAllLocalRead: () => void;
+  markAllLocalRead: () => Promise<void>;
   clear: () => void;
 };
 
@@ -63,18 +63,34 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
     set((state) => {
       const exists = state.items.some((item) => item.id === notification.id);
       const items = exists
-        ? state.items.map((item) => (item.id === notification.id ? notification : item))
-        : [notification, ...state.items];
+         ? state.items.map((item) => (item.id === notification.id ? notification : item))
+         : [notification, ...state.items];
       return {
         items,
         unreadCount: items.filter((item) => !item.isRead).length,
       };
     }),
-  markAllLocalRead: () =>
+  markAllLocalRead: async () => {
     set((state) => ({
       items: state.items.map((item) => ({ ...item, isRead: true })),
       unreadCount: 0,
-    })),
+    }));
+    try {
+      await notificationsApi.markAllAsRead();
+    } catch (error) {
+      const message = getErrorMessage(error, "Failed to mark all notifications as read.");
+      set({ error: message });
+      try {
+        const items = (await notificationsApi.list()).map(mapNotificationDto);
+        set({
+          items,
+          unreadCount: items.filter((item) => !item.isRead).length,
+        });
+      } catch {
+        // ignore
+      }
+    }
+  },
   clear: () =>
     set({
       items: [],

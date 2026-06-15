@@ -27,6 +27,9 @@ export type UserProfileDto = {
   };
   specialty?: string | null;
   hospital?: string | null;
+  certificate_url?: string | null;
+  verification_status?: string | null;
+  verification_notes?: string | null;
 };
 
 export function mapUserProfileDto(dto: unknown): UserProfile {
@@ -51,6 +54,9 @@ export function mapUserProfileDto(dto: unknown): UserProfile {
     },
     specialty: asNullableString(source.specialty),
     hospital: asNullableString(source.hospital),
+    certificateUrl: asNullableString(source.certificate_url),
+    verificationStatus: asNullableString(source.verification_status),
+    verificationNotes: asNullableString(source.verification_notes),
   };
 }
 

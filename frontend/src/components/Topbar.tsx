@@ -29,6 +29,7 @@ const scopeMap: Record<string, string> = {
   step_count: "Bước chân",
   respiratory_rate: "Nhịp thở",
   manual_health_records: "Chỉ số nhập tay",
+  patient_documents: "Tài liệu y tế cá nhân",
 };
 
 function translateNotification(title: string, message: string) {

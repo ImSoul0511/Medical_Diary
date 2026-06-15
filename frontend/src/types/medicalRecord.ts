@@ -19,3 +19,15 @@ export type MedicalRecordForm = {
     attachments?: string[];
 }
 
+export type PatientDocument = {
+  id: string;
+  patientId: string;
+  fileName: string;
+  filePath: string;
+  fileSize: number;
+  mimeType: string | null;
+  downloadUrl: string | null;
+  createdAt: string;
+};
+
+

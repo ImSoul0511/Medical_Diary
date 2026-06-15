@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
-import { Plus, Save, Trash2 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
@@ -13,7 +13,7 @@ type MedicineRow = {
   id: string;
   medicationName: string;
   dosage: string;
-  scheduledTimes: string;
+  scheduledTimes: string[];
   durationDays: number;
 };
 
@@ -30,7 +30,7 @@ export function DoctorPrescription() {
       id: "medicine-1",
       medicationName: "",
       dosage: "",
-      scheduledTimes: "08:00",
+      scheduledTimes: ["08:00"],
       durationDays: 3,
     },
   ]);
@@ -51,10 +51,7 @@ export function DoctorPrescription() {
             medicationName: row.medicationName,
             dosage: row.dosage,
             durationDays: row.durationDays,
-            scheduledTimes: row.scheduledTimes
-              .split(",")
-              .map((time) => time.trim())
-              .filter(Boolean),
+            scheduledTimes: row.scheduledTimes.filter(Boolean),
             startDate: new Date().toISOString().slice(0, 10),
             customLogs: [],
           });
@@ -66,6 +63,15 @@ export function DoctorPrescription() {
 
   return (
     <AppShell role="doctor" title="Tạo đơn thuốc">
+      <div className="mb-4">
+        <Link
+          className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+          to={patientId ? `/bac-si/benh-nhan/${patientId}` : "/bac-si/quan-ly-benh-nhan"}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Quay lại chi tiết bệnh nhân
+        </Link>
+      </div>
       <form className="space-y-6" onSubmit={handleSubmit}>
         <Card padding="lg">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -100,7 +106,7 @@ export function DoctorPrescription() {
                     id: `medicine-${Date.now()}`,
                     medicationName: "",
                     dosage: "",
-                    scheduledTimes: "08:00",
+                    scheduledTimes: ["08:00"],
                     durationDays: 7,
                   },
                 ])
@@ -113,10 +119,78 @@ export function DoctorPrescription() {
           </div>
           <div className="space-y-4">
             {rows.map((row) => (
-              <div className="grid gap-3 rounded-card border border-border p-4 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.6fr_auto]" key={row.id}>
+              <div className="grid gap-3 rounded-card border border-border p-4 lg:grid-cols-[1.2fr_0.8fr_1.5fr_0.6fr_auto]" key={row.id}>
                 <FormInput label="Tên thuốc" onChange={(event) => updateRow(row.id, { medicationName: event.target.value })} value={row.medicationName} />
-                <FormInput label="Liều dùng" onChange={(event) => updateRow(row.id, { dosage: event.target.value })} value={row.dosage} />
-                <FormInput label="Giờ uống" helperText="Có thể nhập nhiều giờ, cách nhau bằng dấu phẩy." onChange={(event) => updateRow(row.id, { scheduledTimes: event.target.value })} value={row.scheduledTimes} />
+                <FormInput label="Liều dùng" placeholder="VD: 1 viên" onChange={(event) => updateRow(row.id, { dosage: event.target.value })} value={row.dosage} />
+                
+                <div className="flex flex-col gap-1.5">
+                  <span className="block text-sm font-medium text-secondary">Giờ uống</span>
+                  <div className="flex flex-wrap gap-1.5 items-center min-h-[44px] w-full rounded-input border border-border/50 bg-white px-3 py-1.5 text-sm text-secondary outline-none transition-all duration-200 shadow-soft-sm focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10">
+                    {row.scheduledTimes.map((time, idx) => (
+                      <Badge
+                        key={idx}
+                        tone="info"
+                        className="flex items-center gap-1 px-2.5 py-1 text-xs cursor-default rounded-md bg-teal-50 text-accent font-mono border border-accent/25 hover:bg-teal-100 transition-colors"
+                      >
+                        <span>{time}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newTimes = row.scheduledTimes.filter((_, i) => i !== idx);
+                            updateRow(row.id, { scheduledTimes: newTimes });
+                          }}
+                          className="text-accent/60 hover:text-accent font-bold text-xs ml-0.5"
+                        >
+                          &times;
+                        </button>
+                      </Badge>
+                    ))}
+                    
+                    <input
+                      type="time"
+                      className="w-24 text-xs border border-border/80 rounded px-2 py-1 outline-none focus:border-accent"
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val && !row.scheduledTimes.includes(val)) {
+                          const newTimes = [...row.scheduledTimes, val].sort();
+                          updateRow(row.id, { scheduledTimes: newTimes });
+                        }
+                        e.target.value = ""; // Reset value
+                      }}
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {["08:00", "12:00", "16:00", "20:00"].map((preset) => {
+                      const isSelected = row.scheduledTimes.includes(preset);
+                      return (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => {
+                            let newTimes;
+                            if (isSelected) {
+                              newTimes = row.scheduledTimes.filter((t) => t !== preset);
+                            } else {
+                              newTimes = [...row.scheduledTimes, preset].sort();
+                            }
+                            updateRow(row.id, { scheduledTimes: newTimes });
+                          }}
+                          className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                            isSelected
+                              ? "bg-accent text-white border border-accent"
+                              : "bg-muted text-mutedForeground border border-border/60 hover:bg-muted/70"
+                          }`}
+                        >
+                          {preset === "08:00" && "Sáng (08:00)"}
+                          {preset === "12:00" && "Trưa (12:00)"}
+                          {preset === "16:00" && "Chiều (16:00)"}
+                          {preset === "20:00" && "Tối (20:00)"}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <FormInput label="Số ngày" onChange={(event) => updateRow(row.id, { durationDays: Number(event.target.value) })} type="number" value={row.durationDays} />
                 <div className="flex items-end">
                   <Button

@@ -20,6 +20,9 @@ export type UserProfile = {
   privacySettings: PrivacySettings;
   specialty?: string | null;
   hospital?: string | null;
+  certificateUrl?: string | null;
+  verificationStatus?: string | null;
+  verificationNotes?: string | null;
 };
 
 export type UserProfileForm = {

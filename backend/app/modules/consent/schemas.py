@@ -16,6 +16,7 @@ ConsentScope = Literal[
     "step_count",
     "respiratory_rate",
     "manual_health_records",
+    "patient_documents",
 ]
 
 VALID_CONSENT_SCOPES = set(get_args(ConsentScope))
