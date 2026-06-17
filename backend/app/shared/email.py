@@ -27,7 +27,7 @@ def send_email_sync(email: str, subject: str, body: str, is_html: bool = False) 
         msg["From"] = smtp_from
         msg["To"] = email
 
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10.0) as server:
             server.starttls()
             server.login(smtp_user, smtp_password)
             server.sendmail(smtp_from, [email], msg.as_string())

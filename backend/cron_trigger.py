@@ -26,12 +26,23 @@ logger = logging.getLogger("cron_trigger")
 
 
 def main():
-    backend_url = os.environ.get("BACKEND_URL", "").rstrip("/")
-    jwt_secret = os.environ.get("JWT_SECRET", "")
+    backend_url = os.environ.get("BACKEND_URL", "").strip().rstrip("/")
+    jwt_secret = os.environ.get("JWT_SECRET", "").strip()
+
+    # Tự động loại bỏ dấu nháy đơn/nháy kép bọc ngoài JWT_SECRET nếu có
+    if (jwt_secret.startswith("'") and jwt_secret.endswith("'")) or (jwt_secret.startswith('"') and jwt_secret.endswith('"')):
+        jwt_secret = jwt_secret[1:-1]
+    if '\\"' in jwt_secret:
+        jwt_secret = jwt_secret.replace('\\"', '"')
 
     if not backend_url:
         logger.error("BACKEND_URL is not set. Aborting.")
         sys.exit(1)
+
+    # Tự động thêm protocol https:// nếu người dùng quên nhập
+    if not backend_url.startswith(("http://", "https://")):
+        backend_url = f"https://{backend_url}"
+        logger.info(f"BACKEND_URL was missing protocol. Auto-prefixed to: {backend_url}")
 
     if not jwt_secret:
         logger.error("JWT_SECRET is not set. Aborting.")
