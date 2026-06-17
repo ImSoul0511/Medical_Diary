@@ -138,6 +138,8 @@ async def list_patient_prescriptions(
     return await service.list_patient_prescriptions(UUID(current_user["sub"]), patient_id)
 
 
+from fastapi import BackgroundTasks, Header
+
 @router.post(
     "/prescriptions/internal/send-reminders",
     response_model=MessageResponse,
@@ -146,6 +148,7 @@ async def list_patient_prescriptions(
     description="Endpoint nội bộ (gọi bởi database cron job) để quét và gửi email nhắc nhở uống thuốc.",
 )
 async def send_medication_reminders(
+    background_tasks: BackgroundTasks,
     x_internal_token: str = Header(..., alias="X-Internal-Token"),
     service: PrescriptionsService = Depends(_get_service),
 ) -> MessageResponse:
@@ -153,4 +156,4 @@ async def send_medication_reminders(
     if x_internal_token != settings.JWT_SECRET:
         raise HTTPException(status_code=403, detail="Unauthorized internal request.")
     
-    return await service.send_scheduled_reminders()
+    return await service.send_scheduled_reminders(background_tasks)

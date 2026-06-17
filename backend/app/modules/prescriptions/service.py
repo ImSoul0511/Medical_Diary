@@ -5,7 +5,7 @@ from datetime import datetime, time as time_type, timezone
 from email.mime.text import MIMEText
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -366,7 +366,7 @@ class PrescriptionsService:
         await self.db.flush()
         logger.info(f"Prescription {prescription_id} soft-deleted by doctor {doctor_id}")
 
-    async def send_scheduled_reminders(self) -> MessageResponse:
+    async def send_scheduled_reminders(self, background_tasks: BackgroundTasks) -> MessageResponse:
         """
         [Internal API] Quét các cữ uống thuốc đến giờ/quá giờ mà chưa thông báo/gửi mail,
         tiến hành ghi nhận thông báo vào DB và gửi email nhắc nhở cho bệnh nhân.
@@ -451,16 +451,15 @@ class PrescriptionsService:
             """)
             await self.db.execute(update_query, {"log_id": row.log_id})
 
-            # 5. Gửi email thông qua helper dùng chung
-            import asyncio
+            # 5. Gửi email không đồng bộ trong Background Task để tránh làm nghẽn/timeout request
             from app.shared.email import send_email_sync
-            await asyncio.to_thread(send_email_sync, email, subject, body, True)
-            logger.info(f"Email reminder processed for {email} (log: {row.log_id})")
+            background_tasks.add_task(send_email_sync, email, subject, body, True)
+            logger.info(f"Email reminder queued for background delivery to {email} (log: {row.log_id})")
 
             sent_count += 1
 
         await self.db.flush()
-        logger.info(f"Processed {sent_count} medication reminders.")
+        logger.info(f"Processed and queued {sent_count} medication reminders.")
         return MessageResponse(message=f"Đã xử lý {sent_count} cữ nhắc nhở uống thuốc.")
 
     async def list_patient_prescriptions(
