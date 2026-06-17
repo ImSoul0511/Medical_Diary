@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "../../components/AppShell";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
@@ -19,6 +19,7 @@ type MedicineRow = {
 
 export function DoctorPrescription() {
   const { patientId = "" } = useParams();
+  const navigate = useNavigate();
   const showToast = useUiStore((state) => state.showToast);
   const createPrescription = usePrescriptionStore((state) => state.createPrescription);
   const addPrescriptionItem = usePrescriptionStore((state) => state.addPrescriptionItem);
@@ -57,6 +58,7 @@ export function DoctorPrescription() {
           });
         }
         showToast("Đã gửi đơn thuốc.");
+        navigate(patientId ? `/bac-si/benh-nhan/${patientId}` : "/bac-si/quan-ly-benh-nhan");
       })
       .catch(() => undefined);
   }

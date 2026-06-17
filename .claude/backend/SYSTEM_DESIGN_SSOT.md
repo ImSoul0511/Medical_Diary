@@ -76,7 +76,7 @@ backend/
 │   ├── shared/                 # Tiện ích dùng chung trong toàn hệ thống
 │   │   ├── consent.py          # Tiện ích kiểm tra quyền truy cập (check_consent) dựa trên bảng cấp quyền
 │   │   ├── dependencies.py     # Các dependency injection (get_current_user, require_role)
-│   │   ├── email.py            # Tiện ích gửi email SMTP (Mock ở dev, gửi SMTP thật ở production)
+│   │   ├── email.py            # Tiện ích gửi email qua Resend HTTP API (Mock ở dev, gửi qua Resend thật ở production)
 │   │   └── schemas.py          # Định nghĩa cấu trúc lỗi và phản hồi chung (ErrorResponse, MessageResponse, PaginatedResponse)
 │   │
 │   └── modules/                # CÁC NGHIỆP VỤ CHÍNH (DOMAINS)
@@ -194,7 +194,7 @@ Mỗi module nghiệp vụ nằm trong `app/modules/` là một đơn vị độ
 * `DELETE /prescriptions/{prescription_id}`: Bác sĩ xóa đơn thuốc của mình kê (soft-delete).
 * `GET /prescription-logs`: Bệnh nhân xem chi tiết danh sách lịch uống thuốc của đơn.
 * `PATCH /prescription-logs/{log_id}`: Bệnh nhân cập nhật trạng thái uống thuốc của cữ (`taken`, `skipped`, `untaken`). Nếu chuyển sang `taken`, trường `taken_at` tự động ghi nhận thời gian thực hiện.
-* `POST /prescriptions/internal/send-reminders`: **[Internal API]** Gọi bởi database cron job để quét các cữ uống thuốc đã đến giờ/quá giờ trong vòng 2 giờ qua mà chưa gửi thông báo, tiến hành thêm thông báo hệ thống và gửi email nhắc nhở cho người dùng. Xác thực qua Header `X-Internal-Token` đối chiếu trực tiếp với `JWT_SECRET`.
+* `POST /prescriptions/internal/send-reminders`: **[Internal API]** Gọi bởi database cron job để quét các cữ uống thuốc đã đến giờ/quá giờ trong vòng 2 giờ qua mà chưa gửi thông báo, tiến hành thêm thông báo hệ thống và đưa tác vụ gửi email vào hàng đợi ngầm (FastAPI BackgroundTasks) để phản hồi tức thì cho Cron Job mà không bị timeout. Xác thực qua Header `X-Internal-Token` đối chiếu trực tiếp với `JWT_SECRET`.
 
 ### 5.8. Emergency Access (`/emergency`)
 * `POST /emergency/token`: Tạo mã QR khẩn cấp với thời gian hết hạn cụ thể (`ttl_minutes`) hoặc mã QR vĩnh viễn (dùng in thẻ đeo).
@@ -256,9 +256,10 @@ Hệ thống tích hợp lập lịch tác vụ tự động gửi email nhắc 
 ---
 
 ## 8. Vận hành & Hạ tầng (DevOps & Infrastructure)
-1.  **Quản lý cấu hình:** Sử dụng file `.env` chứa toàn bộ URL kết nối, khóa JWT_SECRET, khóa ENCRYPTION_KEY, và cấu hình SMTP email. Lớp cấu hình `Settings` (`app/core/config.py`) sử dụng thư viện `pydantic-settings` để tự động map biến môi trường vào hệ thống.
+1.  **Quản lý cấu hình:** Sử dụng file `.env` chứa toàn bộ URL kết nối, khóa JWT_SECRET, khóa ENCRYPTION_KEY, biến `RESEND_API_KEY`, và cấu hình SMTP/Resend email. Lớp cấu hình `Settings` (`app/core/config.py`) sử dụng thư viện `pydantic-settings` để tự động map biến môi trường vào hệ thống.
 2.  **Giới hạn tần suất (Rate Limiting):** Sử dụng thư viện `slowapi` bảo vệ các endpoint quan trọng như login, register, request-access, và quét mã QR khẩn cấp trước các nguy cơ tấn công từ chối dịch vụ (DDoS) hoặc spam dữ liệu.
 3.  **Realtime Notifications (Supabase Realtime):** Bảng `notifications` được cấu hình bật tính năng Realtime. Khi backend thực hiện thêm mới thông báo, Supabase Cloud tự động broadcast payload thông báo mới qua giao thức WebSocket trực tiếp đến client (frontend) đang online để hiển thị pop-up/toast lập tức, giảm tải gánh nặng polling liên tục cho backend.
+4.  **Dịch vụ gửi Email (Resend HTTP API & Background Tasks):** Thay thế giao thức SMTP truyền thống bằng Resend HTTP API (qua cổng bảo mật 443) nhằm tránh các chính sách chặn cổng kết nối (25, 465, 587) từ các nhà cung cấp Cloud như Railway. Tích hợp FastAPI `BackgroundTasks` giúp thực thi tác vụ gửi thư ngầm bên dưới mà không làm nghẽn hoặc quá hạn (Timeout) các yêu cầu HTTP từ Cron Job hay Client.
 
 ---
 trigger: always_on
