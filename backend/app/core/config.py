@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     SMTP_USER: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
     SMTP_FROM: str = "noreply@medicaldiary.com"
+    RESEND_API_KEY: Optional[str] = None
 
     # App Config
     APP_NAME: str = "Medical Diary API"
