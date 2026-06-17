@@ -45,3 +45,10 @@ response.md
 .claude/backend/SCHEMAS.md
 .claude/backend/DB_SCHEMAS.md
 DEPLOYMENT.md
+
+report/*.aux
+report/*.fdb_latexmk
+report/*.fls 
+report/*.out
+report/*.synctex.gz 
+report/*.toc

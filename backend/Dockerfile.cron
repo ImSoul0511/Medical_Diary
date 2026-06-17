@@ -1,0 +1,15 @@
+# Dockerfile dành riêng cho Railway Cron Service
+# Image nhỏ gọn: chỉ cần Python + httpx để gọi HTTP endpoint
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+WORKDIR /code
+
+# Chỉ cài httpx — không cần toàn bộ dependencies của FastAPI
+RUN pip install --no-cache-dir httpx==0.27.0
+
+COPY cron_trigger.py .
+
+# Lệnh chạy khi Railway khởi động cron job
+CMD ["python", "cron_trigger.py"]
