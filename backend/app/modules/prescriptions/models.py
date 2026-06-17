@@ -8,6 +8,7 @@ Bảng:
 """
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Column,
     Date,
@@ -119,6 +120,9 @@ class PrescriptionLog(Base):
     )
     taken_at = Column(
         DateTime(timezone=True), nullable=True, comment="Chỉ có giá trị khi status = 'taken'"
+    )
+    is_reminder_sent = Column(
+        Boolean, nullable=False, server_default=text("false"), comment="Đã gửi email nhắc nhở chưa"
     )
 
     # Relationships

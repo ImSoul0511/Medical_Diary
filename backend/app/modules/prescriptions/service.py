@@ -371,20 +371,16 @@ class PrescriptionsService:
         [Internal API] Quét các cữ uống thuốc đến giờ/quá giờ mà chưa thông báo/gửi mail,
         tiến hành ghi nhận thông báo vào DB và gửi email nhắc nhở cho bệnh nhân.
         """
-        # 1. Tìm các cữ uống thuốc đã đến/quá giờ uống thuốc trong vòng 2 giờ qua và có trạng thái là 'untaken'
-        # đồng thời chưa có thông báo tương ứng
+        # 1. Tìm các cữ uống thuốc đã đến/quá giờ uống thuốc trong vòng 2 giờ qua,
+        # có trạng thái là 'untaken' và chưa được gửi nhắc nhở (is_reminder_sent = false)
         query = text("""
             SELECT pl.id as log_id, pl.user_id, pl.scheduled_date, pl.scheduled_time, pi.medication_name, pi.dosage
             FROM prescription_logs pl
             JOIN prescription_items pi ON pi.id = pl.prescription_item_id
             WHERE pl.status = 'untaken'
+              AND pl.is_reminder_sent = false
               AND (pl.scheduled_date + pl.scheduled_time) <= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
               AND (pl.scheduled_date + pl.scheduled_time) >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh' - INTERVAL '2 hours')
-              AND NOT EXISTS (
-                  SELECT 1 FROM notifications n
-                  WHERE n.type = 'prescription_reminder'
-                    AND n.reference_id = pl.id
-              )
         """)
         result = await self.db.execute(query)
         rows = result.all()
@@ -447,7 +443,15 @@ class PrescriptionsService:
             )
             self.db.add(notif)
 
-            # 4. Gửi email thông qua helper dùng chung
+            # 4. Cập nhật cờ is_reminder_sent = true để tránh gửi lặp
+            update_query = text("""
+                UPDATE prescription_logs
+                SET is_reminder_sent = true
+                WHERE id = :log_id
+            """)
+            await self.db.execute(update_query, {"log_id": row.log_id})
+
+            # 5. Gửi email thông qua helper dùng chung
             import asyncio
             from app.shared.email import send_email_sync
             await asyncio.to_thread(send_email_sync, email, subject, body, True)
