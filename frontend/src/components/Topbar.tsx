@@ -89,12 +89,28 @@ export function Topbar({ role, title, description }: TopbarProps) {
     const msg = (it.message || "").toLowerCase();
 
     if (
+      title.includes("duyệt") ||
+      msg.includes("duyệt") ||
+      title.includes("xác minh") ||
+      msg.includes("xác minh") ||
+      title.includes("tài khoản") ||
+      msg.includes("tài khoản")
+    ) {
+      navigate(ROUTES.privateSettings);
+      return;
+    }
+
+    if (
       type === "access_request" ||
       title.includes("truy cập") ||
       msg.includes("truy cập") ||
       title.includes("xin quyền")
     ) {
-      navigate(ROUTES.consent);
+      if (role === "doctor") {
+        navigate(ROUTES.doctorPatientManagement);
+      } else {
+        navigate(ROUTES.consent);
+      }
     } else if (
       type === "prescription_reminder" ||
       type === "prescription_new" ||
@@ -102,7 +118,11 @@ export function Topbar({ role, title, description }: TopbarProps) {
       msg.includes("thuốc") ||
       title.includes("kê đơn")
     ) {
-      navigate(ROUTES.prescriptions);
+      if (role === "doctor") {
+        navigate(ROUTES.doctorPatientManagement);
+      } else {
+        navigate(ROUTES.prescriptions);
+      }
     }
   };
   const [qrOpen, setQrOpen] = useState(false);
