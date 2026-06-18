@@ -14,8 +14,41 @@ type MedicineRow = {
   medicationName: string;
   dosage: string;
   scheduledTimes: string[];
-  durationDays: number;
+  durationDays: number | "";
 };
+
+function parseTimeString(val: string): string | null {
+  if (!val) return null;
+  const cleaned = val.replace(/[^0-9:]/g, "");
+  if (!cleaned) return null;
+
+  let hh = "";
+  let mm = "00";
+  if (cleaned.includes(":")) {
+    const parts = cleaned.split(":");
+    hh = parts[0];
+    mm = parts[1] || "00";
+  } else {
+    if (cleaned.length === 1 || cleaned.length === 2) {
+      hh = cleaned;
+    } else if (cleaned.length === 3) {
+      hh = cleaned.substring(0, 1);
+      mm = cleaned.substring(1);
+    } else if (cleaned.length === 4) {
+      hh = cleaned.substring(0, 2);
+      mm = cleaned.substring(2);
+    } else {
+      return null;
+    }
+  }
+
+  const h = parseInt(hh, 10);
+  const m = parseInt(mm, 10);
+  if (isNaN(h) || h < 0 || h > 23) return null;
+  if (isNaN(m) || m < 0 || m > 59) return null;
+
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+}
 
 export function DoctorPrescription() {
   const { patientId = "" } = useParams();
@@ -51,7 +84,7 @@ export function DoctorPrescription() {
           await addPrescriptionItem(prescription.id, {
             medicationName: row.medicationName,
             dosage: row.dosage,
-            durationDays: row.durationDays,
+            durationDays: row.durationDays || 3,
             scheduledTimes: row.scheduledTimes.filter(Boolean),
             startDate: new Date().toISOString().slice(0, 10),
             customLogs: [],
@@ -109,7 +142,7 @@ export function DoctorPrescription() {
                     medicationName: "",
                     dosage: "",
                     scheduledTimes: ["08:00"],
-                    durationDays: 7,
+                    durationDays: 3,
                   },
                 ])
               }
@@ -149,15 +182,31 @@ export function DoctorPrescription() {
                     ))}
                     
                     <input
-                      type="time"
-                      className="w-24 text-xs border border-border/80 rounded px-2 py-1 outline-none focus:border-accent"
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val && !row.scheduledTimes.includes(val)) {
-                          const newTimes = [...row.scheduledTimes, val].sort();
-                          updateRow(row.id, { scheduledTimes: newTimes });
+                      type="text"
+                      placeholder="Giờ (VD: 1430)"
+                      className="w-24 text-xs border border-border/80 rounded px-2 py-1 outline-none focus:border-accent font-mono text-center placeholder:font-sans placeholder:text-[10px]"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const val = parseTimeString(e.currentTarget.value);
+                          if (val) {
+                            if (!row.scheduledTimes.includes(val)) {
+                              const newTimes = [...row.scheduledTimes, val].sort();
+                              updateRow(row.id, { scheduledTimes: newTimes });
+                            }
+                            e.currentTarget.value = "";
+                          }
                         }
-                        e.target.value = ""; // Reset value
+                      }}
+                      onBlur={(e) => {
+                        const val = parseTimeString(e.target.value);
+                        if (val) {
+                          if (!row.scheduledTimes.includes(val)) {
+                            const newTimes = [...row.scheduledTimes, val].sort();
+                            updateRow(row.id, { scheduledTimes: newTimes });
+                          }
+                          e.target.value = "";
+                        }
                       }}
                     />
                   </div>
@@ -193,7 +242,15 @@ export function DoctorPrescription() {
                   </div>
                 </div>
 
-                <FormInput label="Số ngày" onChange={(event) => updateRow(row.id, { durationDays: Number(event.target.value) })} type="number" value={row.durationDays} />
+                <FormInput
+                  label="Số ngày"
+                  onChange={(event) => {
+                    const val = event.target.value;
+                    updateRow(row.id, { durationDays: val === "" ? "" : Number(val) });
+                  }}
+                  type="number"
+                  value={row.durationDays}
+                />
                 <div className="flex items-end">
                   <Button
                     aria-label="Xóa thuốc"
