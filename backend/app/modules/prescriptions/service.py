@@ -389,19 +389,31 @@ class PrescriptionsService:
             logger.info("No due prescription reminders to send.")
             return MessageResponse(message="Không có lịch nhắc nhở nào cần gửi.")
 
-        sent_count = 0
+        # Nhóm các cữ uống thuốc theo (user_id, scheduled_date, scheduled_time)
+        from collections import defaultdict
+        grouped_reminders = defaultdict(list)
         for row in rows:
+            key = (row.user_id, row.scheduled_date, row.scheduled_time)
+            grouped_reminders[key].append(row)
+
+        sent_count = 0
+        for (user_id, scheduled_date, scheduled_time), items in grouped_reminders.items():
             # 2. Truy vấn email của người dùng từ auth.users của Supabase
             email_query = text("SELECT email FROM auth.users WHERE id = :user_id")
-            email_res = await self.db.execute(email_query, {"user_id": row.user_id})
+            email_res = await self.db.execute(email_query, {"user_id": user_id})
             email = email_res.scalar()
 
             if not email:
-                logger.warning(f"Email not found for user {row.user_id}, skipping reminder.")
+                logger.warning(f"Email not found for user {user_id}, skipping reminder.")
                 continue
 
-            time_str = row.scheduled_time.strftime('%H:%M') if row.scheduled_time else ""
-            date_str = row.scheduled_date.strftime('%d/%m/%Y') if row.scheduled_date else ""
+            time_str = scheduled_time.strftime('%H:%M') if scheduled_time else ""
+            date_str = scheduled_date.strftime('%d/%m/%Y') if scheduled_date else ""
+
+            # Tạo HTML hiển thị danh sách các thuốc cần uống
+            meds_html = ""
+            for item in items:
+                meds_html += f"<li style='margin-bottom: 6px;'><strong>Tên thuốc:</strong> {item.medication_name} - <strong>Liều lượng:</strong> {item.dosage}</li>"
 
             subject = "[Medical Diary] Nhắc nhở uống thuốc định kỳ"
             body = f"""
@@ -416,8 +428,10 @@ class PrescriptionsService:
       <p style="font-size: 16px; line-height: 1.5; color: #64748B;">Đã đến giờ uống thuốc theo đơn của bạn. Việc dùng thuốc đúng giờ rất quan trọng cho quá trình điều trị.</p>
       
       <div style="background-color: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 15px; margin: 20px 0;">
-        <p style="margin: 0 0 10px; font-size: 15px;"><strong>Tên thuốc:</strong> {row.medication_name}</p>
-        <p style="margin: 0 0 10px; font-size: 15px;"><strong>Liều lượng:</strong> {row.dosage}</p>
+        <p style="margin: 0 0 10px; font-size: 15px; font-weight: bold; color: #166534;">Thông tin các thuốc cần uống:</p>
+        <ul style="margin: 0 0 12px 0; padding-left: 20px; font-size: 15px; color: #1E293B;">
+          {meds_html}
+        </ul>
         <p style="margin: 0; font-size: 15px;"><strong>Giờ uống:</strong> {time_str} ngày {date_str}</p>
       </div>
 
@@ -432,31 +446,35 @@ class PrescriptionsService:
 </div>
 """
 
-            # 3. Ghi nhận thông báo vào DB
+            # 3. Ghi nhận thông báo vào DB (Gộp làm 1 thông báo cho cả nhóm thuốc)
+            meds_summary = ", ".join([f"{item.medication_name} ({item.dosage})" for item in items])
             notif = Notification(
-                user_id=row.user_id,
+                user_id=user_id,
                 type='prescription_reminder',
                 title='Nhắc nhở uống thuốc (Email đã gửi)',
-                message=f"Đã đến giờ uống thuốc: {row.medication_name} ({row.dosage}) - Khung giờ: {time_str} ngày {date_str}.",
-                reference_id=row.log_id,
+                message=f"Đã đến giờ uống thuốc: {meds_summary} - Khung giờ: {time_str} ngày {date_str}.",
+                reference_id=items[0].log_id,  # Lấy ID của log đầu tiên làm reference
                 is_read=False
             )
             self.db.add(notif)
 
-            # 4. Cập nhật cờ is_reminder_sent = true để tránh gửi lặp
-            update_query = text("""
-                UPDATE prescription_logs
-                SET is_reminder_sent = true
-                WHERE id = :log_id
-            """)
-            await self.db.execute(update_query, {"log_id": row.log_id})
+            # 4. Cập nhật cờ is_reminder_sent = true cho tất cả cữ uống trong nhóm để tránh gửi lặp
+            for item in items:
+                update_query = text("""
+                    UPDATE prescription_logs
+                    SET is_reminder_sent = true
+                    WHERE id = :log_id
+                """)
+                await self.db.execute(update_query, {"log_id": item.log_id})
 
             # 5. Gửi email không đồng bộ trong Background Task để tránh làm nghẽn/timeout request
             from app.shared.email import send_email_sync
             background_tasks.add_task(send_email_sync, email, subject, body, True)
-            logger.info(f"Email reminder queued for background delivery to {email} (log: {row.log_id})")
+            
+            log_ids_str = ", ".join([str(item.log_id) for item in items])
+            logger.info(f"Email reminder queued for background delivery to {email} (logs: {log_ids_str})")
 
-            sent_count += 1
+            sent_count += len(items)
 
         await self.db.flush()
         logger.info(f"Processed and queued {sent_count} medication reminders.")

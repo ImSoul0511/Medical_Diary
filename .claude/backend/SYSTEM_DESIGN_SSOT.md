@@ -238,11 +238,11 @@ Các trường dữ liệu cực kỳ nhạy cảm như **Số điện thoại**
 * **Prescription Logs Trigger (`trg_generate_prescription_logs`):** Khi bác sĩ thêm một loại thuốc (`prescription_item`) ở chế độ tự động, trigger này tự động tính toán và sinh ra các bản ghi lịch uống thuốc tương ứng trên bảng `prescription_logs` dựa theo số ngày (`duration_days`) và mảng khung giờ (`scheduled_times`).
 * **Audit Log Trigger (`trg_audit_log`):** Tự động ghi nhận mọi sự thay đổi dữ liệu nhạy cảm (INSERT, UPDATE, DELETE) của các bảng y khoa vào bảng tĩnh `data_access_logs`. Quá trình lưu vết được thực hiện hoàn toàn ở tầng DB thông qua Trigger nên đảm bảo tính khách quan và không thể bị sửa đổi hay vượt qua bởi logic ở backend API.
 
-### 6.5. Tự động hóa Lập lịch bằng pg_cron & pg_net
+### 6.5. Tự động hóa Lập lịch bằng Railway Cron Service & Resend
 Hệ thống tích hợp lập lịch tác vụ tự động gửi email nhắc nhở uống thuốc định kỳ:
-* Sử dụng extension `pg_cron` cấu hình chạy hàm gọi nhắc nhở mỗi 5 phút một lần (`*/5 * * * *`).
-* Hàm tự động lập lịch sử dụng extension `pg_net` thực hiện cuộc gọi HTTP POST không đồng bộ từ cơ sở dữ liệu đến endpoint nội bộ `/prescriptions/internal/send-reminders` trên FastAPI backend kèm theo token bảo mật xác thực.
-* Logic xử lý tại backend sẽ quét các cữ uống chưa thực hiện, đối chiếu thời gian theo múi giờ Việt Nam (`Asia/Ho_Chi_Minh`), gửi email và lưu thông báo hệ thống.
+* Sử dụng dịch vụ `Railway Cron Service` chạy một container chuyên biệt lập lịch thực thi script `cron_trigger.py` mỗi 5 phút một lần (`*/5 * * * *`).
+* Script `cron_trigger.py` thực hiện cuộc gọi HTTP POST đến endpoint nội bộ `/prescriptions/internal/send-reminders` trên FastAPI backend kèm theo token bảo mật xác thực trong Header `X-Internal-Token`.
+* Logic xử lý tại backend sẽ quét các cữ uống chưa thực hiện, đối chiếu thời gian theo múi giờ Việt Nam (`Asia/Ho_Chi_Minh`), gửi email thông báo qua Resend API và lưu thông báo hệ thống.
 
 ---
 

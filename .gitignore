@@ -52,3 +52,6 @@ report/*.fls
 report/*.out
 report/*.synctex.gz 
 report/*.toc
+report/main.pdf
+report/main.tex
+report/
