@@ -297,7 +297,7 @@ export function ProfilePage() {
       <div className="space-y-6">
         <section className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
           <Card padding="lg">
-            <h2 className="text-lg font-semibold text-secondary">Thông tin y tế có thể cập nhật</h2>
+            <h2 className="text-lg font-semibold text-secondary">Thông tin y tế khẩn cấp</h2>
             <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
               <FormSelect
                 disabled={!isEditing}
