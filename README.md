@@ -182,11 +182,11 @@ MEDICAL_DIARY/
 
 Dự án được phát triển và hoàn thiện bởi Nhóm 3 - Lớp 24CTT4:
 
-| MSSV | Họ và tên | Vai trò | Nhiệm vụ chính | GitHub |
-| :--- | :--- | :--- | :--- | :--- |
-| 24120394 | Nguyễn Đặng Khôi Nguyên | Backend Developer | Kiến trúc Backend (FastAPI, SQLAlchemy), Quản trị Database Supabase, lập trình DB Triggers & RLS | [GitHub](https://github.com/username) |
-| 24120085 | Lê Nguyễn Thùy Linh | Frontend Developer | Giao diện React/TS, thiết kế luồng Đăng nhập/Đăng ký và quản lý Cài đặt riêng tư | [GitHub](https://github.com/username) |
-| 24120370 | Trần Thị Lợi | Frontend Developer | Phát triển các module Nhật ký triệu chứng, chỉ số sinh học và biểu đồ xu hướng sức khỏe (Recharts) | [GitHub](https://github.com/username) |
-| 24120474 | Trịnh Vỹ Triết | DevOps Engineer | Triển khai hệ thống Quản lý cấp quyền (Consent) theo scope, tích hợp Resend API và Railway Cron Job nền | [GitHub](https://github.com/username) |
-| 24120480 | Cái Lâm Trường | System Analyst | Thiết kế tính năng SOS qua mã QR khẩn cấp, viết tài liệu đặc tả hệ thống và báo cáo kỹ thuật đồ án | [GitHub](https://github.com/username) |
+| MSSV | Họ và tên | GitHub |
+| :--- | :--- | :--- |
+| 24120394 | Nguyễn Đặng Khôi Nguyên | [GitHub](https://github.com/username) |
+| 24120085 | Lê Nguyễn Thùy Linh | [GitHub](https://github.com/username) |
+| 24120370 | Trần Thị Lợi | [GitHub](https://github.com/username) |
+| 24120474 | Trịnh Vỹ Triết | [GitHub](https://github.com/username) |
+| 24120480 | Cái Lâm Trường | [GitHub](https://github.com/username) |
 
