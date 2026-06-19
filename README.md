@@ -182,9 +182,11 @@ MEDICAL_DIARY/
 
 Dự án được phát triển và hoàn thiện bởi Nhóm 3 - Lớp 24CTT4:
 
-*   **Nguyễn Đặng Khôi Nguyên** (24120394) - Backend Developer (Kiến trúc Backend FastAPI, Quản trị Database Supabase, lập trình DB Triggers/RLS)
-*   **Lê Nguyễn Thùy Linh** (24120085) - Frontend Developer (Giao diện React/TS, thiết kế luồng Đăng nhập/Đăng ký và quản lý Cài đặt riêng tư)
-*   **Trần Thị Lợi** (24120370) - Frontend Developer (Phát triển module Nhật ký triệu chứng, chỉ số sinh học và biểu đồ xu hướng Recharts)
-*   **Trịnh Vỹ Triết** (24120474) - DevOps Engineer (Triển khai hệ thống quản lý cấp quyền Consent theo scope, tích hợp Resend API & Railway Cron Job)
-*   **Cái Lâm Trường** (24120480) - System Analyst (Thiết kế SOS QR Code khẩn cấp, viết tài liệu đặc tả hệ thống và báo cáo kỹ thuật đồ án)
+| MSSV | Họ và tên | Vai trò | Nhiệm vụ chính | GitHub |
+| :--- | :--- | :--- | :--- | :--- |
+| 24120394 | Nguyễn Đặng Khôi Nguyên | Backend Developer | Kiến trúc Backend (FastAPI, SQLAlchemy), Quản trị Database Supabase, lập trình DB Triggers & RLS | [GitHub](https://github.com/username) |
+| 24120085 | Lê Nguyễn Thùy Linh | Frontend Developer | Giao diện React/TS, thiết kế luồng Đăng nhập/Đăng ký và quản lý Cài đặt riêng tư | [GitHub](https://github.com/username) |
+| 24120370 | Trần Thị Lợi | Frontend Developer | Phát triển các module Nhật ký triệu chứng, chỉ số sinh học và biểu đồ xu hướng sức khỏe (Recharts) | [GitHub](https://github.com/username) |
+| 24120474 | Trịnh Vỹ Triết | DevOps Engineer | Triển khai hệ thống Quản lý cấp quyền (Consent) theo scope, tích hợp Resend API và Railway Cron Job nền | [GitHub](https://github.com/username) |
+| 24120480 | Cái Lâm Trường | System Analyst | Thiết kế tính năng SOS qua mã QR khẩn cấp, viết tài liệu đặc tả hệ thống và báo cáo kỹ thuật đồ án | [GitHub](https://github.com/username) |
 
