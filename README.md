@@ -180,13 +180,13 @@ MEDICAL_DIARY/
 
 ## Thành viên Đóng góp (Contributors)
 
-Dự án được phát triển và hoàn thiện bởi Nhóm 3 - Lớp 24CTT4:
+Dự án được phát triển và hoàn thiện bởi Nhóm 3 - Lớp Tư duy tính toán 24CTT4:
 
 | MSSV | Họ và tên | GitHub |
 | :--- | :--- | :--- |
-| 24120394 | Nguyễn Đặng Khôi Nguyên | [GitHub](https://github.com/username) |
-| 24120085 | Lê Nguyễn Thùy Linh | [GitHub](https://github.com/username) |
-| 24120370 | Trần Thị Lợi | [GitHub](https://github.com/username) |
-| 24120474 | Trịnh Vỹ Triết | [GitHub](https://github.com/username) |
-| 24120480 | Cái Lâm Trường | [GitHub](https://github.com/username) |
+| 24120394 | Nguyễn Đặng Khôi Nguyên | [GitHub](https://github.com/ImSoul0511) |
+| 24120085 | Lê Nguyễn Thùy Linh | [GitHub](https://github.com/Maylyn-2day) |
+| 24120370 | Trần Thị Lợi | [GitHub](https://github.com/Lowen-here) |
+| 24120474 | Trịnh Vỹ Triết | [GitHub](https://github.com/AIVIETNAM-AIO-Triet-Descartes) |
+| 24120480 | Cái Lâm Trường | [GitHub](https://github.com/clTruongk24) |
 
