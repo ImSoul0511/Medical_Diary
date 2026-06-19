@@ -133,7 +133,9 @@ MEDICAL_DIARY/
     ```bash
     alembic upgrade head
     ```
-6.  Chạy ứng dụng Backend:
+6.  Khởi tạo các Hàm, Triggers và Realtime trên Database:
+    Vì một số tính năng đặc thù (mã hóa pgcrypto, quản lý session, tự động sinh log đơn thuốc, audit logs và realtime) được thiết lập trực tiếp ở tầng cơ sở dữ liệu, bạn cần sao chép và thực thi tuần tự các tệp SQL trong thư mục `backend/supabase/policies/` (từ `001_` đến `008_`) trên **SQL Editor** của Supabase Dashboard (hoặc công cụ quản lý PostgreSQL của bạn).
+7.  Chạy ứng dụng Backend:
     ```bash
     uvicorn app.main:app --reload
     ```
