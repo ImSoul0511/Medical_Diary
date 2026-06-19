@@ -175,3 +175,16 @@ MEDICAL_DIARY/
 1.  **Chống rò rỉ Access Token:** Access Token (JWT) được lưu hoàn toàn trên bộ nhớ `in-memory` của client (Zustand state) với thời gian hết hạn cực ngắn (15 phút). Refresh Token được lưu an toàn trong Cookie của trình duyệt với cờ `HttpOnly`, `Secure` và `SameSite=Strict`.
 2.  **Row Level Security (RLS):** Middleware tại backend tự động thiết lập danh tính người dùng vào DB session thông qua câu lệnh `SET LOCAL request.jwt.claims`. Các chính sách RLS tại database sẽ tự động chặn hoặc cho phép truy vấn dựa trên chủ sở hữu hoặc bảng ủy quyền `consent_permissions`.
 3.  **Mã hóa cột (pgcrypto):** Trường thông tin định danh cá nhân nhạy cảm (CCCD, SĐT) được mã hóa AES-256 ngay trong DB. Khóa giải mã được nạp vào session tạm thời qua transaction và không bao giờ lưu tĩnh tại Database.
+
+---
+
+## Thành viên Đóng góp (Contributors)
+
+Dự án được phát triển và hoàn thiện bởi Nhóm 3 - Lớp 24CTT4:
+
+*   **Nguyễn Đặng Khôi Nguyên** (24120394) - Backend Developer (Kiến trúc Backend FastAPI, Quản trị Database Supabase, lập trình DB Triggers/RLS)
+*   **Lê Nguyễn Thùy Linh** (24120085) - Frontend Developer (Giao diện React/TS, thiết kế luồng Đăng nhập/Đăng ký và quản lý Cài đặt riêng tư)
+*   **Trần Thị Lợi** (24120370) - Frontend Developer (Phát triển module Nhật ký triệu chứng, chỉ số sinh học và biểu đồ xu hướng Recharts)
+*   **Trịnh Vỹ Triết** (24120474) - DevOps Engineer (Triển khai hệ thống quản lý cấp quyền Consent theo scope, tích hợp Resend API & Railway Cron Job)
+*   **Cái Lâm Trường** (24120480) - System Analyst (Thiết kế SOS QR Code khẩn cấp, viết tài liệu đặc tả hệ thống và báo cáo kỹ thuật đồ án)
+
