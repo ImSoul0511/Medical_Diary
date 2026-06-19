@@ -167,7 +167,7 @@ MEDICAL_DIARY/
     ```bash
     npm run dev
     ```
-    *Giao diện người dùng sẽ khả dụng tại:* `http://localhost:5173`
+    *Giao diện người dùng sẽ khả dụng tại:* `http://localhost:5174`
 
 ---
 
