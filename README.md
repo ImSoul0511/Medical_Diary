@@ -86,9 +86,7 @@ MEDICAL_DIARY/
 │   │   ├── store/              # Zustand global state (authStore, notificationStore)
 │   │   └── types/              # TypeScript definitions
 │   └── package.json
-├── report/                     # Báo cáo kỹ thuật đồ án (tệp nguồn LaTeX)
-│   └── main.tex
-└── README.md                   # Tài liệu hướng dẫn sử dụng chính
+├── README.md                   # Tài liệu hướng dẫn sử dụng chính
 ```
 
 ---
