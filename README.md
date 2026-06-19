@@ -175,10 +175,3 @@ MEDICAL_DIARY/
 1.  **Chống rò rỉ Access Token:** Access Token (JWT) được lưu hoàn toàn trên bộ nhớ `in-memory` của client (Zustand state) với thời gian hết hạn cực ngắn (15 phút). Refresh Token được lưu an toàn trong Cookie của trình duyệt với cờ `HttpOnly`, `Secure` và `SameSite=Strict`.
 2.  **Row Level Security (RLS):** Middleware tại backend tự động thiết lập danh tính người dùng vào DB session thông qua câu lệnh `SET LOCAL request.jwt.claims`. Các chính sách RLS tại database sẽ tự động chặn hoặc cho phép truy vấn dựa trên chủ sở hữu hoặc bảng ủy quyền `consent_permissions`.
 3.  **Mã hóa cột (pgcrypto):** Trường thông tin định danh cá nhân nhạy cảm (CCCD, SĐT) được mã hóa AES-256 ngay trong DB. Khóa giải mã được nạp vào session tạm thời qua transaction và không bao giờ lưu tĩnh tại Database.
-
----
-
-## Hướng dẫn dành cho AI Agents (Cursor / Windsurf / Antigravity)
-*   **Nguyên tắc SSOT:** Mọi chỉnh sửa liên quan đến Backend/API/Database bắt buộc phải tham chiếu và cập nhật đồng bộ với file `.claude/backend/SYSTEM_DESIGN_SSOT.md` trước tiên (Tệp này được lưu trữ cục bộ ở local và không được track trên Git để tránh các xung đột cấu hình).
-*   **Quy định Database:** Tuyệt đối không viết lệnh SQL xóa cứng (`DELETE`). Hãy luôn sử dụng cơ chế soft-delete bằng cách cập nhật cột `deleted_at`.
-*   **Chỉnh sửa LaTeX:** Khi chỉnh sửa tài liệu LaTeX báo cáo trong `report/main.tex`, hãy kiểm tra các gói package được sử dụng và đảm bảo tài liệu biên dịch thành công mà không có lỗi cú pháp.
