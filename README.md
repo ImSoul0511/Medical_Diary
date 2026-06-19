@@ -70,9 +70,6 @@ Hệ thống được thiết kế tối ưu với phong cách **Soft UI** hiệ
 
 ```text
 MEDICAL_DIARY/
-├── .claude/                    # Cấu hình và tài liệu hệ thống cho AI Agents
-│   └── backend/
-│       └── SYSTEM_DESIGN_SSOT.md # Tài liệu Đặc tả Hệ thống (Single Source of Truth)
 ├── backend/                    # Mã nguồn FastAPI Backend
 │   ├── app/
 │   │   ├── core/               # Cấu hình chính (database, exceptions, security,...)
@@ -182,6 +179,6 @@ MEDICAL_DIARY/
 ---
 
 ## Hướng dẫn dành cho AI Agents (Cursor / Windsurf / Antigravity)
-*   **Nguyên tắc SSOT:** Mọi chỉnh sửa liên quan đến Backend/API/Database bắt buộc phải tham chiếu và cập nhật đồng bộ với file `.claude/backend/SYSTEM_DESIGN_SSOT.md` trước tiên.
+*   **Nguyên tắc SSOT:** Mọi chỉnh sửa liên quan đến Backend/API/Database bắt buộc phải tham chiếu và cập nhật đồng bộ với file `.claude/backend/SYSTEM_DESIGN_SSOT.md` trước tiên (Tệp này được lưu trữ cục bộ ở local và không được track trên Git để tránh các xung đột cấu hình).
 *   **Quy định Database:** Tuyệt đối không viết lệnh SQL xóa cứng (`DELETE`). Hãy luôn sử dụng cơ chế soft-delete bằng cách cập nhật cột `deleted_at`.
 *   **Chỉnh sửa LaTeX:** Khi chỉnh sửa tài liệu LaTeX báo cáo trong `report/main.tex`, hãy kiểm tra các gói package được sử dụng và đảm bảo tài liệu biên dịch thành công mà không có lỗi cú pháp.
